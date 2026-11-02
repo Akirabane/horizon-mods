@@ -1,0 +1,25 @@
+id = "fullbright_nofog"
+kind = "native-mod"
+name = "Fullbright & NoFog"
+summary = "Toggle full brightness and the world's fog with a key (G / N), /fullbright or /nofog."
+description = """
+A native Horizon mod: the launcher builds it into the game (install it on the launcher's Mods page, then press Build there). Native mods are not sandboxed and run with your account's rights, so read the source before you build it. Uses only Horizon's native hook points (hooks 80, for `render_fog`); tested on Nightly 2026-11-01 (c9d474d) and horizon-mixins 0d6b103.
+
+- **Fullbright**: press G (or `/fullbright`, `/fb`) to toggle full brightness (gamma 1500%). Your brightness slider and `options.txt` are never changed; turning it off gives your own brightness back.
+- **NoFog**: press N (or `/nofog`) to remove the world's fog. `/nofog fluids` also clears water, lava and powder snow fog.
+- `/fullbright on|off` and `/nofog on|off` set them directly.
+- Options → Mods → Fullbright & NoFog: a button for each toggle and both keys, rebindable.
+
+Toggling is silent (no chat messages). Client-side: works in single player, on LAN and on servers. Settings are remembered between sessions."""
+authors = ["Nirokx"]
+owners = ["Nirokx"]
+license = "MIT"
+source = "https://github.com/Nirokx/horizon-fullbright-nofog"
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-02"
+game = "26.3"
+file = "fullbright_nofog-1.0.0.hnmod"
+sha256 = "07a13abd8af2405343241f8985db7595a03bfb8ced2f1dfab8a105848eb1b7d7"
+changelog = "First release."
