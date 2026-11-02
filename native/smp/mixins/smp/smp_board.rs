@@ -145,6 +145,8 @@ pub struct Board {
     personal_at: Option<i64>,
     tab_at: Option<i64>,
     tab_sent: HashSet<u128>,
+    /// The vanished players (the glue sets it): on, but not counted online.
+    pub quiet: HashSet<u128>,
 }
 
 /// `1,250`, `125.4k`, `3.2M`: short enough for the sidebar's right side.
@@ -189,6 +191,7 @@ impl Board {
             personal_at: None,
             tab_at: None,
             tab_sent: HashSet::new(),
+            quiet: HashSet::new(),
         })
     }
 
@@ -297,11 +300,12 @@ impl Board {
         }
         let all = std::mem::take(&mut self.stale) || personal;
         let mut out = Vec::new();
+        let online = on.iter().filter(|u| !self.quiet.contains(u)).count();
         for &uuid in on {
             if self.hidden(uuid) || (!all && self.sent.contains_key(&uuid)) {
                 continue;
             }
-            let lines = self.lines(uuid, &me(uuid), on.len());
+            let lines = self.lines(uuid, &me(uuid), online);
             if self.sent.get(&uuid) != Some(&lines) {
                 self.sent.insert(uuid, lines.clone());
                 out.push((uuid, lines));
@@ -529,6 +533,15 @@ mod tests {
         let sent = b.updates(60_000, &[1, 2, 3], me);
         assert_eq!(sent.iter().map(|s| s.0).collect::<Vec<_>>(), vec![2]);
         assert!(b.due(70_000, 3), "a minute passed");
+        // A vanished player isn't counted, at the next refresh.
+        b.quiet.insert(3);
+        let sent = b.updates(120_000, &[1, 2, 3], me);
+        assert_eq!(sent.len(), 3, "everyone's count changed");
+        let online = Line::Stat {
+            label: "Online",
+            value: "2".into(),
+        };
+        assert!(sent[0].1.contains(&online), "{:?}", sent[0].1);
         let _ = std::fs::remove_dir_all(d);
     }
 

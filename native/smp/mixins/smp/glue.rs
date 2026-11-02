@@ -32,6 +32,7 @@ use crate::game::{
     smp_store,
     smp_tax::{self, Taxes},
     smp_trade::{self, Act, Cell, Trades},
+    smp_vanish::{self, Vanish},
 };
 use horizon_client::{
     items::ItemStack,
@@ -139,6 +140,12 @@ pub struct Smp {
     /// `/claim show`: whose chunk border is drawn (level, chunk x, chunk z)
     /// until when.
     shows: std::collections::HashMap<u128, (String, i32, i32, i64)>,
+    /// `/vanish`: an error when `vanish.json` can't be read (nobody is
+    /// hidden then, and the command says so).
+    vanish: Result<Vanish, String>,
+    /// The vanished players on who were sent the subtitle: cleared and
+    /// counted for sleeping again once they show themselves or leave.
+    vanish_titled: std::collections::HashSet<u128>,
 }
 
 static STATE: Mutex<Option<Smp>> = Mutex::new(None);
@@ -213,6 +220,10 @@ fn open(dir: PathBuf) -> Smp {
         log::error!("[smp] claims are off: {e}");
     }
     let board = Board::open(&dir, config.board);
+    let vanish = Vanish::open(&dir);
+    if let Err(e) = &vanish {
+        log::error!("[smp] /vanish is off: {e}");
+    }
     if let Err(e) = &board {
         log::error!("[smp] the sidebar is off: {e}");
     }
@@ -267,6 +278,8 @@ fn open(dir: PathBuf) -> Smp {
         nicks,
         nicks_shown: Default::default(),
         shows: Default::default(),
+        vanish,
+        vanish_titled: Default::default(),
     }
 }
 
@@ -350,6 +363,11 @@ fn save(smp: &mut Smp) {
         log::error!("[smp] {err}");
     }
     if let Err(err) = smp.casino.save() {
+        log::error!("[smp] {err}");
+    }
+    if let Ok(v) = &mut smp.vanish
+        && let Err(err) = v.save()
+    {
         log::error!("[smp] {err}");
     }
 }
@@ -452,6 +470,8 @@ pub fn commands(commands: &mut Vec<NativeCommand>) {
         "delwarp <name:word>",
         "nick <name:word> <nick:word>",
         "treasury pay <player:word> <amount:integer> <reason:text>",
+        "vanish",
+        "vanish list",
     ] {
         commands.push(NativeCommand::op(usage, 3));
     }
@@ -575,6 +595,7 @@ pub(in crate::game) fn perform(
         &smp_board::COMMANDS,
         &smp_presence::COMMANDS,
         &smp_nick::COMMANDS,
+        &smp_vanish::COMMANDS,
     ];
     if !game.native_on(ID) || !ours.iter().any(|c| c.contains(&word)) {
         return;
@@ -591,15 +612,22 @@ pub(in crate::game) fn perform(
     // Survival and adventure: a creative player could sell what they made.
     let trades = matches!(player.game_mode, 0 | 2);
     let players = game.native_server_players();
-    let online = |name: &str| {
-        players
-            .iter()
-            .find(|p| p.name.eq_ignore_ascii_case(name))
-            .map(|p| (p.uuid, p.name.clone(), matches!(p.game_mode, 0 | 2)))
-    };
     let now = chrono::Utc::now().timestamp_millis();
     let mut guard = state(dir.join(smp_store::DIR));
     let smp = guard.as_mut().expect("opened");
+    // A vanished player is out of reach (trades, teleports, bets) of those
+    // who don't see them.
+    let hidden: Vec<u128> = smp.vanish.as_ref().map_or_else(
+        |_| Vec::new(),
+        |v| players.iter().filter(|p| !v.sees(me.level, p.uuid)).map(|p| p.uuid).collect(),
+    );
+    let online = |name: &str| {
+        players
+            .iter()
+            .filter(|p| !hidden.contains(&p.uuid))
+            .find(|p| p.name.eq_ignore_ascii_case(name))
+            .map(|p| (p.uuid, p.name.clone(), matches!(p.game_mode, 0 | 2)))
+    };
     let mut acts = Vec::new();
     // Any SMP command is activity (no longer AFK), and past the limit waits.
     let mut sleeps = Vec::new();
@@ -626,7 +654,24 @@ pub(in crate::game) fn perform(
         n.resolve(line, &is_name, &name_of)
     });
     let line = resolved.as_deref().unwrap_or(line);
-    let out = if smp_nick::COMMANDS.contains(&word) {
+    let out = if smp_vanish::COMMANDS.contains(&word) {
+        let ops: Vec<u128> = players.iter().filter(|p| p.permission >= smp_vanish::LEVEL).map(|p| p.uuid).collect();
+        match &mut smp.vanish {
+            Ok(v) => {
+                let out = v.command(&me, &ops, line).unwrap_or_default();
+                // Hidden or shown at once; the subtitle comes with the next
+                // second (commands can't run inside a player's).
+                for (uuid, hidden) in v.changes() {
+                    game.native_hide_player(uuid, hidden.then_some(smp_vanish::LEVEL));
+                }
+                if let Ok(p) = &mut smp.presence {
+                    p.quiet = v.quiet();
+                }
+                out
+            }
+            Err(_) => vec![Out::Error("/vanish is off: vanish.json can't be read (see the server log).".into())],
+        }
+    } else if smp_nick::COMMANDS.contains(&word) {
         let names = ServerNames::read(&dir, smp.economy.as_ref().ok());
         match &mut smp.nicks {
             Ok(n) => {
@@ -712,7 +757,10 @@ pub(in crate::game) fn perform(
         };
         match &mut smp.places {
             Ok(_) if short.is_some() => vec![Out::Error(short.expect("checked"))],
-            Ok(p) => p.command(&me, &bodies(&players), now, line).unwrap_or_default(),
+            Ok(p) => {
+                let seen: Vec<NativeServerPlayer> = players.iter().filter(|p| !hidden.contains(&p.uuid)).cloned().collect();
+                p.command(&me, &bodies(&seen), now, line).unwrap_or_default()
+            }
             Err(_) => vec![Out::Error(
                 "Homes and warps are off: their file can't be read (see the server log).".into(),
             )],
@@ -2107,6 +2155,28 @@ pub(in crate::game) fn tick(game: &mut Game<'_>) {
     };
     let now = chrono::Utc::now().timestamp_millis();
     let mut out = Vec::new();
+    // `/vanish`, once a second: the game told who is hidden (after a
+    // restart), and the subtitle sent to each vanished player on.
+    let vanished = smp.vanish.as_ref().map(|v| v.quiet()).unwrap_or_default();
+    let (mut subtitles, mut unvanished) = (Vec::new(), Vec::new());
+    if n % 20 == 0
+        && let Ok(v) = &mut smp.vanish
+    {
+        for (uuid, hidden) in v.changes() {
+            game.native_hide_player(uuid, hidden.then_some(smp_vanish::LEVEL));
+        }
+        for p in &players {
+            if vanished.contains(&p.uuid) {
+                subtitles.push((p.uuid, p.name.clone()));
+            } else if smp.vanish_titled.contains(&p.uuid) {
+                unvanished.push((p.uuid, p.name.clone()));
+            }
+        }
+        smp.vanish_titled = subtitles.iter().map(|s| s.0).collect();
+        if let Ok(p) = &mut smp.presence {
+            p.quiet = vanished.clone();
+        }
+    }
     // Teleports: each tick while one warms up; requests expire once a second.
     if let Ok(p) = &mut smp.places
         && (n % 20 == 0 || warming)
@@ -2362,12 +2432,15 @@ pub(in crate::game) fn tick(game: &mut Game<'_>) {
                 .unwrap_or_default(),
             played_seconds: places.as_ref().map_or(0, |p| p.played_seconds(uuid)),
         };
+        b.quiet = vanished.clone();
         sidebars = b.updates(now, &on, me);
         let to = b.tab_due(now, &on);
         if !to.is_empty() {
             let (rate, mspt) = game.native_tick_stats();
             let tps = f64::from(rate).min(1000.0 / mspt.max(0.001));
-            tab = Some((to, b.tab_lines(tps, mspt, on.len())));
+            // Vanished players aren't counted: the footer is everyone's.
+            let shown = on.iter().filter(|u| !b.quiet.contains(u)).count();
+            tab = Some((to, b.tab_lines(tps, mspt, shown)));
         }
     }
     // Nicknames: the changes asked for, then those of players who came on.
@@ -2426,6 +2499,23 @@ pub(in crate::game) fn tick(game: &mut Game<'_>) {
         if let smp_presence::Act::Sleep(uuid, ignored) = a {
             game.native_sleep_ignored(uuid, ignored);
         }
+    }
+    // A vanished player doesn't hold the night up; the subtitle lasts a
+    // little past the next second's (1.5 s), so it never blinks.
+    for (uuid, name) in subtitles {
+        game.native_sleep_ignored(uuid, true);
+        let subtitle = serde_json::json!({"text": smp_vanish::SUBTITLE, "color": "aqua"});
+        for line in [
+            format!("title {name} times 0 30 5"),
+            format!("title {name} subtitle {subtitle}"),
+            format!("title {name} title \"\""),
+        ] {
+            game.native_run_command(&line);
+        }
+    }
+    for (uuid, name) in unvanished {
+        game.native_sleep_ignored(uuid, false);
+        game.native_run_command(&format!("title {name} clear"));
     }
     for line in particles.into_iter().chain(casino) {
         game.native_run_command(&line);

@@ -98,6 +98,9 @@ pub struct Presence {
     /// Seconds each player was active today (UTC day), toward the reward;
     /// not kept over a restart.
     played_today: HashMap<u128, (String, i64)>,
+    /// The vanished players (the glue sets it): their first join and AFK
+    /// are told to them only, never announced.
+    pub quiet: HashSet<u128>,
 }
 
 impl Presence {
@@ -123,6 +126,7 @@ impl Presence {
             afk: HashSet::new(),
             recent: HashMap::new(),
             played_today: HashMap::new(),
+            quiet: HashSet::new(),
         })
     }
 
@@ -165,7 +169,7 @@ impl Presence {
                 if self.data.known.insert(key.clone()) {
                     self.dirty = true;
                     let fill = |l: &str| l.replace("{player}", &p.name);
-                    if !self.config.first_join.is_empty() {
+                    if !self.config.first_join.is_empty() && !self.quiet.contains(&p.uuid) {
                         out.push(Out::All(fill(&self.config.first_join)));
                     }
                     out.extend(
@@ -235,7 +239,7 @@ impl Presence {
 
     fn away(&mut self, uuid: u128, name: &str, acts: &mut Vec<Act>) -> Out {
         acts.push(Act::Sleep(uuid, true));
-        if self.config.afk_announce {
+        if self.config.afk_announce && !self.quiet.contains(&uuid) {
             Out::All(format!("{name} is AFK."))
         } else {
             Out::Tell(
@@ -247,7 +251,7 @@ impl Presence {
 
     fn back(&mut self, uuid: u128, name: &str, acts: &mut Vec<Act>) -> Vec<Out> {
         acts.push(Act::Sleep(uuid, false));
-        vec![if self.config.afk_announce {
+        vec![if self.config.afk_announce && !self.quiet.contains(&uuid) {
             Out::All(format!("{name} is back."))
         } else {
             Out::Tell(uuid, "You are back.".into())
@@ -329,6 +333,30 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         (Presence::open(&dir, Config::default(), known).unwrap(), dir)
+    }
+
+    #[test]
+    fn a_vanished_player_is_never_announced() {
+        let (mut p, _dir) = open(vec![]);
+        p.config.afk_announce = true;
+        p.quiet.insert(A);
+        let (out, _) = p.tick(&[seen(A, 0.0)], "2026-10-31", 0, &[]);
+        assert!(
+            !out.iter().any(|o| matches!(o, Out::All(_))),
+            "no first join: {out:?}"
+        );
+        let afk = p.config.afk_minutes * 60_000;
+        let (out, acts) = p.tick(&[seen(A, 0.0)], "2026-10-31", afk, &[]);
+        assert!(
+            matches!(&out[..], [Out::Tell(A, _)]),
+            "AFK told to them only: {out:?}"
+        );
+        assert!(acts.contains(&Act::Sleep(A, true)));
+        let (out, _) = p.tick(&[seen(A, 5.0)], "2026-10-31", afk + 1_000, &[]);
+        assert!(
+            matches!(&out[..], [Out::Tell(A, _)]),
+            "back told to them only: {out:?}"
+        );
     }
 
     #[test]

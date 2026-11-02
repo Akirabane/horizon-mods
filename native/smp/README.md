@@ -59,6 +59,7 @@ header and footer).
 | `/nick <name>`, `/nick off`, `/nick` | operators of level 3 (with `ops_only`, the default): another name for you in chat and the Tab list, shown as `~name` (hovering it gives your real one); `/nick off` (anyone with a nickname) takes it off; `/nick` alone says how |
 | `/nick <player> <name\|off>` | operators of level 3: sets or takes off a player's nickname |
 | `/realname <nick>` | who goes by that nickname |
+| `/vanish`, `/vanish list` | operators of level 3: hides you from the other players, or shows you again; who is vanished |
 | `/invsee <player>`, `/endersee <player>` | operators of level 3: the player's inventory (main, hotbar, armour, off hand) or ender chest in a chest menu, on or off the server; click one of theirs to take it, one of yours to give it; every move in `audit.log`, a summary in `staff.log` |
 | `/sidebar off`, `/sidebar on`, `/sidebar` | hides the scoreboard sidebar for you (remembered), shows it again |
 
@@ -115,6 +116,14 @@ why. The menu is read again once a second while open; nothing runs when none is 
 before it is made (`invsee_take`, `invsee_put`: operator, player, inventory, item, count; a refused one again with
 its reason); closing the menu writes one line to the server log (`[smp] staff: ...`), `staff.log`, and the chat of
 the other operators on. Needs horizon#6106 (`native_inventory`, `native_move_stack`).
+
+**Vanish.** `/vanish` takes an operator of level 3 out of the Tab list and the world of every player below level 3,
+whatever the game mode (survival and creative too), and those players don't read them joining or leaving; operators of
+level 3 or more still see them, and are told who vanished. A vanished operator reads a subtitle the whole time
+(*Vanished: only operators see you*), isn't counted online (the sidebar, the Tab list's footer), doesn't hold the night up, isn't
+announced as AFK or on a first join, and can't be reached by name by those who don't see them (`/tpa`, `/trade`,
+`/coinflip`, `/playtime`). It lasts over a relog and a restart (`vanish.json`) until `/vanish` again. Needs
+horizon#7003 (`native_hide_player`).
 
 **Nicknames.** With `ops_only` (the default since 0.22) only operators of level 3 set nicknames: their own, or a
 player's with `/nick <player> <name>`; a player may take off the one given to them (`/nick off`). At each start, a
@@ -359,6 +368,7 @@ folder is untouched until the mod first runs on it; it changes no block and no p
 | `economy.json` | balances by player UUID, with the name last seen; `held`: coinflip stakes and lottery tickets being decided; `pools`: the Treasury, its insurance fund and other system pools; `treasury`: its income and spending by kind and its last movements; `ext`: other parts' state written in the same step as the money (`tax`: the week collected, land tax owed; `auction`: the listings, bids, mail and notes) |
 | `places.json` | the spawn, the warps, each player's homes, and the seconds each player has played (written once a minute) |
 | `nicks.json` | each player's nickname and when they last changed it |
+| `vanish.json` | the vanished operators by UUID, with their name |
 | `staff.log` | one line per `/invsee` or `/endersee` menu in which something moved: who, whose, what was taken and put |
 | `market.json` | what each player sold today (coins and items), for the daily limits |
 | `market_prices.json` | each item's price factor and history (minutes for 24 h, hours for 30 days: `[time, mid, traded, sold]`), what each player bought in the last day (no selling it back), the day's summary |
@@ -380,13 +390,13 @@ acting player's items (API 9), the server menus and `native_exchange_items` (API
 `native_run_command` (API 21), `native_destroy_block` (API 14), `native_right_click_block`, the acting player and the
 action bar (API 21), `native_block_spread`, `native_piston_move`, `native_explosion_detonate`, `native_fill_bucket` and
 `native_attack_entity` (API 22), `native_sidebar`, `native_tab_list` and `native_tick_stats` (API 49),
-`native_set_nickname` and `native_text_allowed` (API 62), the server tick and the world lifecycle.
+`native_set_nickname` and `native_text_allowed` (API 62), `native_hide_player` (horizon#7003), the server tick and the world lifecycle.
 `compatibility.json` names `"hooks": 58`.
 
 | File | What it is |
 |---|---|
-| `mixins/smp/horizon-mixin.toml` | The bundle: twenty-eight modules and the HEAD hooks |
-| `mixins/smp/smp_store.rs`, `smp_economy.rs`, `smp_market.rs`, `smp_recipes.rs`, `smp_shop.rs`, `smp_nick.rs`, `smp_trade.rs`, `smp_games.rs`, `smp_lottery.rs`, `smp_places.rs`, `smp_claims.rs`, `smp_board.rs`, `smp_presence.rs`, `smp_tax.rs`, `smp_auction.rs`, `smp_bank.rs`, `smp_report.rs`, `smp_jobs.rs`, `smp_market_prices.rs`, `smp_market_menu.rs`, `smp_market_chart.rs`, `smp_invsee.rs`, `smp_futures.rs` | The rules, no game types (a trade's stacks are a type parameter): added to the game as `game::smp_store`, `game::smp_economy`, `game::smp_market`, `game::smp_recipes`, `game::smp_shop`, `game::smp_nick`, `game::smp_trade`, `game::smp_games`, `game::smp_lottery`, `game::smp_places`, `game::smp_claims`, `game::smp_board`, `game::smp_presence`, `game::smp_tax`, `game::smp_auction`, `game::smp_bank`, `game::smp_report`, `game::smp_jobs`, `game::smp_market_prices`, `game::smp_market_menu`, `game::smp_market_chart`, `game::smp_invsee`, `game::smp_futures`; also this crate's modules (`src/lib.rs`), for their tests |
+| `mixins/smp/horizon-mixin.toml` | The bundle: thirty-two modules and the HEAD hooks |
+| `mixins/smp/smp_store.rs`, `smp_economy.rs`, `smp_market.rs`, `smp_recipes.rs`, `smp_shop.rs`, `smp_nick.rs`, `smp_trade.rs`, `smp_games.rs`, `smp_lottery.rs`, `smp_places.rs`, `smp_claims.rs`, `smp_board.rs`, `smp_presence.rs`, `smp_tax.rs`, `smp_auction.rs`, `smp_bank.rs`, `smp_report.rs`, `smp_jobs.rs`, `smp_market_prices.rs`, `smp_market_menu.rs`, `smp_market_chart.rs`, `smp_invsee.rs`, `smp_futures.rs`, `smp_vanish.rs` | The rules, no game types (a trade's stacks are a type parameter): added to the game as `game::smp_store`, `game::smp_economy`, `game::smp_market`, `game::smp_recipes`, `game::smp_shop`, `game::smp_nick`, `game::smp_trade`, `game::smp_games`, `game::smp_lottery`, `game::smp_places`, `game::smp_claims`, `game::smp_board`, `game::smp_presence`, `game::smp_tax`, `game::smp_auction`, `game::smp_bank`, `game::smp_report`, `game::smp_jobs`, `game::smp_market_prices`, `game::smp_market_menu`, `game::smp_market_chart`, `game::smp_invsee`, `game::smp_futures`, `game::smp_vanish`; also this crate's modules (`src/lib.rs`), for their tests |
 | `mixins/smp/glue.rs` | The state for the open world and the edges to the game's types (`game::smp_glue`) |
 | `mixins/smp/{register,command,tick,lifecycle,menu_clicked,menu_closed,destroy_block,right_click_block,block_spread,piston_move,explosion_detonate,fill_bucket,attack_entity}.rs` | One small helper per hook |
 | `mixins/smp/smp_casino.rs`, `smp_casino_roulette.rs`, `smp_casino_slots.rs`, `smp_casino_crash.rs`, `smp_casino_blackjack.rs` | The casino's rules, menus and effects (`game::smp_casino*`) |

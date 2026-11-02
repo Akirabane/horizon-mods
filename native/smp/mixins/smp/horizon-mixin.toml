@@ -99,6 +99,12 @@ name = "smp_trade"
 source = "smp_trade.rs"
 
 [[module]]
+id = "vanish"
+file = "crates/horizon-client/src/game.rs"
+name = "smp_vanish"
+source = "smp_vanish.rs"
+
+[[module]]
 id = "games"
 file = "crates/horizon-client/src/game.rs"
 name = "smp_games"

@@ -833,6 +833,46 @@ def trades(server, alex, steve, port, ctl, resources, root):
     return results, steve
 
 
+def vanish(server, alex, steve, out):
+    """/vanish: Alex (an operator) leaves Steve's world and Tab list, and reads a subtitle the whole time; Steve can't
+    reach her by name; /vanish again brings her back. Steve can't vanish."""
+    r = {}
+    players = lambda c: [e for e in c.run("entities", 64, "player")["entities"]]
+    subtitle = lambda c: c.run("messages", 1).get("subtitle") or ""
+    r["seen_before"] = len(players(steve))
+    r["refused"] = steve.say("/vanish")
+    assert any("Unknown" in l or "Only operators" in l or "permission" in l for l in r["refused"]), r
+    r["vanish"] = alex.say("/vanish")
+    assert any("You vanished" in l for l in r["vanish"]), r
+    time.sleep(2.5)
+    # Over a few seconds, not just once: the subtitle never lapses.
+    r["subtitles"] = []
+    for _ in range(4):
+        r["subtitles"].append(subtitle(alex))
+        time.sleep(1)
+    assert all(s == "Vanished: only operators see you" for s in r["subtitles"]), r
+    assert "Vanished" not in subtitle(steve), r
+    if r["seen_before"]:
+        assert not players(steve), "Steve no longer sees Alex"
+    alex.run("screenshot", str(Path(out).resolve() / "vanish-subtitle.png"))
+    steve.run("key", "tab", "down")
+    time.sleep(1)
+    steve.run("screenshot", str(Path(out).resolve() / "vanish-tab.png"))
+    steve.run("key", "tab", "up")
+    r["tpa"] = steve.say("/tpa Alex")
+    assert any("Alex is not on." in l or "Alex isn't on." in l for l in r["tpa"]), r
+    r["list"] = alex.say("/vanish list")
+    assert any("Vanished: Alex." in l for l in r["list"]), r
+    r["back"] = alex.say("/vanish")
+    assert any("You are visible again." in l for l in r["back"]), r
+    time.sleep(3)
+    assert "Vanished" not in subtitle(alex), r
+    if r["seen_before"]:
+        assert players(steve), "Steve sees Alex again"
+    time.sleep(6)  # the spam guard's window, for the steps after
+    return r
+
+
 def run(ctl, resources, out):
     if os.environ.get("SMP_PROOF") == "casino":
         # The casino's own proof (proof_casino.py), apart: it plays its games for a few minutes.
@@ -964,6 +1004,7 @@ def run(ctl, resources, out):
         results["polish"] = polish(server, alex, steve, out)
         results["presence"] = presence(server, alex, steve)
         results["nicks"] = nicks(server, alex, steve, out)
+        results["vanish"] = vanish(server, alex, steve, out)
         results["coinflip"], alex_wins = coinflips(alex, steve)
         results["lottery"], alex_lotto = lottery(alex, steve, alex_wins)
         alex_after = 415 + (100 if alex_wins else -100) + (20 if alex_lotto else -30)
