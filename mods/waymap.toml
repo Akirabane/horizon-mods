@@ -1,0 +1,31 @@
+id = "waymap"
+kind = "native-mod"
+name = "Waymap"
+summary = "Native Horizon waypoint mod with per-context storage, minimap dots, world markers, and full command suite."
+description = """
+Waymap — Native client-side waypoints for Horizon.
+Features:
+- World markers (3D, camera-projected)
+- Minimap dots (rotation-aware)
+- Waypoint list panel (bottom-left, 6 nearest)
+- Per-context storage (per server server_<host:port>.txt / world world_<folder>.txt)
+- Atomic saves (temp + atomic rename), legacy migration
+- Commands: /wp add|del|list|rename|color|clear|edit|help
+- Keys: N = add, B = toggle list"""
+authors = ["Aron"]
+owners = ["Lauch2"]
+license = "MIT"
+source = "https://github.com/Lauch2/horizon-waymap-mod"
+key = "RWS1B1QZPeYaSNKJr9rffnfHDSvB0AZj/Ul1B2pKrJ2XFBgKXL0FC96u"
+
+[[versions]]
+version = "0.1.4"
+published = "2026-11-02"
+game = "26.3"
+file = "waymap-0.1.4.hnmod"
+sha256 = "61bf573af5b2711453ca37a41b4ac2abc78ab827863bcafb9bfabe7dbf19ccd5"
+signature = """
+untrusted comment: signature from minisign secret key
+RUS1B1QZPeYaSBV67KshMqdN7e9tTtnd0aJ2j2hE0IOvZNQpo896FjvOETBrxu0OhB738CE44moftY8pvDMvF8o+dxXsfxQduAU=
+trusted comment: timestamp:1793662341\tfile:waymap-0.1.4.hnmod\thashed
+j0dStr7Yhq33q3uA+wVGhfiEfjdNx0XBCUIHiZ5AfD7vPhcCqtVnrnYx8KKcliC2UOMNBP0Kl3gOz2MyiqJSAQ=="""
