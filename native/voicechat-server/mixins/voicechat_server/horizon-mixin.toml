@@ -1,0 +1,60 @@
+[mod]
+id = "voicechat_server"
+version = "1.0.0"
+priority = 100
+
+# The commit it was tested on (the official server's engine).
+[compatibility]
+horizon_revision = "f4833621f9037e08c487b1779e8c030487e65cc2"
+
+# The handshake, the groups and the UDP relay: plain Rust with its tests.
+[[crate]]
+id = "relay"
+path = "relay"
+
+# The edges between the game and the relay.
+[[module]]
+id = "glue"
+file = "crates/horizon-client/src/game.rs"
+name = "voicechat_server"
+source = "glue.rs"
+
+[[injection]]
+id = "net"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_net_from_client"
+helper = "net.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "player", ty = "u128", value = "player" },
+  { name = "channel", ty = "&str", value = "channel" },
+  { name = "data", ty = "&[u8]", value = "data" },
+]
+
+[[injection]]
+id = "tick"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_server_tick"
+helper = "tick.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "phase", ty = "crate::game::native_lifecycle::ServerTickPhase", value = "phase" },
+]
+
+[[injection]]
+id = "logged_out"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_player_logged_out"
+helper = "logged_out.rs"
+bindings = [
+  { name = "player", ty = "u128", value = "player" },
+]
+
+[[injection]]
+id = "lifecycle"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_world_lifecycle"
+helper = "lifecycle.rs"
+bindings = [
+  { name = "phase", ty = "crate::game::native_lifecycle::WorldPhase", value = "phase" },
+]

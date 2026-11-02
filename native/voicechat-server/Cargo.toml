@@ -1,0 +1,4 @@
+# The relay crate the bundle adds to the game (mixins/voicechat_server/relay), with its tests.
+[workspace]
+members = ["mixins/voicechat_server/relay"]
+resolver = "3"
