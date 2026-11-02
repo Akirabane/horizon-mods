@@ -1,0 +1,16 @@
+id = "simple_hud"
+kind = "mod"
+name = "Simple Hud"
+summary = "Simple f3 like ui with coordinates, orientation, day counter, biome and time informations."
+authors = ["Rick-29"]
+owners = ["Rick-29"]
+license = "MIT"
+source = "https://github.com/Rick-29/simple-hud"
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-02"
+game = "26.3"
+file = "simple_hud-0.1.0.hmod"
+sha256 = "d3e7192be9720b1c1627ace4be1d2dae062e8690103dfe797b6319524c1c08d2"
+changelog = "First release"
