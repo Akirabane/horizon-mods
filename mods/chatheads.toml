@@ -1,18 +1,21 @@
 id = "chatheads"
 kind = "native-mod"
-name = "ChatHeads"
+name = "chatheads"
 summary = "A player's head left of every chat line they wrote."
-description = """
-Each chat line from a player gets their 8x8 skin face in the strip to its left, like the Chat Heads Java mod. Lines without a player (system messages, /me, wrapped continuations) stay as they are; the face fades with its line.
-
-Settings: Options > Mods > ChatHeads > Settings (on or off).
-
-Known limit: the chat's hit-test does not know about the 10 px indent, so clicking a link in chat lands 10 px left of its pixels."""
+description = "Each chat line from a player gets their 8x8 skin face in the strip to its left; lines without a player stay as they are, and the face fades with its line. The switch lives in Options > Mods."
 authors = ["Domanffe"]
 owners = ["Domanffe"]
 license = "MIT"
 source = "https://github.com/Domanffe/chatheads"
-icon = "https://horizon-rust.github.io/horizon-mods/icons/chatheads.png"
+icon = "https://horizon-rust.github.io/horizon-mods/icons/chatheads.pnghttps://horizon-rust.github.io/horizon-mods/icons/chatheads.png"
+
+[[versions]]
+version = "0.1.1"
+published = "2026-11-02"
+game = "26.3"
+file = "chatheads-0.1.1.hnmod"
+sha256 = "16f5e1db33255c550c087fcf3ed982a4be9abf61b547b470a08f471d309ad1fe"
+changelog = "Rebuilt on the 2026-11-01 Nightly (Horizon `4aa6854`). The three hook points it shares — `mods`, `settings`, `settings_click` — are named now instead of pinned to raw source targets, so a Horizon update that moves them no longer breaks the bundle."
 
 [[versions]]
 version = "0.1.0"
