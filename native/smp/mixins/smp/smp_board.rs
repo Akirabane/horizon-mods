@@ -1,10 +1,10 @@
 // The SMP's screens: a scoreboard sidebar, the player's own block first (their
-// name or nickname, balance, playtime, the players on), then the three
-// richest and the server's address, which a player hides with `/sidebar off`
-// (kept in `board.json`); and the Tab list's header and footer (the server's
-// name, its TPS and the players on). Nothing happens per tick: the ranking is
-// built once for everyone when a balance changed (at most once each
-// `min_seconds`) or every `refresh_seconds`; the players' own lines are looked
+// name or nickname, balance, playtime, the players on), then the server's
+// address, which a player hides with `/sidebar off` (kept in `board.json`);
+// and the Tab list's header and footer (the server's name, its TPS and the
+// players on). Nothing happens per tick: the balances are read once for
+// everyone when one changed (at most once each `min_seconds`) or every
+// `refresh_seconds`; the players' own lines are looked
 // at on the same `refresh_seconds`, and a sidebar is sent only to the players
 // whose lines changed and to newcomers. The Tab list goes out every
 // `tab_refresh_seconds`, and to a player who just joined. No game types. Added to the game as `game::smp_board`;
@@ -16,10 +16,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-/// The most of the richest a sidebar lists: vanilla's 15 lines, less the
-/// player's four, the two gaps, the heading and the address.
-const MAX_TOP: usize = 7;
-
 /// `config.json`'s `board` section.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
@@ -27,11 +23,9 @@ pub struct Config {
     /// The sidebar (each player may hide it).
     pub sidebar: bool,
     pub title: String,
-    /// How many of the richest players it lists (at most 7; 0: none).
-    pub top: usize,
     /// Its last line, the server's address ("": none).
     pub footer: String,
-    /// The ranking is built again, and the players' own lines looked at,
+    /// The balances are read again, and the players' own lines looked at,
     /// at least this often.
     pub refresh_seconds: i64,
     /// After a balance changed, at most this often.
@@ -50,7 +44,6 @@ impl Default for Config {
         Self {
             sidebar: true,
             title: "Horizon SMP".into(),
-            top: 3,
             footer: "play.playhorizon.dev".into(),
             refresh_seconds: 60,
             min_seconds: 5,
@@ -63,19 +56,14 @@ impl Default for Config {
     }
 }
 
-/// SMP 0.13's sidebar defaults (the richest ten), moved to 0.14's when a
-/// server never changed them. True when something changed.
+/// SMP 0.13's sidebar title (`Richest players`), moved to today's when a
+/// server never changed it. True when something changed.
 pub fn migrate(config: &mut Config) -> bool {
-    let mut changed = false;
     if config.title == "Richest players" {
         config.title = Config::default().title;
-        changed = true;
+        return true;
     }
-    if config.top == 10 {
-        config.top = Config::default().top;
-        changed = true;
-    }
-    changed
+    false
 }
 
 /// `board.json`.
@@ -95,16 +83,6 @@ pub enum Line {
     Stat { label: &'static str, value: String },
     /// An empty line.
     Gap,
-    /// The heading over the richest.
-    Heading,
-    /// One of the richest: their rank, name and balance; `me` on the
-    /// player's own line.
-    Top {
-        rank: usize,
-        name: String,
-        amount: String,
-        me: bool,
-    },
     /// The server's address.
     Footer(String),
 }
@@ -131,10 +109,9 @@ pub struct Board {
     path: PathBuf,
     data: Data,
     changed: bool,
-    /// Every account by balance, richest first: UUID, name, balance.
-    ranked: Vec<(u128, String, i64)>,
-    rank_of: HashMap<u128, usize>,
-    /// When the ranking was built, and over which economy revision.
+    /// Every account's balance.
+    balances: HashMap<u128, i64>,
+    /// When the balances were read, and at which economy revision.
     built_at: Option<i64>,
     built_revision: u64,
     /// What each player on was last sent.
@@ -180,8 +157,7 @@ impl Board {
             path,
             data,
             changed: false,
-            ranked: Vec::new(),
-            rank_of: HashMap::new(),
+            balances: HashMap::new(),
             built_at: None,
             built_revision: 0,
             sent: HashMap::new(),
@@ -204,7 +180,7 @@ impl Board {
         self.data.hidden.contains(&smp_store::uuid_string(uuid))
     }
 
-    /// Whether the ranking should be built again: the economy changed
+    /// Whether the balances should be read again: the economy changed
     /// (`revision`) and `min_seconds` passed, or `refresh_seconds` passed.
     pub fn due(&self, now: i64, revision: u64) -> bool {
         if !self.config.sidebar {
@@ -218,27 +194,17 @@ impl Board {
             || since >= self.config.refresh_seconds * 1000
     }
 
-    /// The ranking from the accounts (UUID, name, balance, any order).
-    pub fn rebuild(&mut self, mut accounts: Vec<(u128, String, i64)>, now: i64, revision: u64) {
-        accounts.sort_by(|a, b| b.2.cmp(&a.2).then_with(|| a.1.cmp(&b.1)));
-        self.rank_of = accounts
-            .iter()
-            .enumerate()
-            .map(|(i, a)| (a.0, i + 1))
-            .collect();
-        self.ranked = accounts;
+    /// The balances from the accounts (UUID, name, balance).
+    pub fn rebuild(&mut self, accounts: Vec<(u128, String, i64)>, now: i64, revision: u64) {
+        self.balances = accounts.into_iter().map(|(u, _, b)| (u, b)).collect();
         self.built_at = Some(now);
         self.built_revision = revision;
         self.stale = true;
     }
 
-    /// `uuid`'s sidebar: their own block, the richest from the ranking, the
-    /// address.
+    /// `uuid`'s sidebar: their own block, then the address.
     pub fn lines(&self, uuid: u128, me: &Me, online: usize) -> Vec<Line> {
-        let balance = self
-            .rank_of
-            .get(&uuid)
-            .map_or(0, |&rank| self.ranked[rank - 1].2);
+        let balance = self.balances.get(&uuid).copied().unwrap_or(0);
         let mut lines = vec![
             Line::Name(me.name.clone()),
             Line::Stat {
@@ -254,19 +220,6 @@ impl Board {
                 value: online.to_string(),
             },
         ];
-        let top = self.config.top.min(MAX_TOP);
-        if top > 0 && !self.ranked.is_empty() {
-            lines.push(Line::Gap);
-            lines.push(Line::Heading);
-            lines.extend(self.ranked.iter().take(top).enumerate().map(
-                |(i, (u, name, balance))| Line::Top {
-                    rank: i + 1,
-                    name: name.clone(),
-                    amount: compact(*balance),
-                    me: *u == uuid,
-                },
-            ));
-        }
         if !self.config.footer.is_empty() {
             lines.push(Line::Gap);
             lines.push(Line::Footer(self.config.footer.clone()));
@@ -429,7 +382,7 @@ mod tests {
     }
 
     #[test]
-    fn the_sidebar_shows_the_player_then_the_three_richest_then_the_address() {
+    fn the_sidebar_shows_the_player_then_the_address_and_no_ranking() {
         let d = dir();
         let mut b = Board::open(&d, Config::default()).unwrap();
         assert!(b.due(0, 0));
@@ -442,12 +395,6 @@ mod tests {
             label,
             value: value.into(),
         };
-        let top = |rank, name: &str, amount: &str, me| Line::Top {
-            rank,
-            name: name.into(),
-            amount: amount.into(),
-            me,
-        };
         assert_eq!(
             b.lines(11, &rocky, 42),
             vec![
@@ -456,27 +403,20 @@ mod tests {
                 stat("Playtime", "2h 05m"),
                 stat("Online", "42"),
                 Line::Gap,
-                Line::Heading,
-                top(1, "P12", "1,200", false),
-                top(2, "P11", "1,100", true),
-                top(3, "P10", "1,000", false),
-                Line::Gap,
                 Line::Footer("play.playhorizon.dev".into()),
             ]
         );
-        // A player with no account yet; a server with no address and no top.
+        // A player with no account yet; a server with no address.
         assert_eq!(b.lines(99, &rocky, 1)[1], stat("Balance", "0"));
         b.config.footer.clear();
-        b.config.top = 0;
         assert_eq!(b.lines(99, &rocky, 1).len(), 4);
         let _ = std::fs::remove_dir_all(d);
     }
 
     #[test]
-    fn the_old_defaults_move_to_the_new_ones_and_set_ones_stay() {
+    fn the_old_title_moves_to_the_new_one_and_a_set_one_stays() {
         let mut old = Config {
             title: "Richest players".into(),
-            top: 10,
             ..Config::default()
         };
         assert!(migrate(&mut old));
@@ -484,15 +424,21 @@ mod tests {
         assert!(!migrate(&mut old));
         let mut own = Config {
             title: "My server".into(),
-            top: 5,
             ..Config::default()
         };
         assert!(!migrate(&mut own));
-        assert_eq!((own.title.as_str(), own.top), ("My server", 5));
+        assert_eq!(own.title, "My server");
     }
 
     #[test]
-    fn sidebars_go_out_on_join_on_a_new_ranking_and_on_the_refresh() {
+    fn an_old_config_with_a_top_still_reads() {
+        let old = serde_json::json!({ "title": "Horizon SMP", "top": 3 });
+        let c: Config = serde_json::from_value(old).unwrap();
+        assert_eq!(c, Config::default());
+    }
+
+    #[test]
+    fn sidebars_go_out_on_join_on_a_balance_change_and_on_the_refresh() {
         let d = dir();
         let mut b = Board::open(&d, Config::default()).unwrap();
         b.rebuild(accounts(3), 0, 1);
@@ -511,11 +457,12 @@ mod tests {
         assert!(b.due(5_000, 2));
         b.rebuild(accounts(3), 5_000, 2);
         assert!(b.updates(5_000, &[1, 2], me).is_empty(), "same lines");
-        // Player 1 gets richer: everyone's top changes.
+        // Player 1 gets richer: only their own sidebar changes.
         let mut a = accounts(3);
         a[0].2 = 1_000;
         b.rebuild(a, 10_000, 3);
-        assert_eq!(b.updates(10_000, &[1, 2], me).len(), 2);
+        let sent = b.updates(10_000, &[1, 2], me);
+        assert_eq!(sent.iter().map(|s| s.0).collect::<Vec<_>>(), vec![1]);
         // A newcomer gets theirs at once, and only they are looked at.
         asked.set(0);
         assert_eq!(b.updates(11_000, &[1, 2, 3], me).len(), 1);

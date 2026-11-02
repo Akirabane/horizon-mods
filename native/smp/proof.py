@@ -453,7 +453,7 @@ def world_guard(server, alex, steve):
 
 
 def board(alex, steve, out):
-    """The scoreboard sidebar (the player's own block, the richest, the address) and the Tab list; /sidebar off
+    """The scoreboard sidebar (the player's own block, then the address) and the Tab list; /sidebar off
     hides it, on shows it again."""
     r = {}
     side = lambda c: c.run("status").get("sidebar")
@@ -463,9 +463,8 @@ def board(alex, steve, out):
             break
         time.sleep(0.5)
     assert r["sidebar"]["objective"] == "horizon:native_sidebar" and r["sidebar"]["title"] == "Horizon SMP", r
-    # Steve's name, balance, playtime and the players on; a gap, "Richest", Alex and Steve (the two accounts); a gap,
-    # the address.
-    assert len(r["sidebar"]["scores"]) == 10, r
+    # Steve's name, balance, playtime and the players on; a gap, the address. No ranking of the richest.
+    assert len(r["sidebar"]["scores"]) == 6, r
     # Holders starting with '#' would be hidden from the sidebar (only the title would show).
     assert not any(o.startswith("#") for o in r["sidebar"]["scores"]), r
     steve.run("key", "tab", "down")

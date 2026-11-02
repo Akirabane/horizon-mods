@@ -9,7 +9,7 @@ lines, vanilla chest menus the server fills with ordinary items (the trade menu)
 bar, boss bars and the sidebar).
 
 This version: the economy with its Treasury and taxes, the auction house, the bank, the server market and its `/shop` menu, player trades, the coinflip, the lottery, places (spawn, homes, warps,
-teleport requests, the rules), land claims, and the scoreboard (a sidebar with your balance, playtime and the richest players, the Tab list's
+teleport requests, the rules), land claims, and the scoreboard (a sidebar with your balance and playtime, the Tab list's
 header and footer).
 
 | Command | Does |
@@ -239,14 +239,14 @@ items, shearing, leads), which waits for Horizon's hook (#4648). The server's `s
 the spawn.
 
 **The scoreboard.** A sidebar on the right, titled `board.title` ("Horizon SMP"): your own block first (your name, or
-your nickname; your balance, `125.4k`, `3.2M`; your playtime, `2h 05m`; the players online), then the `board.top` (3)
-richest players with their balance, then `board.footer` (`play.playhorizon.dev`, empty for none). The ranking is
-built once for everyone, only when a balance changed (at most every `board.min_seconds`, 5) or every
-`board.refresh_seconds` (60); each player's own lines are looked at on the same `board.refresh_seconds`, and a
+your nickname; your balance, `125.4k`, `3.2M`; your playtime, `2h 05m`; the players online), then `board.footer`
+(`play.playhorizon.dev`, empty for none). It lists no ranking: `/baltop` does (`board.top`, of 0.14 to 0.29, is
+ignored). The balances are read once for everyone, only when one changed (at most every `board.min_seconds`, 5) or
+every `board.refresh_seconds` (60); each player's own lines are looked at on the same `board.refresh_seconds`, and a
 sidebar is sent only to the players whose lines changed and to newcomers: nothing runs per tick per player. The Tab
 list shows `board.tab_header` and `board.tab_footer` (`{server}`, `{tps}`, `{players}` filled in, every
 `board.tab_refresh_seconds`, 5). `board.sidebar` and `board.tab` turn either off; `board.server_name` names the Tab
-list. A server that kept 0.13's defaults (`Richest players`, the top 10) gets these at its first start of 0.14. The
+list. A server that kept 0.13's title (`Richest players`) gets `Horizon SMP` at its first start. The
 sidebar uses one scoreboard objective of its own (`horizon:native_sidebar`) and leaves the world's scoreboard alone.
 
 **Presence.** A player's first join is announced to everyone (`presence.first_join`, empty for none) and they read
