@@ -1,0 +1,27 @@
+id = "unlimited_stacks_mod"
+kind = "native-mod"
+name = "Infinite Stacks"
+summary = "Raise the item stack limit past 64, up to 2 billion"
+description = """
+Items that normally stack to 64 stack as high as you want. Set any limit from 1 to 2,147,483,647 in **Options › Mods › Infinite Stacks** without restarting.
+
+**What changes**
+- All 64-stack items respect the new limit. Tools, armour, and 16-stack items (eggs, ender pearls) are not affected.
+- Stacks above 999 show a compact label on the HUD (`1k`, `1.5m`, `2.14b`) scaled to fit the slot.
+- The setting is saved per world folder and survives restarts.
+
+**Requirements**
+Both the server and every client must run the mod. A vanilla client connected to a modded server will still see stacks capped at 99."""
+authors = ["Barthomolew"]
+owners = ["bartekchomik26-dotcom"]
+license = "MIT"
+source = "https://github.com/bartekchomik26-dotcom/InfiniteStacks-Rust"
+icon = "https://media.forgecdn.net/avatars/thumbnails/564/314/256/256/637920478481541062.png"
+
+[[versions]]
+version = "1.2.5"
+published = "2026-11-02"
+game = "26.3"
+file = "unlimited_stacks_mod-1.2.5.hnmod"
+sha256 = "c560f57ab1543617c1564b6b4112c9dcd1f9ddd9b0e2574fefb57b5ca0b89c43"
+changelog = "nothing. just works"
