@@ -1,0 +1,32 @@
+id = "tectonic_horizon"
+kind = "native-mod"
+name = "Tectonic-Horizon"
+summary = "Unofficial native port of Tectonic: mountain ranges, underground rivers and configurable terrain."
+description = """
+An unofficial native Rust port of [Tectonic](https://github.com/Apollounknowndev/tectonic) by Apollo (Apollounknowndev), based on Tectonic 3.0.1 revision 0761b561062de01b701d2571401f625c31059a9a under CC0-1.0. Not made or endorsed by Apollo or the Horizon project.
+
+Mountain ranges, terrain density recipes, underground rivers and configurable terrain for Horizon 26.3. Native source mod: install in the launcher, then Build; it runs with the game's account permissions. No Minecraft code or assets are included.
+
+Enable under Options > Mods before opening a world. Configuration is config/tectonic-horizon.json in the game home; missing fields use defaults. Restart after edits. Settings affect newly generated chunks; create a fresh world to avoid terrain seams. Use increased height only for a new world.
+
+Pinned upstream Horizon: 0409f619a6a5529c7278306a49476eafb3913e8a. Horizon Mixins: ddd9700b21997c95d95ac6ee5ecafe3830cf622a. Other revisions are not covered by this release's validation. See the source repository's docs/VALIDATION.md for evidence.
+
+Known differences: no claim of block-for-block Java parity; native river-decoration placement/randomness differs from Lithostitched; Java configuration UI and Terralith/CliffTree overlays are omitted. Other biome packs need their own Horizon ports.
+
+![Tectonic landscape in Horizon](https://raw.githubusercontent.com/eltanschauung/tectonic-horizon/main/docs/screenshots/tectonic-landscape.png)
+
+Screenshot captured 2026-11-01 in our Horizon fork, supplied by the author; it illustrates terrain rather than validation of this release's upstream pin. Minimap is a separate mod.
+
+Original Tectonic by Apollo; Horizon adaptation by eltanschauung with Codex assistance. Original license, notices and input-source hashes are retained in the source repository."""
+authors = ["eltanschauung", "Apollo (original Tectonic)"]
+owners = ["eltanschauung"]
+license = "CC0-1.0"
+source = "https://github.com/eltanschauung/tectonic-horizon"
+
+[[versions]]
+version = "0.3.1"
+published = "2026-11-02"
+game = "26.3"
+file = "tectonic_horizon-0.3.1.hnmod"
+sha256 = "b3ce7fb49c18c81390698483fe01b04e79c9feb78b961562dc0a0211fdbc8c6d"
+changelog = "Unofficial Tectonic 3.0.1 terrain port for Horizon 26.3. Version 0.3.1 pins upstream Horizon 0409f619a6a5529c7278306a49476eafb3913e8a and Horizon Mixins ddd9700b21997c95d95ac6ee5ecafe3830cf622a. Includes native terrain configuration, river decoration and upstream/fork enablement adapters."
