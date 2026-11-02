@@ -1,0 +1,42 @@
+id = "voicechat"
+kind = "native-mod"
+name = "Horizon Voice Chat"
+summary = "Talk with Simple Voice Chat players: proximity voice, groups, push to talk and a menu (V)."
+description = """
+An unofficial client for the [Simple Voice Chat](https://github.com/henkelmax/simple-voice-chat) protocol. On a server with the Simple Voice Chat mod or plugin, you can talk with players who use the Java mod on the regular launcher.
+
+## What it does
+
+- **Menu (V):** connection status, microphone and voice chat on/off, push to talk or voice activation, voice volume, microphone gain and activation level with a live meter, and every hotkey as it is bound now. The right side lists the server's groups with their members: join (with a password if needed), leave, or create a group.
+- **Talking:** hold Caps Lock (push to talk) or use voice activation. Voices come from where players stand, getting quieter with distance and panned left or right.
+- **Groups:** each player's group shows above their head. `/vc join <group> [password]`, `/vc leave`, `/vc create <name> [password] [normal|open|isolated]` and `/vc groups` work too.
+- **Keys** (Options > Mods > Horizon Voice Chat): menu (V), push to talk (Caps Lock), whisper (unbound), mute (J), voice chat off/on (K).
+- **Protocols:** Simple Voice Chat 2.6.x (compatibility 20) and 2.7 (21).
+
+## What it touches
+
+- It reads the server's `voicechat:*` custom payloads and other players' positions inside `game::remote`, so it is pinned to Horizon `c9d474d`.
+- It opens one UDP connection to the server's voice chat port, encrypted with AES-128-GCM using the secret the server sends.
+- It uses the default microphone and speakers through cpal, and loads the system **libopus** at run time (the `opus` package must be installed).
+- It keeps its settings in Horizon's own mod settings. It contacts no host other than the Minecraft server you are on (and DNS, for the server's SRV record).
+
+## Not affiliated
+
+This project is not made, endorsed or supported by Max Henkel or the Simple Voice Chat project. It contains none of Simple Voice Chat's code: everything is written from scratch in Rust.
+
+## Tested
+
+The engine's unit tests pass, and the modded client type-checks. Live, against Paper 26.3 with the Simple Voice Chat 2.6.27 plugin, it authenticated and connected, a test tone was heard through the server, and groups and labels came from the server. Not tested yet: the menu in the real game, a real microphone, 2.7 servers, and talking with the Java mod itself.
+"""
+authors = ["Nirokx"]
+owners = ["Nirokx"]
+license = "MIT"
+source = "https://github.com/Nirokx/horizon-voice-chat"
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-02"
+game = "26.3"
+file = "voicechat-1.0.0.hnmod"
+sha256 = "7a12ef9e691d10128ea081906a313d597c67f22897380618871477f9dd8eabf1"
+changelog = "First release."
