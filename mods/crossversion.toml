@@ -1,0 +1,33 @@
+id = "crossversion"
+kind = "native-mod"
+name = "CrossVersion"
+summary = "Allows connecting to older servers"
+description = """
+A native Horizon mod that lets the 26.3 client join servers that speak an older Minecraft protocol.
+
+Horizon talks exactly one protocol (777, Minecraft 26.3). This mod watches a join, asks the server what protocol it speaks in its status reply, and — if it is not 26.3 — starts a ViaProxy instance on a loopback port and points the join at it. The proxy speaks 26.3 to Horizon and the server's own version to the server. Nothing else in the client changes, and a join to a 26.3 server never starts anything.
+
+Horizon client ──26.3──▶ 127.0.0.1:<port>  ViaProxy  ──server's version──▶ the server
+
+Tested against a vanilla 1.20.1 server (protocol 763) and a 1.21.1 server (767): world load, chunks, entities, chat and the tab list all work. ViaProxy itself covers servers from 1.0 to 26.3. An online-mode 1.20.1 server accepts the player's own account through the proxy.
+
+Signed chat works too: from Horizon's Nightly 2026-11-01 on, the client holds a chat key pair and signs its messages, so online-mode servers with enforce-secure-profile=true accept them through the proxy (<JustKarkat> …, not [Not Secure]). On Horizon before that nightly (the mod's 0.1.x pinned an earlier commit) secure-profile servers refused the chat and said "Chat disabled due to missing profile public key" — the client's gap, not the proxy's."""
+authors = ["JustKarkat"]
+owners = ["JustKarkat"]
+license = "MIT"
+source = "https://github.com/JustKarkat/horizon-crossversion"
+icon = "https://github.com/JustKarkat/horizon-crossversion/blob/master/icon.png?raw=true"
+key = "RWTcPJHJYjPW0pV3lPwr45crCu0wJxW5HbDLc3fr3Eom1TzxO++kHOo4"
+
+[[versions]]
+version = "0.4.0"
+published = "2026-11-02"
+game = "26.3"
+file = "crossversion-0.4.0.hnmod"
+sha256 = "5cf5ed0c16636a72da77d00f25923b2dc9938b66bcba2fc3571f2220f99f3f30"
+signature = """
+untrusted comment: signature from minisign secret key
+RUTcPJHJYjPW0sufgxegROTP9Mp0mOnggtNsendRR9PUL9gvOQAXIpX+gOSNinE/Xsze7pzBkvi7kgWqmR3hAeM/GZ8Wal97CQU=
+trusted comment: timestamp:1793593673\tfile:crossversion-0.4.0.hnmod\thashed
+NErBRO3f7O8sN/aQHf7Fsrqanubwgo9rCm/kuxSP0Oux21LiX6jcuMxeMykUmjtWP6AJDptFjdyAHlA7m0P9Dw=="""
+changelog = "Initial push for CrossVersion"
