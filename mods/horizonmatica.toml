@@ -1,0 +1,64 @@
+id = "horizonmatica"
+kind = "native-mod"
+name = "Horizonmatica"
+summary = "Litematica for Horizon: schematics as ghost blocks, a verifier, material lists and a printer that builds the missing blocks for you."
+description = """
+Horizonmatica is a re-creation of **Litematica** (with its **printer**) for Horizon. Load a schematic, see it as ghost blocks in your world, check your build against it, get a material list, and let the printer place the missing blocks.
+
+## Features
+- **Formats:** `.litematic` (versions 1–7, several regions), `.schem` (Sponge v1–v3: WorldEdit, FAWE, Amulet, Axiom), `.schematic` (MCEdit / WorldEdit up to 1.12) and vanilla structure `.nbt`. Older files are upgraded with Horizon's data fixer, the same way old worlds are.
+- **Overlay:** missing blocks as translucent real block models (chests, banners, heads and other block entities included), optionally visible through walls.
+- **Verifier:** wrong block (red), wrong state (orange), extra block (pink), plus a progress HUD.
+- **Layers:** all / one layer / above / below / range.
+- **Placement:** move, rotate, mirror; a move mode for mouse wheel and arrow keys. Each placement is remembered per world and dimension and restored when you join again.
+- **Material list:** missing, total and carried, with item icons, in the HUD, in chat or in the menu.
+- **Menu (M):** a screen of its own, drawn with the game's widgets.
+- **Printer:** places one missing block within reach every few ticks, from the bottom up. It only clicks when Horizon's own placement logic says the click produces exactly the wanted state (stairs, slabs, logs, furnaces…). Redstone-aware order, repeater, comparator and note block setup after placing, double slabs and stacks, chests, falling blocks. The camera never moves.
+
+Usage: put schematics into `schematics/` next to `options.txt` of your instance (`/hm folder` shows the path), then `/hm load <name>` or press **M**. All commands and keys are in the [README](https://github.com/keksi2k/horizonmatica#usage).
+
+## What it does and doesn't do
+- **Reads** only files in the instance's `schematics/` folder, and creates that folder if it's missing.
+- **Writes** nothing itself: settings and remembered placements go through Horizon's mod settings.
+- **Network:** no connections of its own. The only thing sent to a server is what the printer does: the same block-placing clicks a player would make (with the matching look direction), and hotbar slot changes.
+- **"Open folder"** in the menu opens the schematics folder in your file manager through Horizon's own function.
+- No telemetry, no downloads, no code run from schematic files. Schematics are parsed as data only.
+
+⚠️ On other people's servers, automatic placing may break the rules or trip anti-cheat. The printer is off until you turn it on (`K` or `/hm printer on`). Its *air place* option (on by default) is noticed by anti-cheat plugins such as Grim.
+
+**Version:** native mods use game internals, so Horizonmatica is pinned to one Horizon commit (currently Nightly 2026-11-01, `4aa6854`). A new Nightly needs a new release.
+
+## Credits
+The idea, the way it's used, the file format and the behaviour come from **[Litematica](https://github.com/maruohon/litematica)** by masa (maruohon), maintained by **[Sakura-Ryoko](https://github.com/sakura-ryoko/litematica)**, and from **[Litematica Printer](https://github.com/aleksilassila/litematica-printer)** by aleksilassila. Horizonmatica is not an official project of these authors, isn't made or endorsed by them, and contains none of their code. Only the file format and the behaviour are re-created. If you like it, go and support the originals.
+
+Menus built with [horizon-menus](https://github.com/keksi2k/horizon-menus). MIT licensed."""
+authors = ["keksi2k"]
+owners = ["keksi2k"]
+license = "MIT"
+source = "https://github.com/keksi2k/horizonmatica"
+icon = "https://raw.githubusercontent.com/keksi2k/horizonmatica/main/icon.png"
+key = "RWS+BRoCJslNCFapck3cbG2VFQcjlr1MUH5m3+CWA8zhJecoBoja7X94"
+
+[[versions]]
+version = "0.1.1"
+published = "2026-11-02"
+game = "26.3"
+file = "horizonmatica-0.1.1.hnmod"
+sha256 = "2ddc562dd2ea0f9a76a47eb761c64c803def68a8c81b92cb5d15ec26c5d432aa"
+signature = """
+untrusted comment: signature from minisign secret key\r
+RUS+BRoCJslNCOkWo88+wHXYmMr1C6TzXpxZIGwzFuUN+K4lbd9RT6tLC8sIQQ5uD3QZQZx2rawTHRJvUvRhCgUNDoqhIek18w4=\r
+trusted comment: timestamp:1793599192\tfile:horizonmatica-0.1.1.hnmod\thashed\r
+BmryY+OjbG0qZnnFappBEO2tR8zx+a5BmqBFA4AVytjqvLnuvDWYE0PUwZLLodqbN218NM0JluVGpstnI3DvBQ=="""
+changelog = """
+First release in the registry.
+
+- Loads .litematic, .schem (Sponge v1–v3), .schematic (MCEdit, 1.12 ids) and structure .nbt; older files are upgraded with Horizon's data fixer
+- Ghost overlay with real block models, see-through mode, verifier colours and layer modes
+- Placements remembered per world and dimension; move mode, rotate, mirror
+- Own menu screen (M) and a material list with item icons
+- Printer: places missing blocks within reach, checked against the game's own placement logic; the camera never moves
+
+Since 0.1.0 on GitHub: loading another schematic no longer shows the previous one's blocks.
+
+Built for Horizon Nightly 2026-11-01 (c9d474d, hook API 80)."""
