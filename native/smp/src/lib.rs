@@ -49,3 +49,6 @@ pub mod smp_shop;
 pub mod smp_store;
 #[path = "../mixins/smp/smp_trade.rs"]
 pub mod smp_trade;
+
+#[path = "../mixins/smp/smp_config.rs"]
+pub mod smp_config;

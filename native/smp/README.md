@@ -8,6 +8,16 @@ Players install nothing: it speaks only what a stock Horizon client already show
 lines, vanilla chest menus the server fills with ordinary items (the trade menu); later sounds, titles, the action
 bar, boss bars and the sidebar).
 
+**Unlimited gameplay (0.31).** On every world load, the SMP removes market daily sales and incoming-payment quotas,
+market resale waiting periods and minute trade throttles, casino daily win/loss quotas and bet cooldowns,
+coinflip cooldowns, lottery ticket quotas, auction listing quotas and percentage bid increments, home and claim
+playtime quotas, teleport warmups/cooldowns, nickname playtime/cooldown requirements, and command rate limits.
+Existing `config.json` limits are migrated automatically and saved. Bets accept any positive amount supported by
+the economy. Home and claim counts use the platform's representable maximum; auction durations retain only a
+safe timestamp ceiling. Permission checks, feature enable switches, inventory capacity, checked money arithmetic,
+claim protection, nickname validation, market pricing curves and game rules still apply.
+The limit settings and old defaults described below are retained for compatibility; the world-load policy overrides them.
+
 This version: the economy, the auction house, the server market and its `/shop` menu, player trades, the coinflip, the lottery, places (spawn, homes, warps,
 teleport requests, the rules), land claims, and the scoreboard (a sidebar with your balance, playtime and the richest players, the Tab list's
 header and footer).

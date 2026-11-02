@@ -10,14 +10,14 @@
 use crate::game::{
     Game,
     smp_auction::{self, AuctionHouse},
-    smp_report::{self, Report},
+    smp_report::Report,
     native_server::{NativeCommand, NativeServerPlayer, NativeSidebar},
     smp_board::{self, Board, Line},
-    smp_casino::{self, Casino},
+    smp_casino::Casino,
     smp_casino_glue,
     smp_claims::{self, Claims},
     smp_economy::{self, Economy, Out, Player},
-    smp_games::{self, Games},
+    smp_games::Games,
     smp_lottery::Lottery,
     smp_places::{self, Body, Place, Places},
     smp_presence::{self, Presence},
@@ -39,48 +39,9 @@ use std::{path::PathBuf, sync::Mutex};
 /// The mod's id, name and version.
 pub const ID: &str = "smp";
 pub const NAME: &str = "SMP";
-pub const VERSION: &str = "0.30.1";
+pub const VERSION: &str = "0.31.0";
 
-/// `config.json` in `world/horizon-smp/`, written with its defaults the
-/// first time, and again with the keys a newer version adds (values kept).
-#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
-#[serde(default)]
-pub struct Config {
-    #[serde(flatten)]
-    pub economy: smp_economy::Config,
-    pub market: smp_market::Config,
-    pub shop: smp_shop::Config,
-    pub gambling: smp_games::Config,
-    pub casino: smp_casino::Config,
-    pub places: smp_places::Config,
-    pub claims: smp_claims::Config,
-    pub board: smp_board::Config,
-    pub presence: smp_presence::Config,
-    pub nicks: smp_nick::Config,
-    pub auction: smp_auction::Config,
-    pub report: smp_report::Config,
-    pub web: WebPush,
-}
-
-/// `config.json`'s `web`: where the web pages (`web/market.json`,
-/// `web/economy.json`) are sent for the website, `url` + `/<name>`, with
-/// `token` as the bearer (off while empty). Only what changed is sent, at
-/// most once a minute, gzipped, by the thread that writes the market page.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-#[serde(default)]
-pub struct WebPush {
-    pub url: String,
-    pub token: String,
-}
-
-impl Default for WebPush {
-    fn default() -> Self {
-        Self {
-            url: "https://kira-production-500e.up.railway.app/smp/ingest".into(),
-            token: String::new(),
-        }
-    }
-}
+pub use crate::game::smp_config::{Config, WebPush};
 
 /// The SMP of the open world.
 pub struct Smp {
@@ -162,6 +123,7 @@ fn open(dir: PathBuf) -> Smp {
         }
     };
     let mut config = config;
+    let write = config.remove_limits() | write;
     // Prices never edited: today's defaults (the balances are untouched).
     let write = smp_market::migrate(&mut config.market) | write;
     // 0.13's sidebar (the richest ten), never edited: 0.14's scoreboard.

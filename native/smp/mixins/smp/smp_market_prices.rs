@@ -41,7 +41,7 @@ pub struct Dynamic {
     /// kept so older configs read the same.
     pub max_trade_impact_percent: f64,
     pub max_player_impact_percent: f64,
-    /// How far the price may move within one minute (either way).
+    /// How far the price may move within one minute (either way); 0: unlimited.
     pub max_minute_move_percent: f64,
     /// What a player bought from the market can't be sold back to it for
     /// this long (that many of that item).
@@ -300,7 +300,7 @@ impl Book {
             return (f64::from(n) * mid * s0.exp(), s0, n);
         }
         let mut done = n;
-        if edge < bound {
+        if band > 0.0 && edge < bound {
             // The band comes first: as many as fit in it.
             let fit = (edge.max(0.0) / delta + 1e-9).floor();
             if fit < f64::from(n) {
@@ -675,6 +675,23 @@ mod tests {
         let fam = vec!["minecraft:hay_block".to_string()];
         b.trade(&c, "minecraft:wheat", &fam, 2.0, w, 64, true);
         assert_eq!(b.factor("minecraft:hay_block"), b.factor("minecraft:wheat"));
+    }
+
+    #[test]
+    fn unlimited_band_trades_every_item_and_preserves_round_trip_safety() {
+        let mut c = Dynamic::default();
+        c.max_minute_move_percent = 0.0;
+        c.validate();
+        for buy in [false, true] {
+            let mut b = book();
+            let (value, after, count) = b.fill(&c, "minecraft:diamond", 200.0, 0.01, 100_000, buy);
+            assert_eq!(count, 100_000);
+            b.track("minecraft:diamond").factor = after.exp();
+            let (returned, _, count) = b.fill(&c, "minecraft:diamond", 200.0, 0.01, count, !buy);
+            assert_eq!(count, 100_000);
+            let (paid, received) = if buy { (value, returned) } else { (returned, value) };
+            assert!(to_get(received) <= to_pay(paid));
+        }
     }
 
     #[test]
