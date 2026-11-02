@@ -13,8 +13,21 @@ authors = ["soufi"]
 owners = ["soufied"]
 license = "MIT"
 source = "https://github.com/soufied/AppleSkin-Horizon"
-icon = "icons/appleskin.png"
+icon = "https://raw.githubusercontent.com/soufied/AppleSkin-Horizon/refs/heads/main/icons/appleskin.png"
 key = "RWT6eNq4e5WfVDA2lzOOi6XCm/+jJgilqT1+HUUM33ie5MCjcRfSg760"
+
+[[versions]]
+version = "0.1.2"
+published = "2026-11-02"
+game = "26.3"
+file = "appleskin-0.1.2.hnmod"
+sha256 = "627d1e7c4b4fa3dd191a4ff5887fe38b20ceb7d7d7f1197c1e03d1f25b6b6b92"
+signature = """
+untrusted comment: signature from minisign secret key
+RUT6eNq4e5WfVJqiP4tt8vQGW6sVLSxiLXLeVunyGuyfS9aZWqPilg77biu/2B+HUDS1FlBE31F/HOhBR2YWy0GSmdwhUO7xNAs=
+trusted comment: timestamp:1793633868\tfile:appleskin-0.1.2.hnmod\thashed
+IW9M2qJIktmQDlARS6ZTJ1IA9BoGCfMZvatnjIlSpVPkpeG/Qpr5QKRRRPFhnZa93a5KcUG34ok+cgFxipRjBg=="""
+changelog = "animation fix"
 
 [[versions]]
 version = "0.1.1"
