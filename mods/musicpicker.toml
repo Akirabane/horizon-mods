@@ -1,0 +1,16 @@
+id = "musicpicker"
+kind = "native-mod"
+name = "music picker"
+summary = "music picker - pick any song in minecraft"
+description = "music picker - pick any song in minecraft"
+authors = ["laal75"]
+owners = ["laal75"]
+license = "MIT"
+source = "https://github.com/laal75/muiscpicker-horizon"
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-02"
+game = "26.3"
+file = "musicpicker-0.1.0.hnmod"
+sha256 = "84b639eb1a33d4b6a2fde939093f6e6b15f5eaaa58f3dc5ec674d58d494f4282"
