@@ -1,0 +1,24 @@
+id = "crossversion"
+kind = "native-mod"
+name = "Cross Version"
+summary = "Join servers on older Minecraft versions: picks the version per server, runs ViaProxy locally, and logs in with an account added to the proxy."
+description = "**Cross-version** lets Horizon join servers running an older Minecraft version. On a join it reads what version the server speaks, and if it isn't 26.3 it starts ViaProxy on a loopback port so the server is spoken to in its own version — a 26.3 server is never touched. The server list marks those servers joinable (green bars, version in green above the MOTD), Edit Server and Direct Connect carry a click-to-change version switch for servers whose status lies, and online-mode works by logging in with a Microsoft account you add to ViaProxy once from its settings page. Horizon itself never signs anything, so a joined server can't use your session elsewhere. It downloads ViaProxy (GPL-3.0, hash-pinned) on first use and needs Java 17+; nothing else."
+authors = ["JustKarkat"]
+owners = ["JustKarkat"]
+license = "MIT"
+source = "https://github.com/JustKarkat/horizon-crossversion/"
+icon = "https://github.com/JustKarkat/horizon-crossversion/blob/master/icon.png?raw"
+key = "RWTcPJHJYjPW0pV3lPwr45crCu0wJxW5HbDLc3fr3Eom1TzxO++kHOo4"
+
+[[versions]]
+version = "0.7.0"
+published = "2026-11-02"
+game = "26.3"
+file = "crossversion-0.7.0.hnmod"
+sha256 = "281f45baeea2b65b091d5464c57eeba7b3d3be47eaddcbec6acf33975cf7ec40"
+signature = """
+untrusted comment: signature from minisign secret key
+RUTcPJHJYjPW0sZHADCefonT57e7aWgGLjF1DWTY6wS9TgmVVYfztD8u1sozK/UoTsXdbHjijRvSdmt5HHdowtIi4PFO0CT9EAU=
+trusted comment: timestamp:1793647010\tfile:crossversion-0.7.0.hnmod\thashed
+CZX329b7UHVbmCZAgb+Qfo4B1UMGXLH733SnAZh0sgqjrwm1j7uLYI8kHO44qwO0Np1NG1gpvqwzsiuPAMGKDg=="""
+changelog = "A version switch on Edit Server and Direct Connect: choose what version ViaProxy tells that server it is (auto, 1.8, 1.9, 1.12.2, 1.16.5, 1.20.1, 1.21.1, 1.21.4, 26.3), kept per address, for servers whose status reports the wrong version. Online-mode still logs in through the account added to ViaProxy; the client never signs."
