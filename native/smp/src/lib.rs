@@ -53,6 +53,8 @@ pub mod smp_report;
 pub mod smp_shop;
 #[path = "../mixins/smp/smp_store.rs"]
 pub mod smp_store;
+#[path = "../mixins/smp/smp_switch.rs"]
+pub mod smp_switch;
 #[path = "../mixins/smp/smp_tax.rs"]
 pub mod smp_tax;
 #[path = "../mixins/smp/smp_trade.rs"]

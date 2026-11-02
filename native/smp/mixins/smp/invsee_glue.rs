@@ -14,7 +14,7 @@ use crate::game::{
     smp_economy::{Out, Player},
     smp_glue,
     smp_invsee::{self, Cell, Invsee, Kind, Move},
-    smp_store,
+    smp_store, smp_switch,
 };
 use horizon_client::{
     items::ItemStack,
@@ -88,6 +88,11 @@ pub(in crate::game) fn perform(game: &mut Game<'_>, player: &NativeServerPlayer,
         return;
     }
     *ran = true;
+    if !smp_glue::part_on(game, smp_switch::Part::Invsee) {
+        let refusal = smp_glue::refusal(smp_switch::Part::Invsee);
+        game.native_feedback(Text::literal(refusal).with_color(text::RED));
+        return;
+    }
     let me = Player {
         uuid: player.uuid,
         name: player.name.clone(),
@@ -249,6 +254,12 @@ pub(in crate::game) fn menu_clicked(game: &mut Game<'_>, uuid: u128, window: i32
         return true;
     };
     if !matches!(mode, 0 | 1) {
+        return true;
+    }
+    // Turned off since it opened: closed, nothing moves.
+    if !smp_glue::part_on(game, smp_switch::Part::Invsee) {
+        drop(guard);
+        game.native_close_menu(uuid);
         return true;
     }
     let mut asked: Option<Move> = None;

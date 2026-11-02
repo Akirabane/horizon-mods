@@ -189,6 +189,12 @@ name = "smp_invsee_glue"
 source = "invsee_glue.rs"
 
 [[module]]
+id = "switch"
+file = "crates/horizon-client/src/game.rs"
+name = "smp_switch"
+source = "smp_switch.rs"
+
+[[module]]
 id = "glue"
 file = "crates/horizon-client/src/game.rs"
 name = "smp_glue"

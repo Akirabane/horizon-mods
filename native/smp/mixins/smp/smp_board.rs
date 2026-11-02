@@ -200,6 +200,14 @@ impl Board {
         Ok(())
     }
 
+    /// Forgets what each player was sent: everyone gets theirs again at the
+    /// next update (the sidebars were taken away).
+    pub fn forget(&mut self) {
+        self.sent.clear();
+        self.tab_sent.clear();
+        self.stale = true;
+    }
+
     pub fn hidden(&self, uuid: u128) -> bool {
         self.data.hidden.contains(&smp_store::uuid_string(uuid))
     }

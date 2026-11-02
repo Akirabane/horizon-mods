@@ -61,6 +61,7 @@ header and footer).
 | `/realname <nick>` | who goes by that nickname |
 | `/invsee <player>`, `/endersee <player>` | operators of level 3: the player's inventory (main, hotbar, armour, off hand) or ender chest in a chest menu, on or off the server; click one of theirs to take it, one of yours to give it; every move in `audit.log`, a summary in `staff.log` |
 | `/sidebar off`, `/sidebar on`, `/sidebar` | hides the scoreboard sidebar for you (remembered), shows it again |
+| `/smp status`, `/smp off [part\|all] [reason]`, `/smp on [part\|all]` | operators of level 3: the emergency switches (below) |
 
 The market trades only plain items (not worn, named or enchanted), and only with players in survival or adventure
 mode. Items move first, then money, both logged; a sale the log refuses gives the items back, and a purchase checks the
@@ -348,6 +349,20 @@ pool: the stake goes in, the payout comes out, never more than the pool holds), 
 
 The currency is earned in game only: it can't be bought with real money or cashed out (Mojang's usage guidelines).
 
+**Emergency switches.** An operator of level 3 turns parts of the SMP off while the server runs: `/smp off`
+(everything but land protection), `/smp off <part> [reason]`, `/smp on [part]`, `/smp status` (what is off, by whom,
+when and why). Parts: `economy` (balances, `/pay`, `/eco`, the Treasury, taxes, the bank, contracts, the daily
+reward), `market` (`/worth`, `/sell`, `/buy`, `/shop`, `/market`), `auction`, `trades`, `gambling` (coinflips, the
+lottery, the casino), `futures`, `places` (spawn, homes, warps, `/tpa`, `/back`), `claims` (land protection and
+`/claim`: only by name, `/smp off claims`), `board` (the sidebar and the Tab list's header and footer), `presence`
+(welcomes, AFK, the commands' rate limit), `nicks`, `invsee`. A part that is off answers its commands with "... is
+turned off for now by the server's staff", and its menus close at the next click. Turning one off ends open trades
+with nothing moved, closes the shop, market, auction and futures menus, calls off teleports waiting, takes the
+sidebars and nicknames away. Its timed work waits (the lottery's draw, auctions ending, futures marking and funding,
+contracts, interest, taxes, the daily reward); nothing held is lost: coinflips not taken still go back and a casino
+round under way still ends and is paid. The other operators on are told, and each change is in the server's log and
+`audit.log` (`switch_off`, `switch_on`). What is off is kept in `switches.json`, so a restart keeps it off.
+
 ## Data
 
 Everything is in the world's folder, `world/horizon-smp/`, so a backup of the world carries it. A world without that
@@ -365,6 +380,7 @@ folder is untouched until the mod first runs on it; it changes no block and no p
 | `web/market.json` | for the website (`/hub/market`, through Kira), written by a thread each minute prices move: `schema` 1, `generated`, `currency`, `tax_percent`, `taxes_collected`, `daily_summary` (`day`, `lines`), `items` (`id`, `name`, `category`, `price` (the one price; `buy` and `sell` repeat it on the sides the market trades, for older readers), `mid`, `base`, `change_1h`, `change_24h`, `volume_24h`, `day`: 5-minute points, `month`: hours, each `{step, t, price, volume}`). When `web.token` is set, the same thread POSTs each page of `web/` that changed (gzipped, `Authorization: Bearer <token>`) to `<web.url>/<name>`: Kira keeps the last one and serves it to the site; the server needs no inbound access and Kira no key to it |
 | `presence.json` | the players who have joined (no welcome again), and the day each last got the daily reward |
 | `board.json` | the players who hid the sidebar (`/sidebar off`) |
+| `switches.json` | the parts operators turned off (`/smp off`): by whom, when and why |
 | `casino.json` | the day's ledger: each player's bets, wins and rounds today (the daily loss cap), the day's biggest wins, each game's totals, the pot's last sweep |
 | `claims.json` | each claimed chunk (`<dimension> <chunk x> <chunk z>`) with its owner, and whom each owner trusts |
 | `audit.log` | one JSON line per change, written before the change: `time` (ms), `kind` (`open`, `pay`, `grant`, `land_tax`...), `amount`, `from`/`to` with their balance before, `by` for an operator, `to_pool`/`from_pool` with `pool_before` and `reason` for a pool's movement; a trade's line (`trade`: both players, their items and money) comes before its swap, `trade_failed` after one that didn't go through |
@@ -386,7 +402,7 @@ action bar (API 21), `native_block_spread`, `native_piston_move`, `native_explos
 | File | What it is |
 |---|---|
 | `mixins/smp/horizon-mixin.toml` | The bundle: twenty-eight modules and the HEAD hooks |
-| `mixins/smp/smp_store.rs`, `smp_economy.rs`, `smp_market.rs`, `smp_recipes.rs`, `smp_shop.rs`, `smp_nick.rs`, `smp_trade.rs`, `smp_games.rs`, `smp_lottery.rs`, `smp_places.rs`, `smp_claims.rs`, `smp_board.rs`, `smp_presence.rs`, `smp_tax.rs`, `smp_auction.rs`, `smp_bank.rs`, `smp_report.rs`, `smp_jobs.rs`, `smp_market_prices.rs`, `smp_market_menu.rs`, `smp_market_chart.rs`, `smp_invsee.rs`, `smp_futures.rs` | The rules, no game types (a trade's stacks are a type parameter): added to the game as `game::smp_store`, `game::smp_economy`, `game::smp_market`, `game::smp_recipes`, `game::smp_shop`, `game::smp_nick`, `game::smp_trade`, `game::smp_games`, `game::smp_lottery`, `game::smp_places`, `game::smp_claims`, `game::smp_board`, `game::smp_presence`, `game::smp_tax`, `game::smp_auction`, `game::smp_bank`, `game::smp_report`, `game::smp_jobs`, `game::smp_market_prices`, `game::smp_market_menu`, `game::smp_market_chart`, `game::smp_invsee`, `game::smp_futures`; also this crate's modules (`src/lib.rs`), for their tests |
+| `mixins/smp/smp_store.rs`, `smp_economy.rs`, `smp_market.rs`, `smp_recipes.rs`, `smp_shop.rs`, `smp_nick.rs`, `smp_trade.rs`, `smp_games.rs`, `smp_lottery.rs`, `smp_places.rs`, `smp_claims.rs`, `smp_board.rs`, `smp_presence.rs`, `smp_tax.rs`, `smp_auction.rs`, `smp_bank.rs`, `smp_report.rs`, `smp_jobs.rs`, `smp_market_prices.rs`, `smp_market_menu.rs`, `smp_market_chart.rs`, `smp_invsee.rs`, `smp_futures.rs`, `smp_switch.rs` | The rules, no game types (a trade's stacks are a type parameter): added to the game as `game::smp_store`, `game::smp_economy`, `game::smp_market`, `game::smp_recipes`, `game::smp_shop`, `game::smp_nick`, `game::smp_trade`, `game::smp_games`, `game::smp_lottery`, `game::smp_places`, `game::smp_claims`, `game::smp_board`, `game::smp_presence`, `game::smp_tax`, `game::smp_auction`, `game::smp_bank`, `game::smp_report`, `game::smp_jobs`, `game::smp_market_prices`, `game::smp_market_menu`, `game::smp_market_chart`, `game::smp_invsee`, `game::smp_futures`, `game::smp_switch`; also this crate's modules (`src/lib.rs`), for their tests |
 | `mixins/smp/glue.rs` | The state for the open world and the edges to the game's types (`game::smp_glue`) |
 | `mixins/smp/{register,command,tick,lifecycle,menu_clicked,menu_closed,destroy_block,right_click_block,block_spread,piston_move,explosion_detonate,fill_bucket,attack_entity}.rs` | One small helper per hook |
 | `mixins/smp/smp_casino.rs`, `smp_casino_roulette.rs`, `smp_casino_slots.rs`, `smp_casino_crash.rs`, `smp_casino_blackjack.rs` | The casino's rules, menus and effects (`game::smp_casino*`) |
