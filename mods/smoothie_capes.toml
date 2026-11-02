@@ -1,0 +1,21 @@
+id = "smoothie_capes"
+kind = "native-mod"
+name = "Smoothie Capes"
+summary = "An Wavey Capes inspired mod for Horizon"
+authors = ["Nully"]
+owners = ["dumbnully"]
+license = "MIT"
+source = "https://github.com/dumbnully/smoothie-capes"
+key = "RWRJPBl24rTE23dFezewHWl465FAcgTsmeJnDkANtUPT19YfVmQ1gYCu"
+
+[[versions]]
+version = "0.2.0"
+published = "2026-11-02"
+game = "26.3"
+file = "smoothie_capes-0.2.0.hnmod"
+sha256 = "303b88bf5dd2c518ed9f5186252813b5a98716289c42e60838d0cb9846fc6429"
+signature = """
+untrusted comment: signature from minisign secret key
+RURJPBl24rTE247uqvyB1Bh5PIfR4C2XUVWvCx4/lt5jAO8sgDBEgtfs9adTKkv+L89ENRyYUVCLG1c8yptts8AYfcmPEI7bcQs=
+trusted comment: timestamp:1793663973\tfile:smoothie_capes.hnmod\thashed
+f+QyN8EVz5M41RHayEZGX7Fk1Z+FZnhUTv7MwH5Y3GTBYXiNMAHAIMdox4i62RDTx3wQhVUuIOBa3GqJ2H7KAQ=="""
