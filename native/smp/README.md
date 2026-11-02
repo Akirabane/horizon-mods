@@ -37,7 +37,7 @@ header and footer).
 | `/coinflip <amount> [player]` | stakes an amount for anyone (or one player) to match; off unless `gambling.enabled` |
 | `/lottery`, `/lottery buy <tickets>` | the pot, your tickets and the time to the draw; buys tickets (off unless `gambling.enabled`) |
 | `/casino`, `/casino roulette\|slots\|crash\|blackjack` | the casino's lobby menu, or a game's table (needs `gambling.enabled` and `casino.enabled`) |
-| `/casino help`, `/casino top`, `/casino stats` | every game's odds and house edge and the limits; today's biggest wins; what you bet, won and may still lose today |
+| `/casino help`, `/casino top`, `/casino stats` | every game's odds and house edge; today's biggest wins; what you bet and won |
 | `/coinflip accept <player>`, `/coinflip cancel`, `/coinflip list` | takes an offer (a fair coin decides, the winner gets both stakes), withdraws yours, lists those waiting |
 | `/spawn` | to the server's spawn; `/setspawn` (operators of level 3) sets it where you stand |
 | `/home [name]`, `/sethome [name]`, `/delhome [name]`, `/homes` | your homes (`home` when unnamed): go, set or move one where you stand, delete, list |
@@ -75,11 +75,10 @@ money and the room before anything moves.
 - Items a recipe links (an ingot and its block, wheat and hay...) share one moving price, the block moving it as
   its 9 ingots do, so crafting never beats the market however prices move; the vanilla-recipe test checks every item
   at the worst drift (what makes it at 0.6 times its price, it at 1.6) too.
-- Each player sells at most `daily_sell_coins` (2,000 coins) and `daily_sell_items` (640 of each item) a UTC day,
-  `/worth` and the shop show what is left, and `market.json` keeps the day's count across restarts.
-- Money received with `/pay` counts toward the receiver's same `daily_sell_coins`: selling up to the limit on alts
-  and paying it all to a main is refused once the main's limit is reached ("can only receive N more today").
-  Trades (`/trade`) and auction house sales are not counted.
+- Selling and incoming `/pay` payments have no daily coin or item caps. Existing configs' `daily_sell_coins`
+  and `daily_sell_items` values are ignored. Auction listings and lottery tickets have no per-player caps.
+- Market purchases can be resold immediately. Trades always fill the requested quantity when inventory and
+  funds permit; price movement never makes the rest wait for another minute.
 - Amounts are checked: no price above 1,000,000,000,000, no sum that overflows.
 - The coinflip and the lottery give the winner all the stakes: they move money between players and never make any.
 
@@ -133,13 +132,11 @@ times a factor that supply and demand move as each trade happens. Every item bou
 2 and 400: a diamond moves 50 times faster per item than cobblestone; `depth` overrides it per item). A trade of N is
 worth the area under that curve (`price / step × (e^(N × step) - 1)`), rounded up to whole coins when buying and down
 when selling: one diamond at 200 costs 201 and sells for 199, 64 cobblestone at 1 cost 65, and a sale walks back the
-exact path of the purchase. All trades together move an item at most `max_minute_move_percent` (5%) a minute from
-where it started that minute: past that, a purchase is cut short and a sale keeps the rest ("sell them in a
-minute"). The factor goes back to 1 with a half-life of `half_life_hours` (6) and stays within `min_factor` (0.6)
-and `max_factor` (1.6), where the rest of a trade goes at that price. There is no tax on trades (an older config's
-`tax_percent` is ignored): the receipt is the price ("Sold 3 diamond at 198 coins each: 595 coins."). Items a player bought from the market in the last `round_trip_hours` (24) can't be
-sold back to it. (`max_trade_impact_percent` and `max_player_impact_percent` are no longer used: the curve and the
-minute's band do their work.) History: one point a minute for 24 hours and one an hour for 30 days (the mid price, the
+exact path of the purchase. The factor goes back to 1 with a half-life of `half_life_hours` (6) and stays within
+`min_factor` (0.6) and `max_factor` (1.6), where the rest of a trade goes at that price. There is no tax on trades
+(an older config's `tax_percent` is ignored). Purchased items can be sold back immediately. Legacy
+`max_trade_impact_percent`, `max_player_impact_percent`, `max_minute_move_percent`, and `round_trip_hours`
+settings do not restrict trades. History: one point a minute for 24 hours and one an hour for 30 days (the mid price, the
 items traded and those sold), in `market_prices.json`, written by a thread every 5 minutes and when the world closes.
 At the first minute of each UTC day, the day's three biggest risers and fallers (at least 1%) and news from real
 activity ("Diamond supply up 40% today", sales against the day before's, at least `news_percent` and
@@ -157,8 +154,8 @@ chart map is drawn again each minute for whoever carries it, and once a minute t
 **The shop.** `/shop` opens a 6-row chest menu on the market's prices: the categories of `config.json`'s `shop` (an
 item in none goes under "Other"), each item named with its prices. A click buys one, a shift-click 64; a click on a
 stack in your own inventory, below the menu, sells it; "Sell all" sells everything the market buys. The bottom row
-shows your balance and today's selling limit. It goes through the market's own rules (survival or adventure only,
-items then money, logged, the daily limits); the items move by the console's `clear` and `give`, measured on the
+shows your balance and confirms there is no selling limit. It goes through the market's own rules (survival or adventure only,
+items then money, logged); the items move by the console's `clear` and `give`, measured on the
 inventory before and after, so the money follows what really moved.
 
 **Trades.** Once accepted, both players see a 6-row chest menu: their own offer on the left (16 stacks), the other's
@@ -171,14 +168,14 @@ the trade, and swaps everything in one step, or nothing (and both must confirm a
 `/trade cancel`, leaving, dying or the other player leaving ends the trade with nothing moved. Survival and
 adventure players only.
 
-**Coinflips.** Off by default: the owner turns them on in `config.json` (`gambling`: `enabled`, `min_bet` 10,
-`max_bet` 1000, `cooldown_seconds` 30, `offer_seconds` 60). A stake is held from the offer, in
+**Coinflips.** Off by default: the owner turns them on in `config.json` (`gambling`: `enabled`, `offer_seconds` 60). Positive stakes have no betting cap or cooldown; legacy
+`min_bet`, `max_bet`, and `cooldown_seconds` settings are ignored. A stake is held from the offer, in
 `economy.json` with the balances, until the coin falls; an offer cancelled, not taken in time, or whose player
 left gives it back, and so does the next start for one the server stopped with. The coin is a fresh random key from
 the system, never the world's random. Only the in-game currency is staked and won.
 
-**The lottery.** Part of `gambling` (`ticket_price` 10, `max_tickets` 100 a player a draw, `lottery_seconds` 3600
-from a round's first ticket to its draw). Tickets are held like coinflip stakes; at the draw one ticket is picked at
+**The lottery.** Part of `gambling` (`ticket_price` 10, `lottery_seconds` 3600
+from a round's first ticket to its draw). There is no ticket cap (`max_tickets` is ignored). Tickets are held like coinflip stakes; at the draw one ticket is picked at
 random among all sold (more tickets, more chances), its owner gets the whole pot, and everyone hears
 it. A round with a single player, or one the server stopped with, gives every ticket back.
 
@@ -197,10 +194,9 @@ jackpot:
 - Blackjack: 6 decks shuffled each hand, the dealer stands on all 17s and peeks, blackjack pays 3 to 2, double on the
   first two cards, no split; about 1% house edge with basic strategy.
 
-Every draw is made by the server (ChaCha20 keyed from the system) before the animation starts. Bets go from `min_bet`
-10 to `max_bet` 1000; a player may lose at most `daily_loss_cap` (10,000) a day (UTC, all games together) and win at most
-`daily_win_cap` (10,000) net (once reached, no new bet until 00:00 UTC; the round that crosses it is paid in full), and
-`cooldown_ms` (2000) passes between the end of a round and their next bet. A bet is held like a coinflip stake;
+Every draw is made by the server (ChaCha20 keyed from the system) before the animation starts. Any positive
+bet within the economy's numeric range is allowed, with no daily win/loss cap or cooldown. Legacy `min_bet`,
+`max_bet`, `daily_loss_cap`, `daily_win_cap`, and `cooldown_ms` settings are ignored. A bet is held like a coinflip stake;
 closing the menu or leaving never loses a round: a spin or a pull ends and is paid, a blackjack hand stands, a crash
 bet is cashed out when its player leaves in flight (or given back before take-off). Wins are paid from the casino's
 pot (`economy.json`'s pool `casino`): a win larger than the pot is paid up to it. A new casino's pot gets `float`
@@ -263,7 +259,7 @@ and outbid players who are offline find a note when they come back. Everything (
 written in `economy.json` with the balances, in one step: a crash can't keep the money and lose the items, or the
 reverse. Only plain items for now (not worn, named or enchanted); whole stacks with their enchantments wait for
 Horizon's `native_give_stack` to be stamped. Survival and adventure players only. `config.json`'s `auction`:
-`enabled`, `max_listings` (8 a player), `listing_hours` (48), `auction_hours` (12),
+`enabled`, `max_listings` (legacy, ignored; unlimited listings), `listing_hours` (48), `auction_hours` (12),
 `auction_hours_max` (24), `bid_step_percent` (5: the smallest raise), `snipe_seconds` (60). Ended listings are
 looked at once a second (a pass over the open listings).
 
@@ -298,17 +294,17 @@ folder is untouched until the mod first runs on it; it changes no block and no p
 
 | File | Holds |
 |---|---|
-| `config.json` | `currency` (default `coins`), `starting_balance` (default 0), `market`: `enabled`, `items` (each item's `buy`, what the market asks, and `sell`, what it pays, 0 closing that side), `daily_sell_coins` (2000) and `daily_sell_items` (640), 0 for no limit; `shop`: `enabled`, `title`, `categories` (`name`, `icon`, `items`); `web`: `url` (Kira's `/smp/ingest`) and `token` (empty: nothing is sent), where the pages of `web/` go; written with the defaults the first time, and again when a newer version adds keys (your values kept) |
+| `config.json` | `currency` (default `coins`), `starting_balance` (default 0), `market`: `enabled`, `items` (each item's `buy`, what the market asks, and `sell`, what it pays, 0 closing that side), legacy `daily_sell_coins` and `daily_sell_items` (ignored; sales are unlimited); `shop`: `enabled`, `title`, `categories` (`name`, `icon`, `items`); `web`: `url` (Kira's `/smp/ingest`) and `token` (empty: nothing is sent), where the pages of `web/` go; written with the defaults the first time, and again when a newer version adds keys (your values kept) |
 | `economy.json` | balances by player UUID, with the name last seen; `held`: coinflip stakes and lottery tickets being decided; `pools`: the casino's pot and the auction house's bids; `ext`: other parts' state written in the same step as the money (`auction`: the listings, bids, mail and notes) |
 | `places.json` | the spawn, the warps, each player's homes, and the seconds each player has played (written once a minute) |
 | `nicks.json` | each player's nickname and when they last changed it |
 | `staff.log` | one line per `/invsee` or `/endersee` menu in which something moved: who, whose, what was taken and put |
-| `market.json` | what each player sold today (coins and items), for the daily limits |
+| `market.json` | what each player sold today (coins and items), for the daily ledger |
 | `market_prices.json` | each item's price factor and history (minutes for 24 h, hours for 30 days: `[time, mid, traded, sold]`), what each player bought in the last day (no selling it back), the day's summary |
 | `web/market.json` | for the website (`/hub/market`, through Kira), written by a thread each minute prices move: `schema` 1, `generated`, `currency`, `tax_percent` (always 0, for older readers), `daily_summary` (`day`, `lines`), `items` (`id`, `name`, `category`, `price` (the one price; `buy` and `sell` repeat it on the sides the market trades, for older readers), `mid`, `base`, `change_1h`, `change_24h`, `volume_24h`, `day`: 5-minute points, `month`: hours, each `{step, t, price, volume}`). When `web.token` is set, the same thread POSTs each page of `web/` that changed (gzipped, `Authorization: Bearer <token>`) to `<web.url>/<name>`: Kira keeps the last one and serves it to the site; the server needs no inbound access and Kira no key to it |
 | `presence.json` | the players who have joined (no welcome again), and the day each last got the daily reward |
 | `board.json` | the players who hid the sidebar (`/sidebar off`) |
-| `casino.json` | the day's ledger: each player's bets, wins and rounds today (the daily loss cap), the day's biggest wins, each game's totals, the pot's last sweep |
+| `casino.json` | the day's ledger: each player's bets, wins and rounds today (statistics), the day's biggest wins, each game's totals, the pot's last sweep |
 | `claims.json` | each claimed chunk (`<dimension> <chunk x> <chunk z>`) with its owner, and whom each owner trusts |
 | `audit.log` | one JSON line per change, written before the change: `time` (ms), `kind` (`open`, `pay`, `grant`, `ah_listing_fee`...), `amount`, `from`/`to` with their balance before, `by` for an operator, `to_pool`/`from_pool` with `pool_before` and `reason` for a pool's movement; a trade's line (`trade`: both players, their items and money) comes before its swap, `trade_failed` after one that didn't go through |
 

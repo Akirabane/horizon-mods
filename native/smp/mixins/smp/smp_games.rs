@@ -3,7 +3,7 @@
 // takes both stakes. Each stake is held in `economy.json` from the moment it
 // is offered (`Economy::hold`) until the coin falls or the offer ends, so a
 // crash or a restart gives it back and never loses or doubles it. Off by
-// default (`gambling.enabled`); limits, a cooldown and the audit log on every
+// default (`gambling.enabled`); the audit log records every
 // step. Nothing here is bought with real money or paid out of the game
 // (Mojang's usage guidelines). No game types; the coin is the glue's, never
 // the world's random. Added to the game as `game::smp_games`; also a module
@@ -11,7 +11,6 @@
 
 use super::smp_economy::{Economy, Out, Player, parse_amount};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// `config.json`'s `gambling` section.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -19,15 +18,16 @@ use std::collections::HashMap;
 pub struct Config {
     /// Off until the owner turns it on.
     pub enabled: bool,
+    /// Legacy betting restrictions, ignored.
     pub min_bet: i64,
     pub max_bet: i64,
-    /// Between two coinflips of one player (offered or accepted).
+    /// Legacy setting, ignored: completed games have no cooldown.
     pub cooldown_seconds: i64,
     /// How long an offer waits before its stake goes back.
     pub offer_seconds: i64,
-    /// The lottery: a ticket's price, the tickets one player may hold in a
-    /// draw, and the time from a round's first ticket to its draw.
+    /// The lottery's ticket price.
     pub ticket_price: i64,
+    /// Legacy setting, ignored: no per-player ticket cap.
     pub max_tickets: i64,
     pub lottery_seconds: i64,
 }
@@ -36,12 +36,12 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             enabled: false,
-            min_bet: 10,
-            max_bet: 1000,
-            cooldown_seconds: 30,
+            min_bet: 1,
+            max_bet: super::smp_economy::MAX_AMOUNT,
+            cooldown_seconds: 0,
             offer_seconds: 60,
             ticket_price: 10,
-            max_tickets: 100,
+            max_tickets: 0,
             lottery_seconds: 3600,
         }
     }
@@ -62,8 +62,6 @@ pub struct Offer {
 pub struct Games {
     pub config: Config,
     pub offers: Vec<Offer>,
-    /// When each player last played, for the cooldown.
-    last: HashMap<u128, i64>,
 }
 
 const USAGE: &str = "Usage: /coinflip <amount> [player], /coinflip accept <player>, /coinflip cancel, /coinflip list";
@@ -74,14 +72,6 @@ impl Games {
             config,
             ..Default::default()
         }
-    }
-
-    /// The milliseconds `uuid` still waits before playing again.
-    fn cooling(&self, uuid: u128, now: i64) -> i64 {
-        self.last
-            .get(&uuid)
-            .map_or(0, |t| t + self.config.cooldown_seconds * 1000 - now)
-            .max(0)
     }
 
     /// Offers nobody took in time: their stakes go back.
@@ -203,25 +193,10 @@ impl Games {
         amount: i64,
         now: i64,
     ) -> Vec<Out> {
-        let c = &self.config;
-        if !(c.min_bet..=c.max_bet).contains(&amount) {
-            return vec![Out::Error(format!(
-                "A coinflip is {} to {}.",
-                economy.money(c.min_bet),
-                economy.money(c.max_bet)
-            ))];
-        }
         if self.offers.iter().any(|o| o.from == me.uuid) {
             return vec![Out::Error(
                 "You already have a coinflip waiting (/coinflip cancel).".into(),
             )];
-        }
-        let wait = self.cooling(me.uuid, now);
-        if wait > 0 {
-            return vec![Out::Error(format!(
-                "Wait {} s before your next coinflip.",
-                (wait + 999) / 1000
-            ))];
         }
         if let Err(e) = economy.hold("coinflip_stake", me.uuid, amount) {
             return vec![Out::Error(e)];
@@ -258,7 +233,7 @@ impl Games {
         economy: &mut Economy,
         me: &Player,
         name: &str,
-        now: i64,
+        _now: i64,
         heads: &mut dyn FnMut() -> bool,
     ) -> Vec<Out> {
         let Some(i) = self.offers.iter().position(|o| {
@@ -268,13 +243,6 @@ impl Games {
         };
         if self.offers[i].from == me.uuid {
             return vec![Out::Error("You can't flip against yourself.".into())];
-        }
-        let wait = self.cooling(me.uuid, now);
-        if wait > 0 {
-            return vec![Out::Error(format!(
-                "Wait {} s before your next coinflip.",
-                (wait + 999) / 1000
-            ))];
         }
         let amount = self.offers[i].amount;
         if let Err(e) = economy.hold("coinflip_stake", me.uuid, amount) {
@@ -295,8 +263,6 @@ impl Games {
             }
             return vec![Out::Error(e)];
         }
-        self.last.insert(o.from, now);
-        self.last.insert(me.uuid, now);
         let won = economy.money(prize);
         vec![
             Out::Tell(
@@ -389,8 +355,10 @@ mod tests {
     #[test]
     fn limits_cooldown_and_refusals() {
         let (mut e, mut g, dir) = setup("limits");
+        g.config.min_bet = 10;
+        g.config.max_bet = 100;
+        g.config.cooldown_seconds = 30;
         for line in [
-            "coinflip 5",
             "coinflip 1001",
             "coinflip 100 alex",
             "coinflip 100 nobody",
@@ -414,12 +382,14 @@ mod tests {
         // Only the named player may take a named offer.
         run(&mut e, &mut g, A, 0, true, "coinflip cancel");
         e.adjust("eco_give", B, 480, "test").unwrap();
-        // Cooldown after a game.
+        // A completed game can be followed immediately by another.
         run(&mut e, &mut g, A, 0, true, "coinflip 10");
         run(&mut e, &mut g, B, 0, true, "coinflip accept alex");
-        assert!(
-            matches!(&run(&mut e, &mut g, A, 10_000, true, "coinflip 10")[0], Out::Error(s) if s.contains("Wait 20 s"))
-        );
+        assert!(matches!(
+            &run(&mut e, &mut g, A, 0, true, "coinflip 5")[0],
+            Out::Reply(_)
+        ));
+        run(&mut e, &mut g, A, 0, true, "coinflip cancel");
         assert!(matches!(
             &run(&mut e, &mut g, A, 30_000, true, "coinflip 10")[0],
             Out::Reply(_)

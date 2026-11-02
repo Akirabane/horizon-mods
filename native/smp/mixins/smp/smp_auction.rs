@@ -57,7 +57,7 @@ const CATEGORY_SLOTS: [usize; 21] = [
 #[serde(default)]
 pub struct Config {
     pub enabled: bool,
-    /// Listings one player may have at once.
+    /// Legacy setting, ignored: players may have any number of listings.
     pub max_listings: usize,
     /// How long a fixed-price listing stays.
     pub listing_hours: i64,
@@ -74,7 +74,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             enabled: true,
-            max_listings: 8,
+            max_listings: 0,
             listing_hours: 48,
             auction_hours: 12,
             auction_hours_max: 24,
@@ -521,19 +521,6 @@ impl AuctionHouse {
             return err("The price must be a positive whole number.".into());
         };
         let mine = uuid_string(me.uuid);
-        if self
-            .data
-            .listings
-            .iter()
-            .filter(|l| l.seller == mine)
-            .count()
-            >= self.config.max_listings
-        {
-            return err(format!(
-                "You may have {} listings at once.",
-                self.config.max_listings
-            ));
-        }
         let Some((item, held, plain)) = bag.held() else {
             return err("Hold the items you want to sell.".into());
         };
@@ -1341,15 +1328,15 @@ mod tests {
         ));
         assert!(ah.listing(1).is_some(), "the listing stays for sale");
         assert_eq!(e.balance(STEVE), 11_000);
-        // The listing limit.
+        // Listings can exceed the old per-player cap even with a legacy config.
+        ah.config.max_listings = 8;
         let mut many = holding("dirt", 64);
         for _ in 1..8 {
             run(&mut ah, &mut e, &alex, &mut many, T0, "ah sell 1 1");
         }
-        assert_eq!(
-            run(&mut ah, &mut e, &alex, &mut many, T0, "ah sell 1 1"),
-            [Out::Error("You may have 8 listings at once.".into())]
-        );
+        let out = run(&mut ah, &mut e, &alex, &mut many, T0, "ah sell 1 1");
+        assert!(matches!(&out[0], Out::Reply(_)), "{out:?}");
+        assert_eq!(ah.data.listings.len(), 9);
     }
 
     #[test]

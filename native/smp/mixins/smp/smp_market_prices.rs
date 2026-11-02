@@ -6,10 +6,7 @@
 // the area under the price along the way it moves the price (`fill`): the
 // same curve both ways, so a sale exactly retraces a purchase, and a round
 // trip earns nothing, whoever trades and however the price was
-// pushed. Within a minute the price moves at most `max_minute_move_percent`
-// from where the minute began: the rest of a trade waits for the next minute
-// (never priced flat: buying slowly while the price drifts back, then
-// dumping at a flat edge, would earn). At `min_factor`..`max_factor` the
+// pushed. Trades always fill completely. At `min_factor`..`max_factor` the
 // price stops and a trade goes at that bound, the least the market ever pays
 // or the most it ever asks. Between trades the factor drifts back toward
 // 1 (mean reversion). Items made of one another (`smp_recipes`) share one
@@ -41,10 +38,9 @@ pub struct Dynamic {
     /// kept so older configs read the same.
     pub max_trade_impact_percent: f64,
     pub max_player_impact_percent: f64,
-    /// How far the price may move within one minute (either way).
+    /// Legacy setting, ignored: price movement does not restrict trade volume.
     pub max_minute_move_percent: f64,
-    /// What a player bought from the market can't be sold back to it for
-    /// this long (that many of that item).
+    /// Legacy setting: the market allows immediate resale.
     pub round_trip_hours: i64,
     /// Items that move the price 1%, by item (else from its price: dear
     /// items move faster).
@@ -273,9 +269,9 @@ impl Book {
     /// What `n` of `id` (based at `mid`, each moving the log factor by
     /// `delta`) are worth bought (`buy`) or sold now: the area under the
     /// price as the trade moves it, exactly, so the same items sold back
-    /// retrace it. At a bound the price stops and the rest goes at it; past
-    /// this minute's band the rest isn't traded. The value, the log factor
-    /// after, and how many of the `n` go.
+    /// retrace it. At a price bound every remaining item trades at the bound.
+    /// The value,
+    /// the log factor after, and the full number of items traded.
     pub fn fill(
         &self,
         config: &Dynamic,
@@ -286,11 +282,7 @@ impl Book {
         buy: bool,
     ) -> (f64, f64, u32) {
         let s0 = self.factor(id).ln();
-        let open = self.items.get(id).map_or(0.0, |t| t.open);
-        let band = config.max_minute_move_percent / 100.0;
         let sign = if buy { 1.0 } else { -1.0 };
-        // How far this minute still lets it go, and where the bound is.
-        let edge = sign * (open + sign * band - s0);
         let bound = if buy {
             config.max_factor.ln() - s0
         } else {
@@ -299,14 +291,7 @@ impl Book {
         if delta <= 0.0 {
             return (f64::from(n) * mid * s0.exp(), s0, n);
         }
-        let mut done = n;
-        if edge < bound {
-            // The band comes first: as many as fit in it.
-            let fit = (edge.max(0.0) / delta + 1e-9).floor();
-            if fit < f64::from(n) {
-                done = fit as u32;
-            }
-        }
+        let done = n;
         let reach = (f64::from(done) * delta).min(bound.max(0.0));
         let s1 = s0 + sign * reach;
         let curve = mid / delta * (s1.exp() - s0.exp()).abs();
@@ -737,29 +722,16 @@ mod tests {
     }
 
     #[test]
-    fn a_minute_moves_the_price_at_most_five_percent_and_the_rest_waits() {
+    fn trades_fill_completely_past_the_old_minute_band() {
         let c = Dynamic::default();
         let mut b = book();
-        // 0.5% a diamond: 10 fit in the minute's 5%, the other 630 wait.
         let (v, s1, done) = b.fill(&c, D, 250.0, delta(), 640, false);
-        assert_eq!(done, 10);
-        assert!((s1 + 0.05).abs() < 1e-9, "{s1}");
-        let curve = 250.0 / delta() * (1.0 - (-0.05f64).exp());
-        assert!((v - curve).abs() < 1e-6, "{v}");
+        assert_eq!(done, 640);
+        assert!((s1.exp() - c.min_factor).abs() < 1e-9);
+        assert!(v > 0.0);
         b.trade(&c, D, &[], 250.0, delta(), 640, false);
-        assert_eq!(
-            b.fill(&c, D, 250.0, delta(), 5, false).2,
-            0,
-            "no more this minute"
-        );
-        assert!(
-            b.fill(&c, D, 250.0, delta(), 5, true).2 == 5,
-            "buying back is fine"
-        );
-        // The next minute's band starts where this one ended (drift aside).
-        b.tick(&c, &mids(), T0 + MINUTE_MS);
-        b.trade(&c, D, &[], 250.0, delta(), 640, false);
-        assert!(b.factor(D) < (-0.099f64).exp());
+        assert_eq!(b.fill(&c, D, 250.0, delta(), 640, false).2, 640);
+        assert_eq!(b.fill(&c, D, 250.0, delta(), 640, true).2, 640);
     }
 
     #[test]

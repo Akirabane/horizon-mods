@@ -13,7 +13,7 @@ Checked from the clients' own menus, chat, titles and action bar, and from the f
 - crash: both players bet in the same round; Steve leaves mid-flight (cashed out or crashed, his bet settled once),
   Alex cashes out or crashes;
 - blackjack: a hand dealt and stood (or settled at once on a blackjack);
-- the bet limits: the most is `max_bet`;
+- the bet selector reaches the economy numeric range despite legacy limits;
 - after the server stops: every bet held is settled exactly once in audit.log, nothing is left held, and the money
   in the game (balances + pools) is the float and the operator's two `/eco give`s; casino.json holds the day's totals; no
   console command the casino ran was refused.
@@ -206,7 +206,7 @@ def blackjack(alex, out):
     alex.run("click-slot", 300 + 49, "shift")
     time.sleep(1)
     r["max"] = alex.name_at(48)
-    assert r["max"] == "Bet: 1,000 coins", r
+    assert r["max"] == "Bet: 1,000,000,000,000 coins", r
     alex.run("close")
     return r
 
@@ -238,7 +238,7 @@ def run(ctl, resources, out):
             assert any(f"Alex gave 3,000 coins to {who}: casino proof." in l for l in alex.say(f"/eco give {who} 3000 casino proof"))
         results["help"] = alex.say("/casino help")
         text = "\n".join(results["help"])
-        for want in ("bets 10 coins to 1,000 coins", "pot (20,000 coins now)", "European", "94.2%", "96%", "3 to 2"):
+        for want in ("no daily win/loss limits or cooldown", "pot (20,000 coins now)", "European", "94.2%", "96%", "3 to 2"):
             assert want in text, (want, results["help"])
         alex.say("/casino")
         assert alex.title() == "Casino", alex.title()

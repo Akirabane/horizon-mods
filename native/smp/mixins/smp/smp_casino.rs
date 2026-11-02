@@ -4,8 +4,7 @@
 // This file holds what every game shares: the settings, the server's random
 // (ChaCha20 seeded from the system, never the world's or anything a client
 // can see), the bets (held in `economy.json` from the moment they are placed,
-// so a crash gives them back), the limits (a bet's floor and ceiling, a daily
-// loss cap per player, a cooldown), the day's ledger (`casino.json`: what
+// so a crash gives them back), the day's ledger (`casino.json`: what
 // each player staked and got back today, the day's biggest wins, each game's
 // totals) and the lobby menu. Winnings are paid from the casino's own pot
 // (the economy's "casino" pool, which every lost bet fills); a win the pot
@@ -42,15 +41,11 @@ const WINS: usize = 10;
 #[serde(default)]
 pub struct Config {
     pub enabled: bool,
+    /// Legacy betting restrictions, ignored (positive amounts are required).
     pub min_bet: i64,
     pub max_bet: i64,
-    /// What one player may lose in a day (UTC), all games together: bets
-    /// staked minus what they paid back.
     pub daily_loss_cap: i64,
-    /// What one player may win in a day (UTC), all games together: paid back
-    /// minus bets staked. Once reached, no new bet until the day ends.
     pub daily_win_cap: i64,
-    /// Between the end of a player's round and their next bet.
     pub cooldown_ms: i64,
     /// What a new casino's pot starts with, for paying wins (made once).
     pub float: i64,
@@ -68,11 +63,11 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             enabled: true,
-            min_bet: 10,
-            max_bet: 1000,
-            daily_loss_cap: 10_000,
-            daily_win_cap: 10_000,
-            cooldown_ms: 2000,
+            min_bet: 1,
+            max_bet: super::smp_economy::MAX_AMOUNT,
+            daily_loss_cap: 0,
+            daily_win_cap: 0,
+            cooldown_ms: 0,
             float: 20_000,
             announce_profit: 5000,
             jackpot_multiple: 50,
@@ -427,8 +422,6 @@ pub struct Casino {
     pub blackjack: Blackjack,
     /// The draws' random.
     pub rng: Rng,
-    /// When each player's last round ended, for the cooldown.
-    ended: HashMap<u128, i64>,
     /// The boss bar as last sent: its frame, colour and players; None when
     /// hidden (and, at the start, a leftover of the last run to take away).
     boss: Option<(i64, Color, Vec<u128>)>,
@@ -464,7 +457,6 @@ impl Casino {
             crash: Crash::default(),
             blackjack: Blackjack::default(),
             rng: Rng::from_os(),
-            ended: HashMap::new(),
             boss: None,
             boss_reset: true,
         };
@@ -515,24 +507,6 @@ impl Casino {
             .unwrap_or_default()
     }
 
-    /// What `uuid` may still lose today.
-    pub fn loss_left(&self, uuid: u128, now: i64) -> i64 {
-        (self.config.daily_loss_cap - self.day(uuid, now).lost()).max(0)
-    }
-
-    /// Err once `uuid`'s winnings today reached the daily win cap.
-    fn win_cap(&self, economy: &Economy, uuid: u128, now: i64) -> Result<(), String> {
-        let won = self.day(uuid, now).won();
-        if won >= self.config.daily_win_cap {
-            return Err(format!(
-                "Daily win limit: you have won {} today, the most a day ({}). The casino opens again for you at 00:00 UTC.",
-                economy.money(won),
-                economy.money(self.config.daily_win_cap)
-            ));
-        }
-        Ok(())
-    }
-
     fn open_for_play(&self) -> Result<(), String> {
         if !self.gambling || !self.config.enabled {
             return Err("The casino is closed on this server.".into());
@@ -540,7 +514,7 @@ impl Casino {
         Ok(())
     }
 
-    /// Takes a bet: checked against the limits, then held. Err: why not.
+    /// Takes a positive bet and holds its funds. Err: why not.
     pub fn bet(
         &mut self,
         economy: &mut Economy,
@@ -551,32 +525,8 @@ impl Casino {
         now: i64,
     ) -> Result<Stake, String> {
         self.open_for_play()?;
-        let c = &self.config;
-        if !(c.min_bet..=c.max_bet).contains(&amount) {
-            return Err(format!(
-                "A bet is {} to {}.",
-                economy.money(c.min_bet),
-                economy.money(c.max_bet)
-            ));
-        }
         if self.playing(uuid) {
             return Err("Your last round isn't over yet.".into());
-        }
-        let wait = self.ended.get(&uuid).map_or(0, |t| t + c.cooldown_ms - now);
-        if wait > 0 {
-            return Err(format!(
-                "Wait {:.1} s before your next bet.",
-                wait as f64 / 1000.0
-            ));
-        }
-        self.win_cap(economy, uuid, now)?;
-        let left = self.loss_left(uuid, now);
-        if amount > left {
-            return Err(format!(
-                "Daily loss limit: you may lose {} more today ({} a day).",
-                economy.money(left),
-                economy.money(c.daily_loss_cap)
-            ));
         }
         economy.hold("casino_bet", uuid, amount)?;
         self.today(now);
@@ -605,7 +555,6 @@ impl Casino {
         now: i64,
     ) -> Vec<Fx> {
         let to = stake.uuid;
-        self.ended.insert(to, now);
         let kind = format!("casino_{}", stake.game.id());
         let paid = match economy.settle_pool(&kind, to, stake.amount, payout, POT) {
             Ok(paid) => paid,
@@ -786,13 +735,12 @@ impl Casino {
                 let net = d.paid - d.wagered;
                 (
                     vec![Out::Reply(format!(
-                        "Today: {} round(s), {} bet, {} won back, net {}{}. You may lose {} more today.",
+                        "Today: {} round(s), {} bet, {} won back, net {}{}.",
                         d.rounds,
                         economy.money(d.wagered),
                         economy.money(d.paid),
                         if net > 0 { "+" } else { "" },
-                        economy.money(net),
-                        economy.money(self.loss_left(me.uuid, now))
+                        economy.money(net)
                     ))],
                     None,
                 )
@@ -801,18 +749,10 @@ impl Casino {
         })
     }
 
-    /// `/casino help`: each game's odds and the house edge, the limits.
+    /// `/casino help`: each game's odds and the house edge.
     pub fn help(&self, economy: &Economy) -> Vec<String> {
-        let c = &self.config;
         let mut lines = vec![
-            format!(
-                "Casino: bets {} to {}; you may lose at most {} and win at most {} a day; {} s between rounds.",
-                economy.money(c.min_bet),
-                economy.money(c.max_bet),
-                economy.money(c.daily_loss_cap),
-                economy.money(c.daily_win_cap),
-                c.cooldown_ms as f64 / 1000.0
-            ),
+            "Casino: positive bets with no daily win/loss limits or cooldown.".into(),
             "Every draw is made by the server (ChaCha20 seeded by the system), before the animation starts.".into(),
             format!(
                 "Wins are paid from the casino's pot ({} now); a win larger than the pot is paid up to it. The house's profit stays in it.",
@@ -828,7 +768,7 @@ impl Casino {
 
     /// The menu opens on `view` (from `/casino`).
     pub fn sit(&mut self, uuid: u128, name: &str, view: View) {
-        let stake = self.config.min_bet.max(1);
+        let stake = 10;
         let seat = self.seats.entry(uuid).or_insert_with(|| Seat {
             window: None,
             view,
@@ -911,10 +851,9 @@ impl Casino {
         cells[38] = icon(
             "minecraft:clock",
             format!(
-                "Today: {} bet, {} won · may lose {} more",
+                "Today: {} bet, {} won",
                 economy.money(day.wagered),
-                economy.money(day.paid),
-                economy.money(self.loss_left(uuid, now))
+                economy.money(day.paid)
             ),
             Color::Aqua,
         );
@@ -967,7 +906,7 @@ impl Casino {
         economy: &Economy,
         seat: &Seat,
         uuid: u128,
-        now: i64,
+        _now: i64,
     ) {
         for c in &mut cells[45..53] {
             *c = filler("minecraft:black_stained_glass_pane");
@@ -998,14 +937,7 @@ impl Casino {
             format!("Balance: {}", economy.money(economy.balance(uuid))),
             Color::Gold,
         );
-        cells[51] = icon(
-            "minecraft:clock",
-            format!(
-                "You may lose {} more today",
-                economy.money(self.loss_left(uuid, now))
-            ),
-            Color::Aqua,
-        );
+        cells[51] = icon("minecraft:clock", "No daily betting limits", Color::Aqua);
     }
 
     /// A click on cell `slot` of `uuid`'s menu (shift: a shift-click).
@@ -1023,7 +955,7 @@ impl Casino {
         let view = seat.view;
         let in_game = view != View::Lobby;
         if in_game && (45..=51).contains(&slot) {
-            let (min, max) = (self.config.min_bet.max(1), self.config.max_bet.max(1));
+            let (min, max) = (1, super::smp_economy::MAX_AMOUNT);
             match slot {
                 45 => seat.view = View::Lobby,
                 46 => {
@@ -1243,8 +1175,7 @@ impl Casino {
         fx
     }
 
-    /// A bet already in play raised by `extra` (a double): the same limits,
-    /// held the same way.
+    /// A bet already in play raised by `extra` (a double), held the same way.
     fn raise(
         &mut self,
         economy: &mut Economy,
@@ -1252,13 +1183,6 @@ impl Casino {
         extra: i64,
         now: i64,
     ) -> Result<(), String> {
-        let left = self.loss_left(uuid, now);
-        if extra > left {
-            return Err(format!(
-                "Daily loss limit: you may lose {} more today.",
-                economy.money(left)
-            ));
-        }
         economy.hold("casino_bet", uuid, extra)?;
         self.today(now);
         self.ledger
@@ -1611,11 +1535,11 @@ const LOBBY: [(usize, &str, &str, Color); 7] = [
     (33, "minecraft:name_tag", "Lottery: /lottery", Color::Yellow),
 ];
 
-/// The stakes `-`/`+` step through: 10, 25, 50, 100, 250...
+/// The stakes `-`/`+` step through: 1, 2, 5, 10, 25, 50, 100, 250...
 fn step(stake: i64, up: bool) -> i64 {
     let mut steps = Vec::new();
     let mut base = 1i64;
-    while base <= 1_000_000_000 {
+    while base <= super::smp_economy::MAX_AMOUNT {
         steps.extend([base, base * 25 / 10, base * 5]);
         base *= 10;
     }
@@ -1773,70 +1697,39 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn limits_cooldown_and_the_daily_loss_cap() {
+    fn legacy_bet_limits_and_cooldown_do_not_block_play() {
         let (mut e, mut c, dir) = setup("limits", 50_000);
-        c.config.daily_loss_cap = 1000;
-        for (amount, why) in [(5, "A bet is"), (1001, "A bet is")] {
-            let err = c
-                .bet(&mut e, A, "Alex", Game::Roulette, amount, 0)
-                .unwrap_err();
-            assert!(err.contains(why), "{err}");
+        c.config.min_bet = 10;
+        c.config.max_bet = 1000;
+        c.config.daily_loss_cap = 1;
+        c.config.cooldown_ms = 2000;
+        for amount in [5, 1001, 2000] {
+            let stake = c.bet(&mut e, A, "Alex", Game::Roulette, amount, 0).unwrap();
+            c.roulette.rounds.push(roulette::Spin::test(stake.clone()));
+            assert!(
+                c.bet(&mut e, A, "Alex", Game::Roulette, 1, 0)
+                    .unwrap_err()
+                    .contains("isn't over")
+            );
+            c.roulette.rounds.clear();
+            c.settle(&mut e, &stake, 0, "lost", 0);
         }
-        let s = c.bet(&mut e, A, "Alex", Game::Roulette, 600, 0).unwrap();
-        assert_eq!((e.balance(A), e.held(A)), (9400, 600));
-        c.roulette.rounds.push(roulette::Spin::test(s.clone()));
-        assert!(
-            c.bet(&mut e, A, "Alex", Game::Roulette, 10, 0)
-                .unwrap_err()
-                .contains("isn't over")
-        );
-        c.roulette.rounds.clear();
-        c.settle(&mut e, &s, 0, "lost", 1000);
-        assert!(
-            c.bet(&mut e, A, "Alex", Game::Roulette, 10, 2000)
-                .unwrap_err()
-                .contains("Wait 1.0 s")
-        );
-        // 600 lost: 400 may still be lost today.
-        let err = c
-            .bet(&mut e, A, "Alex", Game::Roulette, 500, 3000)
-            .unwrap_err();
-        assert!(err.contains("400 coins more"), "{err}");
-        let s = c.bet(&mut e, A, "Alex", Game::Roulette, 400, 3000).unwrap();
-        c.settle(&mut e, &s, 800, "won", 3000);
-        // Won back 400: the day's loss is 200.
-        assert_eq!(c.loss_left(A, 3000), 800);
-        // A new day starts the count again.
-        assert_eq!(c.loss_left(A, DAY_MS + 1), 1000);
+        assert_eq!(e.held(A), 0);
+        assert!(c.bet(&mut e, A, "Alex", Game::Roulette, 0, 0).is_err());
         std::fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
-    fn the_daily_win_cap_stops_new_bets() {
+    fn wins_and_raises_ignore_legacy_daily_caps() {
         let (mut e, mut c, dir) = setup("wincap", 50_000);
-        c.config.daily_win_cap = 1000;
-        c.config.cooldown_ms = 0;
-        // Won 700 net: still under the cap.
+        c.config.daily_win_cap = 1;
+        c.config.cooldown_ms = 2000;
         let s = c.bet(&mut e, A, "Alex", Game::Roulette, 700, 0).unwrap();
         c.settle(&mut e, &s, 1400, "won", 0);
-        assert_eq!(c.day(A, 0).won(), 700);
-        // Won 700 more: 1400 net, past the cap; the round that crossed it is paid in full.
-        let s = c.bet(&mut e, A, "Alex", Game::Roulette, 700, 0).unwrap();
-        c.settle(&mut e, &s, 1400, "won", 0);
-        assert_eq!(e.balance(A), 10_000 + 1400);
-        let err = c.bet(&mut e, A, "Alex", Game::Slots, 10, 0).unwrap_err();
-        assert!(
-            err.contains("Daily win limit") && err.contains("1,400"),
-            "{err}"
-        );
-        // Nothing was held for the refused bet.
-        assert_eq!((e.balance(A), e.held(A)), (11_400, 0));
-        // Another player isn't affected; a new day opens it again.
-        c.bet(&mut e, B, "Steve", Game::Roulette, 10, 0).unwrap();
-        assert!(
-            c.bet(&mut e, A, "Alex", Game::Roulette, 10, DAY_MS + 1)
-                .is_ok()
-        );
+        assert_eq!(e.balance(A), 10_700);
+        let s = c.bet(&mut e, A, "Alex", Game::Slots, 1, 0).unwrap();
+        c.settle(&mut e, &s, 0, "lost", 0);
+        assert!(c.raise(&mut e, A, 1001, 0).is_ok());
         std::fs::remove_dir_all(dir).unwrap();
     }
 

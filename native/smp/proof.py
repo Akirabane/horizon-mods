@@ -2,7 +2,7 @@
 Steve, `horizon-ctl --offscreen`) join it. Checked from the clients' own chat and from the files the server wrote:
 
 - the economy opens an account for each player (config.json written with its defaults, then economy.json);
-- /balance, /pay (the payer's answer and the payee's line), refused payments (too much, past what the payee may receive today, to oneself, unknown name);
+- /balance, /pay (the payer's answer and the payee's line), refused payments (too much, to oneself, unknown name);
 - money from an operator (made one from the server's console): /eco give with a reason everyone reads; a
   non-operator can't; /treasury, /bank, /jobs, /futures and /eco taxes are gone, and the old Treasury pool is dropped;
 - /baltop;
@@ -13,16 +13,15 @@ Steve, `horizon-ctl --offscreen`) join it. Checked from the clients' own chat an
   cancel button, dying and leaving each end or refuse a trade with nothing moved (each player's items counted from
   their own client); a change of offer clears the other's confirmation; a confirmed trade swaps the items and money;
 - coinflips (turned on in config.json before the first start, the other settings filled in): the stake is held from
-  the offer, the winner gets both, the limits and the cooldown refuse, and a stake left waiting when the server stops
+  the offer, the winner gets both, legacy limits and cooldowns are ignored, and a stake left waiting when the server stops
   comes back; the money in the game stays the same throughout;
 - the lottery: two players' tickets held, one drawn after `lottery_seconds`, the winner announced to everyone and paid
   the pot;
 - after the server stops cleanly and starts again, the balances are the same, and audit.log holds every change;
 - an operator's /eco give, then the /shop menu: a category, one item bought by a click and a stack by
-  a shift-click, a stack of the player's own sold by clicking it, "Sell all" stopped by the daily limit (the rest
-  kept, the limit shown in the menu and in /worth, the day's sales in market.json), the close button;
-- after the restart, prices moving: a purchase and a sale with no tax (receipts), an item bought can't be sold
-  back while one found can, one price for diamond, moved down by a sale and up by a purchase as they go, /market's item
+  a shift-click, a stack sold by clicking it, unlimited "Sell all", the close button;
+- after the restart, prices moving: a purchase and a sale with no tax (receipts), an item bought can be sold
+  back immediately, one price for diamond, moved down by a sale and up by a purchase as they go, /market's item
   page buying, the 24 h chart given as a map and drawn in the player's hand (market-chart.png), web/market.json, and
   market_prices.json written when the world closes;
 - the web pages (web/market.json, web/economy.json) sent gzipped with the token to a stand-in for Kira;
@@ -234,8 +233,8 @@ def open_trade(alex, steve):
 def coinflips(alex, steve):
     """Alex 415, Steve 400. Returns what was seen and whether Alex won."""
     results = {}
-    results["limits"] = alex.say("/coinflip 5")
-    assert any("A coinflip is 10 coins to 1,000 coins." in l for l in results["limits"]), results
+    results["invalid"] = alex.say("/coinflip 0")
+    assert any("Usage:" in l for l in results["invalid"]), results
     results["offer"] = alex.say("/coinflip 100 Steve")
     assert any("Coinflip of 100 coins offered to Steve" in l for l in results["offer"]), results
     assert any("Balance: 315 coins" in l for l in alex.say("/balance")), "the stake is held"
@@ -249,10 +248,8 @@ def coinflips(alex, steve):
     assert any(("you lost 100 coins" if alex_wins else "you won 200 coins") in l for l in steve_saw), steve_saw
     assert any(f"Balance: {415 + (100 if alex_wins else -100)} coins" in l for l in alex.say("/balance"))
     assert any(f"Balance: {400 + (-100 if alex_wins else 100)} coins" in l for l in steve.say("/balance"))
-    results["cooldown"] = steve.say("/coinflip 50")
-    assert any("before your next coinflip" in l for l in results["cooldown"]), results
-    time.sleep(20)
-    assert any("Coinflip of 50 coins offered" in l for l in steve.say("/coinflip 50")), "after the cooldown"
+    results["no_cooldown"] = steve.say("/coinflip 50")
+    assert any("Coinflip of 50 coins offered" in l for l in results["no_cooldown"]), results
     return results, alex_wins
 
 
@@ -603,7 +600,7 @@ def nicks(server, alex, steve, out):
 
 def shop(server, alex):
     """Alex alone, op, in survival: given money (/eco give), then the /shop menu: a category, buying one and a stack,
-    selling a stack of hers, "Sell all" up to the daily limit, closing. Returns the coins it added, and the lines."""
+    selling a stack of hers, "Sell all" without daily limits, closing. Returns the coins it added, and the lines."""
     results = {}
     # Only what the step gives her: "Sell all" would sell the rest too.
     server.console("clear Alex")
@@ -632,38 +629,34 @@ def shop(server, alex):
     results["stack"] = alex.chat()[-4:]  # an advancement may come after
     assert any("Bought 64 cobblestone at 1.02 coins each: 65 coins." in l for l in results["stack"]), results
     assert not any("Tax" in l for l in results["stack"]), results
-    # Her own stack of iron, clicked: the ingot she just bought stays (no buying to sell back), one she found sells.
+    # A purchased ingot can be resold immediately.
     alex.click(alex.slot_of("minecraft:iron_ingot"))
-    results["round_trip"] = alex.chat()[-1:]
-    assert any("You bought 1 iron ingot from the market in the last 24 h" in l for l in results["round_trip"]), results
+    results["round_trip"] = alex.chat()[-4:]
+    assert any("Sold 1 iron ingot" in l for l in results["round_trip"]), results
+    assert alex.count("minecraft:iron_ingot") == 0
     server.console("give Alex minecraft:iron_ingot 1")
     time.sleep(2)
     alex.click(alex.slot_of("minecraft:iron_ingot"))
     results["sold"] = alex.chat()[-4:]
     # Sold at the price she bought at: one price.
     assert any("Sold 1 iron ingot at 15 coins each: 15 coins." in l for l in results["sold"]), results
-    assert any("1 iron ingot kept: bought from the market in the last 24 h." in l for l in results["sold"]), results
-    assert alex.count("minecraft:iron_ingot") == 1
-    # Sell all, up to the 2,000 coins a day: 1,984 left (1 from Steve's /pay in the nickname step: money received
-    # counts too; 15 for the iron), 9 diamonds at 200. Each one sold lowers the price: 40,000 * (1 - e^-0.045)
-    # = 1,760.1 for the 9.
+    assert alex.count("minecraft:iron_ingot") == 0
+    # All thirty diamonds sell, beyond the old daily and minute caps.
     server.console("give Alex minecraft:diamond 30")
     time.sleep(2)
     alex.click(300 + 49)
     results["sell_all"] = alex.chat()[-8:]
-    assert any("Sold 9 diamond at 196 coins each: 1,760 coins." in l for l in results["sell_all"]), results
+    assert any("Sold 30 diamond at 186 coins each: 5,571 coins." in l for l in results["sell_all"]), results
     assert not any("Tax" in l for l in results["sell_all"]), results
-    assert any("21 diamond kept: today's selling limit." in l for l in results["sell_all"]), results
-    assert alex.count("minecraft:diamond") == 21, alex.run("inventory")
+    assert alex.count("minecraft:diamond") == 0, alex.run("inventory")
     limits = alex.menu()[50]
     results["limits"] = limits
-    # 1,984 - 1,760.
-    assert "224 coins left of your 2,000 coins a day" in json.dumps(limits), limits
+    assert "No selling limit" in json.dumps(limits), limits
     alex.click(300 + 53)  # close
     assert not alex.menu()
     results["worth"] = alex.say("/worth diamond")
-    assert any("You may sell 631 more diamond today." in l for l in results["worth"]), results
-    return 2000 + 10 - 15 - 65 + 15 + 1760, results
+    assert not any("more diamond today" in l for l in results["worth"]), results
+    return 2000 + 10 - 15 - 65 + 30 + 5571, results
 
 
 def invsee(alex, data):
@@ -882,9 +875,9 @@ def run(ctl, resources, out):
         assert any("Welcome to the server, Steve!" in l for l in results["welcome"]), results["welcome"]
         assert any("1. Be respectful to everyone." in l for l in results["welcome"]), results["welcome"]
         assert any("Steve joined for the first time" in l for l in alex.chat()), alex.chat()
-        assert config["gambling"] == {"enabled": True, "min_bet": 10, "max_bet": 1000, "cooldown_seconds": 20,
+        assert config["gambling"] == {"enabled": True, "min_bet": 1, "max_bet": 1_000_000_000_000, "cooldown_seconds": 20,
                                       "offer_seconds": 60, "ticket_price": 10,
-                                      "max_tickets": 100, "lottery_seconds": 30}, config
+                                      "max_tickets": 0, "lottery_seconds": 30}, config
         # One price, to buy and to sell.
         assert config["market"]["items"]["minecraft:diamond"] == {"buy": 200, "sell": 200}, config
         server.console("op Alex")
@@ -898,12 +891,11 @@ def run(ctl, resources, out):
         assert any("You paid 120 coins to Steve. Balance: 380 coins" in l for l in results["pay"]), results
         results["paid"] = steve.chat()[-3:]
         assert any("Alex paid you 120 coins." in l for l in results["paid"]), results
-        # 9999 is past what Steve may still receive today (2,000 a day, 120 received): money paid counts toward the
-        # same daily limit as selling, so alts can't sell for a main past it.
+        # Payments require sufficient funds, with no daily receiving cap.
         results["refused"] = [alex.say(l) for l in ("/pay Steve 1500", "/pay Steve 9999", "/pay Alex 1",
                                                     "/pay Nobody 1")]
         for lines, error in zip(results["refused"], ("You only have 380 coins.",
-                                                     "Steve can only receive 1,880 coins more today",
+                                                     "You only have 380 coins.",
                                                      "You can't pay yourself.",
                                                      "No player named Nobody has an account.")):
             assert any(error in l for l in lines), results["refused"]
@@ -1020,17 +1012,16 @@ def run(ctl, resources, out):
         assert [(a["item"], a["count"], a["inventory"]) for a in took] == [("minecraft:torch", 5, "inventory")], took
         kinds = [a["kind"] for a in audit if not a["kind"].startswith("invsee_")]
         shop_kinds = ["eco_give", "buy 1 minecraft:iron_ingot", "buy 64 minecraft:cobblestone",
-                      "sell 1 minecraft:iron_ingot", "sell 9 minecraft:diamond", "buy 1 minecraft:diamond"]
+                      "sell 1 minecraft:iron_ingot", "sell 1 minecraft:iron_ingot", "sell 30 minecraft:diamond", "buy 1 minecraft:diamond"]
         assert kinds[-len(shop_kinds):] == shop_kinds, kinds[-8:]
         kinds = kinds[:-len(shop_kinds)]
         assert kinds[-2] in ("held_returned", "coinflip_cancel") and kinds[-1] == "daily_reward", kinds[-3:]
         results["stake_back"] = kinds[-2]
         sold = json.loads((data / "market.json").read_text())["sold"]
-        # Steve's sales of the first run's day, and Alex's; coins received by /pay count too (#139): Steve got 120 + 1
-        # from Alex, Alex 1 from Steve.
+        # Daily sales are recorded for statistics; payments are unrestricted.
         assert sorted((s["coins"], s["items"]) for s in sold.values()) == [
-            (441, {"minecraft:diamond": 1, "minecraft:wheat": 60}),
-            (1776, {"minecraft:diamond": 9, "minecraft:iron_ingot": 1})], sold
+            (320, {"minecraft:diamond": 1, "minecraft:wheat": 60}),
+            (5601, {"minecraft:diamond": 30, "minecraft:iron_ingot": 2})], sold
         print(json.dumps({"proof": "smp", "ok": True, **results}, indent=2))
     finally:
         (out / "server.log").write_text("\n".join(server.lines))

@@ -65,11 +65,15 @@ impl Lottery {
             }
             ["buy", n] => match parse_amount(n) {
                 None => vec![Out::Error("Usage: /lottery buy <tickets>".into())],
-                Some(n) if mine + n > config.max_tickets => vec![Out::Error(format!(
-                    "{} tickets a draw at most; you have {mine}.",
-                    config.max_tickets
-                ))],
-                Some(n) => match economy.hold("lottery_ticket", me.uuid, n * price) {
+                Some(n) => match n
+                    .checked_mul(price)
+                    .ok_or_else(|| "Ticket cost is too large.".to_string())
+                    .and_then(|cost| {
+                        self.pot(price).checked_add(cost).ok_or_else(|| {
+                            "Lottery pot exceeds the supported numeric range.".to_string()
+                        })?;
+                        economy.hold("lottery_ticket", me.uuid, cost)
+                    }) {
                     Err(e) => vec![Out::Error(e)],
                     Ok(()) => {
                         match self.tickets.iter_mut().find(|t| t.0 == me.uuid) {
@@ -226,13 +230,20 @@ mod tests {
     }
 
     #[test]
-    fn limits_and_off_by_default() {
+    fn unlimited_tickets_still_require_funds_and_enabled_gambling() {
         let (mut e, c, dir) = setup("limits");
         let mut l = Lottery::default();
         let out = l
             .command(&c, &mut e, &player(A), 0, "lottery buy 101")
             .unwrap();
-        assert!(matches!(&out[0], Out::Error(s) if s.contains("100 tickets")));
+        assert!(matches!(&out[0], Out::Error(_)), "insufficient funds");
+        e.adjust("test", A, 2000, "").unwrap();
+        let out = l
+            .command(&c, &mut e, &player(A), 0, "lottery buy 101")
+            .unwrap();
+        assert!(matches!(&out[0], Out::Reply(_)), "{out:?}");
+        assert_eq!(e.held(A), 1010);
+        e.adjust("test", A, -990, "").unwrap();
         let out = l
             .command(&c, &mut e, &player(A), 0, "lottery buy 51")
             .unwrap();
@@ -240,7 +251,7 @@ mod tests {
             matches!(&out[0], Out::Error(_)),
             "510 coins is more than 500"
         );
-        assert_eq!(e.held(A), 0);
+        assert_eq!(e.held(A), 1010);
         let off = Config::default();
         let out = l
             .command(&off, &mut e, &player(A), 0, "lottery buy 1")
@@ -251,7 +262,7 @@ mod tests {
             .unwrap();
         e.save().unwrap();
         let again = Economy::open(&dir, Default::default()).unwrap();
-        assert_eq!((again.balance(A), again.held(A)), (500, 0));
+        assert_eq!((again.balance(A), again.held(A)), (1510, 0));
         std::fs::remove_dir_all(dir).unwrap();
     }
 }
