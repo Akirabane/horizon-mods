@@ -1,0 +1,18 @@
+id = "unlimited_stacks_mod"
+kind = "native-mod"
+name = "Unlimited Stacks"
+summary = "Configurable stack limit for normally 64-stack, non-damageable items, with compact inventory counts."
+description = "Raises the stack limit for non-damageable items that normally stack to 64. Set a custom limit in Options → Mods, with a maximum of 2,147,483,647. Large inventory counts use compact labels such as 1k, 1.23m, and 2.14b. Items that normally stack to 1 or 16, and damageable items, are unchanged."
+authors = ["bart"]
+owners = ["bartekchomik26-dotcom"]
+license = "MIT"
+source = "https://github.com/bartekchomik26-dotcom/InfiniteStacks-Rust/releases/tag/mod"
+icon = "https://media.forgecdn.net/avatars/thumbnails/564/314/256/256/637920478481541062.png"
+
+[[versions]]
+version = "1.2.6"
+published = "2026-11-02"
+game = "26.3"
+file = "unlimited_stacks_mod-1.2.6.hnmod"
+sha256 = "177b990d50268f0978278313853131cbd514deeab251867498164bfd2c6a7790"
+changelog = "nothing"
