@@ -1,0 +1,27 @@
+id = "waypoints"
+kind = "native-mod"
+name = "Waypoints"
+summary = "Place waypoints with N, manage them with M, and see their name and distance in the world."
+description = """
+Waypoints for Horizon.
+
+- **N**: create a waypoint where you stand: name, X/Y/Z, dimension, colour, visible or hidden. Enter saves, Tab moves between fields, Esc cancels.
+- **M**: the waypoint list, filtered by All / Overworld / Nether / End. Each row shows its colour, name, coordinates, dimension and distance, with Hide/Show, Edit and Delete buttons.
+- **In the world**: each visible waypoint in your current dimension shows its name, its distance and a marker in its colour.
+- **Options > Mods > Waypoints**: rebind both keys and turn the in-world labels on or off.
+
+**What it does and doesn't do:** it only reads the game's own state (player position, dimension, camera, world folder name, server address) and draws on the HUD and its own screen. It stores waypoints as a text file per world and per server in `horizon-mods/.horizon-mod-data/waypoints/` inside the game folder. It uses only the Rust standard library, opens no network connections, and reads or writes no other files.
+
+Pinned to Horizon `c9d474d`, because it reads the world folder, server address and last frame's camera from the game itself."""
+authors = ["Nirokx"]
+owners = ["Nirokx"]
+license = "MIT"
+source = "https://github.com/Nirokx/horizon-waypoints"
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-02"
+game = "26.3"
+file = "waypoints-1.0.0.hnmod"
+sha256 = "9c0e670f1205c23fed0fe0b0eaf8f0b90a01f3cbb883a8eee445ebc03f4d90a4"
+changelog = "First release for Horizon 26.3 (Nightly c9d474d)."
