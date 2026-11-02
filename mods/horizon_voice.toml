@@ -1,0 +1,33 @@
+id = "horizon_voice"
+kind = "native-mod"
+name = "Horizon Voice"
+summary = "Proximity voice chat compatible with Simple Voice Chat 2.6.x servers. Not affiliated with Simple Voice Chat."
+description = """
+Proximity voice chat for Horizon. It speaks the network protocol of [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat) by Max Henkel, so a Horizon player can talk with Java Edition players on servers that run Simple Voice Chat 2.6.x. The server still needs that plugin or mod.
+
+**Relation to Simple Voice Chat:** this is a separate implementation written in Rust. It is not made by, affiliated with or endorsed by its authors and contains none of its code, but its wire format was worked out by reading Simple Voice Chat's public source, whose licence reserves all rights. Their permission has not been asked for.
+
+- Push to talk (V) or voice activation, mute (M), menu (G); keys can be changed in Options > Mods
+- Volume by distance and stereo panning
+- Groups: from the menu or with `/vgroup`
+- Noise suppression, microphone gain, device choice, microphone test
+
+Uses the microphone and opens a UDP connection to the voice server the Minecraft server names. Built for Horizon revision 4aa6854. Includes opus-rs (BSD-3-Clause)."""
+authors = ["Frenk1997"]
+owners = ["Frenk1997"]
+license = "MIT AND BSD-3-Clause"
+source = "https://github.com/Frenk1997/horizon-voice"
+key = "RWSfTMDc8NAIuQzwqenEKTkL5NpKRJdB8mAlyYpH1hT0tvq62F401QUV"
+
+[[versions]]
+version = "0.3.0"
+published = "2026-11-02"
+game = "26.3"
+file = "horizon_voice-0.3.0.hnmod"
+sha256 = "9a65d3e979cadc28b89d570a0d6c261c3577e83487384c3b5a10753a254872a8"
+signature = """
+untrusted comment: signature from minisign secret key\r
+RUSfTMDc8NAIuThTIxFwnTTxP6Ed8nDOQ6dPW7zp7rLwJol8iEDBm1kKcnOJAlj/JtLnwZzBC5ZwGgPtOCSK9L42nD8wrw5PUw4=\r
+trusted comment: horizon_voice 0.3.0\r
+vYHpvHIBNpTGkGx3oGHd/ZBykwX71k9xsaVCiA+Ay5hIAfyCTbQdg0V+GlzLdDV66VKYiUdWK+pTbmRXY6MdCQ=="""
+changelog = "First release."
