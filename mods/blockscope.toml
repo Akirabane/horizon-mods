@@ -1,13 +1,21 @@
 id = "blockscope"
 kind = "native-mod"
 name = "Blockscope"
-summary = "The block under your crosshair: its name, id, distance and icon, with reach, placement and opacity on its own settings page. A Jade-style tooltip for Horizon."
-description = "Jade-style block info for Horizon: the block under your crosshair, its name in your language, its block id, how far it is and its icon."
+summary = "The block under your crosshair: its name, id, distance and icon, plus hardness, states and a container's slots."
+description = "A Jade-style tooltip for Horizon: the block under your crosshair with its name in your language, block id, distance and icon, plus its hardness and the tool it wants, its state properties, a crop's growth and, for a container, its slots. Ten switches on its own settings page."
 authors = ["Domanffe"]
 owners = ["Domanffe"]
 license = "MIT"
 source = "https://github.com/Domanffe/blockscope"
 icon = "https://horizon-rust.github.io/horizon-mods/icons/blockscope.png"
+
+[[versions]]
+version = "0.3.1"
+published = "2026-11-02"
+game = "26.3"
+file = "blockscope-0.3.1.hnmod"
+sha256 = "4fea94e5337aa82df3d981fc6231fecc80161262add577b596bb6661e0e303d1"
+changelog = "Rebuilt on the 2026-11-01 Nightly (Horizon `4aa6854`). All five hook points are named now — `mods`, `settings`, `settings_click`, `hud`, `tick` — so the bundle still applies when the game moves them."
 
 [[versions]]
 version = "0.3.0"
