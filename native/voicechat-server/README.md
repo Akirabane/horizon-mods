@@ -14,9 +14,13 @@ any server: the server sends them nothing.
   wherever they are. Groups: normal (members aren't heard outside but hear who is near), open (heard and hearing
   nearby), isolated (members only).
 - **Limits:** 75 voice packets a second a player (burst 30), Opus frames up to 1275 bytes, 128 groups, names and
-  passwords up to 24 characters, 24 messages a player a tick. A packet that doesn't open with the player's key is
-  dropped without an answer, and a client's address can only change after it has been quiet for 5 seconds (a
-  replayed handshake can't take over a live connection).
+  passwords up to 24 characters, group and state changes 2 a second a player (burst 10), one secret a second a
+  player (more requests meanwhile get one answer), 24 messages a player a tick and at most 512 waiting.
+- **Replays:** a packet that doesn't open with the player's key is dropped without an answer. A secret belongs to
+  the first address that authenticates with it: a handshake copied and sent from elsewhere moves nothing. Exact
+  copies are dropped too (the last 64 control packets' nonces, and voice packets' sequence numbers). A client the
+  server stops hearing for 10 keep-alives (its NAT rebound, say) gets a fresh secret over the game connection and
+  comes back from its new address with it; the old key then opens nothing.
 - **No port is opened** until the first voice chat client asks. Then the relay binds `bind:port` (UDP).
 
 ## Config

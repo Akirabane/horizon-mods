@@ -30,10 +30,14 @@ fn world() -> Vec<Player> {
 }
 
 fn server() -> Server {
+    server_with(Config::default())
+}
+
+fn server_with(config: Config) -> Server {
     let s = Server::start(Config {
         bind: "127.0.0.1".into(),
         port: 0,
-        ..Config::default()
+        ..config
     })
     .unwrap();
     s.tick(world());
@@ -55,6 +59,8 @@ struct Voice {
     socket: UdpSocket,
     server: SocketAddr,
     rng: SystemRandom,
+    /// The datagrams of its handshake: authenticate, connection check.
+    handshake: Vec<Vec<u8>>,
 }
 
 impl Voice {
@@ -68,15 +74,16 @@ impl Voice {
         socket
             .set_read_timeout(Some(Duration::from_millis(300)))
             .unwrap();
-        let v = Self {
+        let mut v = Self {
             uuid,
             secret,
             cipher: proto::Cipher::new(&secret),
             socket,
             server: SocketAddr::from(([127, 0, 0, 1], port)),
             rng: SystemRandom::new(),
+            handshake: Vec::new(),
         };
-        v.send(
+        let auth = v.send(
             &Out::default()
                 .byte(5)
                 .uuid(uuid)
@@ -86,11 +93,13 @@ impl Voice {
                 .collect::<Vec<_>>(),
         );
         assert_eq!(v.next(|p| p == [6]), Some(vec![6]), "authenticated");
-        v.send(&[9]);
+        let check = v.send(&[9]);
         assert_eq!(v.next(|p| p == [10]), Some(vec![10]), "connection checked");
+        v.handshake = vec![auth, check];
         v
     }
-    fn send(&self, plain: &[u8]) {
+    /// Sends a sealed packet; returns the datagram.
+    fn send(&self, plain: &[u8]) -> Vec<u8> {
         let sealed = self.cipher.seal(&self.rng, plain).unwrap();
         let datagram = Out::default()
             .byte(proto::MAGIC)
@@ -98,8 +107,16 @@ impl Voice {
             .bytes(&sealed)
             .done();
         self.socket.send_to(&datagram, self.server).unwrap();
+        datagram
     }
-    fn talk(&self, sequence: i64, whispering: bool) {
+    /// Answers keep-alives for a while, as a live client does.
+    fn idle(&self, for_ms: u64) {
+        let until = Instant::now() + Duration::from_millis(for_ms);
+        while Instant::now() < until {
+            self.next(|_| false);
+        }
+    }
+    fn talk(&self, sequence: i64, whispering: bool) -> Vec<u8> {
         self.send(
             &Out::default()
                 .byte(1)
@@ -107,7 +124,7 @@ impl Voice {
                 .long(sequence)
                 .flag(whispering)
                 .done(),
-        );
+        )
     }
     /// The next packet `wanted` accepts, skipping keep-alives (answered) and others; None after a quiet while.
     fn next(&self, wanted: impl Fn(&[u8]) -> bool) -> Option<Vec<u8>> {
@@ -443,4 +460,194 @@ fn config_defaults_fill_in() {
         })
         .is_err()
     );
+}
+
+/// A socket elsewhere that copies datagrams it saw and sends them as its own.
+fn stranger() -> UdpSocket {
+    let socket = UdpSocket::bind("127.0.0.1:0").unwrap();
+    socket
+        .set_read_timeout(Some(Duration::from_millis(300)))
+        .unwrap();
+    socket
+}
+
+fn answered(socket: &UdpSocket) -> bool {
+    let mut buf = [0u8; 4096];
+    socket.recv_from(&mut buf).is_ok()
+}
+
+#[test]
+fn a_replayed_handshake_after_a_silence_moves_nothing() {
+    let s = server();
+    let a = Voice::connect(A, &ask_secret(&s, A));
+    let b = Voice::connect(B, &ask_secret(&s, B));
+    s.tick(world());
+    s.outgoing(64);
+
+    // Alice says nothing for longer than the old 5 s move rule (but less than
+    // the 10 s after which she counts as lost).
+    std::thread::sleep(Duration::from_millis(5300));
+    let eve = stranger();
+    for datagram in &a.handshake {
+        eve.send_to(datagram, a.server).unwrap();
+        assert!(!answered(&eve), "no answer to a copied handshake");
+    }
+    b.talk(0, false);
+    assert!(a.hears().is_some(), "bob's voice still goes to alice");
+    assert!(!answered(&eve), "and not to the copier");
+
+    // Exact copies from alice's own address are dropped too.
+    a.socket.send_to(&a.handshake[1], a.server).unwrap();
+    assert_eq!(a.next(|p| p == [10]), None, "a copied check isn't answered");
+    let said = a.talk(0, false);
+    assert!(b.hears().is_some());
+    a.socket.send_to(&said, a.server).unwrap();
+    assert_eq!(b.hears(), None, "a copied voice packet isn't relayed twice");
+    a.talk(1, false);
+    assert!(b.hears().is_some(), "the next one is");
+
+    // Once her handshake has left the nonces remembered, the secret still
+    // belongs to her address alone.
+    for _ in 0..SEEN_NONCES + 4 {
+        a.send(&[8]);
+    }
+    a.idle(200);
+    for datagram in &a.handshake {
+        eve.send_to(datagram, a.server).unwrap();
+        assert!(!answered(&eve), "no answer to an old copy either");
+    }
+    b.talk(1, false);
+    assert!(a.hears().is_some());
+    assert!(!answered(&eve));
+}
+
+#[test]
+fn a_client_the_server_stops_hearing_gets_a_fresh_secret() {
+    let s = server_with(Config {
+        // Lost after 3 s: bob, who answers keep-alives only while a test
+        // reads his socket, must not count as lost too.
+        keep_alive_ms: 300,
+        ..Config::default()
+    });
+    let a = Voice::connect(A, &ask_secret(&s, A));
+    let b = Voice::connect(B, &ask_secret(&s, B));
+    s.message(
+        A,
+        proto::CREATE_GROUP,
+        &Out::default().text("Open").flag(false).short(1).done(),
+    );
+    s.tick(world());
+    let out = s.outgoing(64);
+    let group = for_player(&out, A)
+        .into_iter()
+        .find(|m| m.0 == proto::ADD_GROUP)
+        .map(|m| In::new(&m.1).uuid().unwrap())
+        .unwrap();
+
+    // Alice's NAT rebinds: the server hears nothing from her for 10 keep-alives.
+    b.idle(3500);
+    let out = s.outgoing(64);
+    let to_alice = for_player(&out, A);
+    assert_eq!(
+        to_alice.iter().map(|m| m.0.as_str()).collect::<Vec<_>>(),
+        [proto::SECRET],
+        "only a new secret, over the game connection"
+    );
+    let fresh = &to_alice[0].1;
+    assert_ne!(&fresh[..16], &a.secret, "a new key");
+
+    // The old key opens nothing now, from anywhere.
+    let eve = stranger();
+    eve.send_to(&a.handshake[0], a.server).unwrap();
+    assert!(!answered(&eve));
+    a.send(&[9]);
+    assert_eq!(a.next(|p| p == [10]), None);
+
+    // From her new address with the new secret, she is back, in her group.
+    let moved = Voice::connect(A, fresh);
+    s.tick(world());
+    let out = s.outgoing(64);
+    let alice = proto::state(&PlayerState {
+        uuid: A,
+        name: "alice".into(),
+        disabled: false,
+        disconnected: false,
+        group: Some(group),
+    });
+    assert!(
+        for_player(&out, B).contains(&(proto::STATE.to_owned(), alice)),
+        "{out:?}"
+    );
+    b.talk(0, false);
+    assert!(
+        moved.hears().is_some(),
+        "bob's voice reaches her new address"
+    );
+    assert_eq!(a.hears(), None, "and not the old one");
+    moved.talk(0, false);
+    assert!(b.hears().is_some());
+}
+
+#[test]
+fn repeated_secret_requests_and_group_changes_stay_bounded() {
+    let s = server();
+    // 40 players, each in a group of their own.
+    let many: Vec<Player> = (0..40u128)
+        .map(|i| player(0x100 + i, &format!("p{i}"), "minecraft:overworld", 0.0))
+        .collect();
+    s.tick(many.clone());
+    for p in &many {
+        ask_secret(&s, p.uuid);
+        s.message(
+            p.uuid,
+            proto::CREATE_GROUP,
+            &Out::default().text(&p.name).flag(false).short(0).done(),
+        );
+    }
+    s.tick(many.clone());
+    s.outgoing(usize::MAX);
+
+    // A thousand requests in a row: answered once now, once more a second later.
+    let first = many[0].uuid;
+    for _ in 0..1000 {
+        s.message(first, proto::REQUEST_SECRET, &20i32.to_be_bytes());
+    }
+    let count = |out: &[Message], channel: &str| {
+        out.iter()
+            .filter(|m| m.0 == first && m.1 == channel)
+            .count()
+    };
+    let out = s.outgoing(usize::MAX);
+    assert_eq!(count(&out, proto::SECRET), 0, "too soon after the last one");
+    std::thread::sleep(SECRET_EVERY + Duration::from_millis(50));
+    s.tick(many.clone());
+    let out = s.outgoing(usize::MAX);
+    assert_eq!(count(&out, proto::SECRET), 1);
+    // Starting over, it left its own group, which went away.
+    assert_eq!(count(&out, proto::ADD_GROUP), 39, "the groups once");
+    let mine: Vec<String> = for_player(&out, first).into_iter().map(|m| m.0).collect();
+    assert!(mine.len() <= 1 + 1 + 39 + 1, "{mine:?}");
+    s.tick(many.clone());
+    assert_eq!(count(&s.outgoing(usize::MAX), proto::SECRET), 0);
+
+    // Group changes: a burst of 10, then 2 a second.
+    let second = many[1].uuid;
+    for i in 0..100 {
+        s.message(
+            second,
+            proto::CREATE_GROUP,
+            &Out::default()
+                .text(&format!("g{i}"))
+                .flag(false)
+                .short(0)
+                .done(),
+        );
+    }
+    let out = s.outgoing(usize::MAX);
+    let joined = out
+        .iter()
+        .filter(|m| m.0 == second && m.1 == proto::JOINED_GROUP)
+        .count();
+    // Its bucket refilled during the wait: 10 of the 100.
+    assert_eq!(joined, OPS_BURST as usize);
 }

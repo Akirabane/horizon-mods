@@ -106,7 +106,11 @@ pub(super) fn message(game: &mut Game<'_>, player: u128, channel: &str, data: &[
     let Relay::Running(server) = &*relay else {
         return;
     };
-    server.tick(players(game));
+    // A player who joined since the last tick (or a relay that just started):
+    // learn who is on first. Not for every message: it lists every player.
+    if !server.knows(player) {
+        server.tick(players(game));
+    }
     server.message(player, channel, data);
 }
 

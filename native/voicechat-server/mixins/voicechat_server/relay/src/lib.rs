@@ -75,15 +75,31 @@ pub type Message = (u128, String, Vec<u8>);
 const MAX_GROUPS: usize = 128;
 const MIC_PER_SECOND: f64 = 75.0;
 const MIC_BURST: f64 = 30.0;
-/// A connected client may move to another address only after its old one
-/// has been quiet this long (a replayed handshake can't steal a live one).
-const MOVE_AFTER: Duration = Duration::from_secs(5);
+/// Group and voice state changes a second a player may make.
+const OPS_PER_SECOND: f64 = 2.0;
+const OPS_BURST: f64 = 10.0;
+/// Secrets a player's own requests get at most this often; more requests
+/// meanwhile are answered once, when the time is up.
+const SECRET_EVERY: Duration = Duration::from_secs(1);
+/// Messages waiting for one player at most; more are dropped.
+const MAX_QUEUED: usize = 512;
+/// The nonces of a player's last control packets remembered, to drop exact
+/// replays; and how far behind the newest a voice packet's sequence may be.
+const SEEN_NONCES: usize = 64;
+const MIC_WINDOW: i128 = 64;
 
+/// A player's voice connection, for the life of one secret.
+///
+/// The first address that authenticates holds the secret: no other address
+/// can use it, so a handshake captured and sent again from elsewhere moves
+/// nothing. A client that moves (a NAT that rebinds) gets a fresh secret
+/// over the game connection, which the game session authenticates: when the
+/// server stops hearing it, or when it asks again. The old key then opens
+/// nothing.
 struct Client {
     secret: [u8; 16],
     cipher: proto::Cipher,
     addr: Option<SocketAddr>,
-    last_heard: Instant,
     /// Answered the connection check: its voice connection works.
     connected: bool,
     last_keep_alive: Instant,
@@ -91,6 +107,94 @@ struct Client {
     group: Option<u128>,
     tokens: f64,
     refilled: Instant,
+    ops: f64,
+    ops_refilled: Instant,
+    /// When this secret was given, and whether a request for another waits.
+    issued: Instant,
+    asked_again: bool,
+    /// Nonces of the control packets already taken (the newest last).
+    seen: VecDeque<[u8; 12]>,
+    /// The newest voice sequence, and which of the 64 before it arrived.
+    mic_top: Option<i64>,
+    mic_seen: u64,
+}
+
+impl Client {
+    fn new(secret: [u8; 16], now: Instant) -> Self {
+        Self {
+            secret,
+            cipher: proto::Cipher::new(&secret),
+            addr: None,
+            connected: false,
+            last_keep_alive: now,
+            disabled: false,
+            group: None,
+            tokens: MIC_BURST,
+            refilled: now,
+            ops: OPS_BURST,
+            ops_refilled: now,
+            issued: now,
+            asked_again: false,
+            seen: VecDeque::new(),
+            mic_top: None,
+            mic_seen: 0,
+        }
+    }
+
+    /// A control packet's nonce: false if it was already taken.
+    fn fresh_nonce(&mut self, nonce: [u8; 12]) -> bool {
+        if self.seen.contains(&nonce) {
+            return false;
+        }
+        if self.seen.len() >= SEEN_NONCES {
+            self.seen.pop_front();
+        }
+        self.seen.push_back(nonce);
+        true
+    }
+
+    /// A voice packet's sequence: false if it was already relayed or is too
+    /// old (a replay). A client counts up from 0 for each secret.
+    fn fresh_sequence(&mut self, sequence: i64) -> bool {
+        let Some(top) = self.mic_top else {
+            self.mic_top = Some(sequence);
+            self.mic_seen = 1;
+            return true;
+        };
+        let ahead = i128::from(sequence) - i128::from(top);
+        if ahead > 0 {
+            self.mic_seen = if ahead >= MIC_WINDOW {
+                1
+            } else {
+                (self.mic_seen << ahead) | 1
+            };
+            self.mic_top = Some(sequence);
+            return true;
+        }
+        let back = -ahead;
+        if back >= MIC_WINDOW {
+            return false;
+        }
+        let bit = 1u64 << back;
+        if self.mic_seen & bit != 0 {
+            return false;
+        }
+        self.mic_seen |= bit;
+        true
+    }
+
+    /// One group or state change, if the player has one left.
+    fn spend_op(&mut self, now: Instant) -> bool {
+        self.ops = (self.ops
+            + now.duration_since(self.ops_refilled).as_secs_f64() * OPS_PER_SECOND)
+            .min(OPS_BURST);
+        self.ops_refilled = now;
+        if self.ops < 1.0 {
+            return false;
+        }
+        self.ops -= 1.0;
+        true
+    }
 }
 
 struct Group {
@@ -101,6 +205,8 @@ struct Group {
 
 struct State {
     config: Config,
+    /// The UDP port the socket got.
+    port: u16,
     clients: HashMap<u128, Client>,
     players: HashMap<u128, Player>,
     groups: HashMap<u128, Group>,
@@ -134,9 +240,11 @@ impl Server {
         }
         let socket = UdpSocket::bind((config.bind.as_str(), config.port))?;
         socket.set_read_timeout(Some(Duration::from_millis(100)))?;
+        let port = socket.local_addr()?.port();
         let shared = Arc::new(Shared {
             state: Mutex::new(State {
                 config,
+                port,
                 clients: HashMap::new(),
                 players: HashMap::new(),
                 groups: HashMap::new(),
@@ -176,12 +284,27 @@ impl Server {
         for uuid in gone {
             st.forget(uuid);
         }
+        // Requests that came too soon after a secret get one now.
+        let due: Vec<u128> = st
+            .clients
+            .iter()
+            .filter(|(_, c)| c.asked_again && c.issued.elapsed() >= SECRET_EVERY)
+            .map(|(u, _)| *u)
+            .collect();
+        for uuid in due {
+            st.give_secret(&self.shared.rng, uuid, false);
+        }
         let changed: Vec<u128> = st.changed.drain().collect();
         for uuid in changed {
             if let Some(s) = st.player_state(uuid) {
                 st.tell_all(proto::STATE, proto::state(&s));
             }
         }
+    }
+
+    /// Whether `player` was on the server at the last tick.
+    pub fn knows(&self, player: u128) -> bool {
+        lock(&self.shared.state).players.contains_key(&player)
     }
 
     /// A player left the game.
@@ -203,71 +326,17 @@ impl Server {
                 if version != proto::COMPATIBILITY_VERSION {
                     return;
                 }
-                let mut secret = [0u8; 16];
-                if self.shared.rng.fill(&mut secret).is_err() {
+                if let Some(c) = st.clients.get_mut(&player)
+                    && c.issued.elapsed() < SECRET_EVERY
+                {
+                    c.asked_again = true;
                     return;
                 }
-                let port = self
-                    .shared
-                    .socket
-                    .local_addr()
-                    .map(|a| a.port())
-                    .unwrap_or(st.config.port);
-                let now = Instant::now();
-                // A new secret each time: a rejoining client starts over.
-                let old = st.clients.insert(
-                    player,
-                    Client {
-                        secret,
-                        cipher: proto::Cipher::new(&secret),
-                        addr: None,
-                        last_heard: now,
-                        connected: false,
-                        last_keep_alive: now,
-                        disabled: false,
-                        group: None,
-                        tokens: MIC_BURST,
-                        refilled: now,
-                    },
-                );
-                if let Some(old) = old
-                    && let Some(g) = old.group
-                {
-                    st.leave_group_cleanup(g);
-                }
-                let c = &st.config;
-                let body = proto::secret(&proto::SecretInfo {
-                    secret: &secret,
-                    port,
-                    player,
-                    mtu: c.mtu.min(i32::MAX as u32) as i32,
-                    distance: c.distance,
-                    keep_alive_ms: c.keep_alive_ms.clamp(100, 60_000) as i32,
-                    groups: c.groups,
-                    voice_host: &c.voice_host,
-                });
-                st.tell(player, proto::SECRET, body);
-                let all: Vec<PlayerState> = st
-                    .clients
-                    .keys()
-                    .filter_map(|u| st.player_state(*u))
-                    .collect();
-                st.tell(player, proto::STATES, proto::states(&all));
-                let groups: Vec<(String, Vec<u8>)> = st
-                    .groups
-                    .iter()
-                    .map(|(id, g)| {
-                        (
-                            proto::ADD_GROUP.to_owned(),
-                            proto::add_group(*id, &g.name, g.password.is_some(), g.kind),
-                        )
-                    })
-                    .collect();
-                st.outbox.entry(player).or_default().extend(groups);
-                st.changed.insert(player);
+                st.give_secret(&self.shared.rng, player, false);
             }
             Request::State { disabled } => {
                 if let Some(c) = st.clients.get_mut(&player)
+                    && c.spend_op(Instant::now())
                     && c.disabled != disabled
                 {
                     c.disabled = disabled;
@@ -281,9 +350,9 @@ impl Server {
             } => {
                 let name = name.trim().to_owned();
                 if !st.config.groups
-                    || !st.clients.contains_key(&player)
                     || name.is_empty()
                     || st.groups.len() >= MAX_GROUPS
+                    || !st.spend_op(player)
                 {
                     return;
                 }
@@ -308,7 +377,7 @@ impl Server {
                 st.join(player, id);
             }
             Request::JoinGroup { group, password } => {
-                if !st.config.groups || !st.clients.contains_key(&player) {
+                if !st.config.groups || !st.groups.contains_key(&group) || !st.spend_op(player) {
                     return;
                 }
                 let Some(g) = st.groups.get(&group) else {
@@ -331,6 +400,9 @@ impl Server {
                 let Some(c) = st.clients.get_mut(&player) else {
                     return;
                 };
+                if c.group.is_none() || !c.spend_op(Instant::now()) {
+                    return;
+                }
                 let Some(g) = c.group.take() else { return };
                 st.tell(
                     player,
@@ -371,11 +443,78 @@ impl Drop for Server {
 }
 
 impl State {
+    /// Queues a message for `player`'s client (dropped when MAX_QUEUED wait).
     fn tell(&mut self, player: u128, channel: &str, data: Vec<u8>) {
-        self.outbox
-            .entry(player)
-            .or_default()
-            .push_back((channel.to_owned(), data));
+        let queue = self.outbox.entry(player).or_default();
+        if queue.len() < MAX_QUEUED {
+            queue.push_back((channel.to_owned(), data));
+        }
+    }
+
+    fn spend_op(&mut self, player: u128) -> bool {
+        self.clients
+            .get_mut(&player)
+            .is_some_and(|c| c.spend_op(Instant::now()))
+    }
+
+    /// A fresh secret for `player`: the old one opens nothing any more.
+    /// `rekey`: the server's own, for a client it stopped hearing (it keeps its
+    /// group and state, and gets only the secret). Otherwise the client asked:
+    /// it starts over and gets everyone's state and the groups, instead of
+    /// whatever still waited for it.
+    fn give_secret(&mut self, rng: &SystemRandom, player: u128, rekey: bool) {
+        let mut secret = [0u8; 16];
+        if rng.fill(&mut secret).is_err() {
+            return;
+        }
+        let mut client = Client::new(secret, Instant::now());
+        let old = self.clients.remove(&player);
+        if rekey && let Some(old) = &old {
+            client.group = old.group;
+            client.disabled = old.disabled;
+            client.ops = old.ops;
+            client.ops_refilled = old.ops_refilled;
+        }
+        self.clients.insert(player, client);
+        if !rekey && let Some(g) = old.and_then(|o| o.group) {
+            self.leave_group_cleanup(g);
+        }
+        let c = &self.config;
+        let body = proto::secret(&proto::SecretInfo {
+            secret: &secret,
+            port: self.port,
+            player,
+            mtu: c.mtu.min(i32::MAX as u32) as i32,
+            distance: c.distance,
+            keep_alive_ms: c.keep_alive_ms.clamp(100, 60_000) as i32,
+            groups: c.groups,
+            voice_host: &c.voice_host,
+        });
+        self.changed.insert(player);
+        if rekey {
+            // Past the cap: the secret is what gets the client back.
+            self.outbox
+                .entry(player)
+                .or_default()
+                .push_back((proto::SECRET.to_owned(), body));
+            return;
+        }
+        self.outbox.remove(&player);
+        self.tell(player, proto::SECRET, body);
+        let all: Vec<PlayerState> = self
+            .clients
+            .keys()
+            .filter_map(|u| self.player_state(*u))
+            .collect();
+        self.tell(player, proto::STATES, proto::states(&all));
+        let groups: Vec<Vec<u8>> = self
+            .groups
+            .iter()
+            .map(|(id, g)| proto::add_group(*id, &g.name, g.password.is_some(), g.kind))
+            .collect();
+        for g in groups {
+            self.tell(player, proto::ADD_GROUP, g);
+        }
     }
 
     /// To every player with a voice chat client.
@@ -493,8 +632,15 @@ fn relay(shared: &Shared) {
     let mut buf = vec![0u8; 4096];
     let mut last_keep_alive = Instant::now();
     while shared.running.load(Ordering::Relaxed) {
-        if let Ok((n, from)) = shared.socket.recv_from(&mut buf) {
-            datagram(shared, &buf[..n], from);
+        match shared.socket.recv_from(&mut buf) {
+            Ok((n, from)) => datagram(shared, &buf[..n], from),
+            Err(e)
+                if matches!(
+                    e.kind(),
+                    io::ErrorKind::WouldBlock | io::ErrorKind::TimedOut
+                ) => {}
+            // Never spin on an error that comes back at once.
+            Err(_) => std::thread::sleep(Duration::from_millis(10)),
         }
         let every = Duration::from_millis(u64::from(
             lock(&shared.state).config.keep_alive_ms.clamp(100, 60_000),
@@ -512,6 +658,9 @@ fn send(shared: &Shared, cipher: &proto::Cipher, to: SocketAddr, packet: &ToClie
     }
 }
 
+/// Keep-alives to every authenticated client. One that stopped answering
+/// gets a fresh secret over the game connection: if it moved (its NAT
+/// rebound), it comes back from its new address with that secret.
 fn keep_alive(shared: &Shared, every: Duration) {
     let mut st = lock(&shared.state);
     let mut lost = Vec::new();
@@ -524,7 +673,9 @@ fn keep_alive(shared: &Shared, every: Duration) {
         }
         send(shared, &c.cipher, addr, &ToClient::KeepAlive);
     }
-    st.changed.extend(lost);
+    for uuid in lost {
+        st.give_secret(&shared.rng, uuid, true);
+    }
 }
 
 fn datagram(shared: &Shared, datagram: &[u8], from: SocketAddr) {
@@ -541,6 +692,9 @@ fn datagram(shared: &Shared, datagram: &[u8], from: SocketAddr) {
     let Ok(packet) = FromClient::read(&plain) else {
         return;
     };
+    // It opened, so it holds at least a nonce and a tag.
+    let mut nonce = [0u8; 12];
+    nonce.copy_from_slice(&sealed[..12]);
     let now = Instant::now();
     if let FromClient::Authenticate {
         player: who,
@@ -550,14 +704,11 @@ fn datagram(shared: &Shared, datagram: &[u8], from: SocketAddr) {
         if who != player || !constant_eq(&secret, &c.secret) {
             return;
         }
-        if c.addr.is_some_and(|a| a != from) && now.duration_since(c.last_heard) < MOVE_AFTER {
+        // The secret belongs to the first address that authenticated with it.
+        if c.addr.is_some_and(|a| a != from) || !c.fresh_nonce(nonce) {
             return;
         }
-        if c.addr != Some(from) {
-            c.addr = Some(from);
-            c.connected = false;
-        }
-        c.last_heard = now;
+        c.addr = Some(from);
         send(shared, &c.cipher, from, &ToClient::AuthenticateAck);
         return;
     }
@@ -565,7 +716,13 @@ fn datagram(shared: &Shared, datagram: &[u8], from: SocketAddr) {
     if c.addr != Some(from) {
         return;
     }
-    c.last_heard = now;
+    if let FromClient::Mic { sequence, .. } = packet {
+        if !c.fresh_sequence(sequence) {
+            return;
+        }
+    } else if !c.fresh_nonce(nonce) {
+        return;
+    }
     match packet {
         FromClient::ConnectionCheck => {
             c.last_keep_alive = now;
@@ -583,9 +740,9 @@ fn datagram(shared: &Shared, datagram: &[u8], from: SocketAddr) {
                 st.changed.insert(player);
             }
         }
-        FromClient::Ping { id, timestamp } => {
-            send(shared, &c.cipher, from, &ToClient::Ping { id, timestamp })
-        }
+        // The server never pings, so this isn't an answer: not echoed (a
+        // client that echoes pings would otherwise bounce it forever).
+        FromClient::Ping { .. } => {}
         FromClient::Mic {
             data,
             sequence,

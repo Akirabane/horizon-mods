@@ -78,7 +78,9 @@ jobs:
           names = zipfile.ZipFile(path).namelist()
           manifest = json.loads(zipfile.ZipFile(path).read("horizon-native.json"))
           assert manifest["hooks"] >= 1, manifest
-          assert all(n == "horizon-native.json" or (n.startswith(f"mixins/{manifest['id']}/") and n.endswith((".rs", ".toml"))) for n in names), names
+          bundle = f"mixins/{manifest['id']}/"
+          assert all(n == "horizon-native.json" or n == bundle + "LICENSE" or (n.startswith(bundle) and n.endswith((".rs", ".toml"))) for n in names), names
+          assert bundle + "LICENSE" in names, "the mod's LICENSE travels in its package"
           print(path, manifest)
           PY
       - uses: actions/upload-artifact@v4
