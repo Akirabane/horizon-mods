@@ -1,0 +1,26 @@
+id = "speedrun_timer"
+kind = "native-mod"
+name = "Speedrun Timer"
+summary = "Speedrun Timer Is a mod made to count the time it took you to beat the Game"
+description = """
+Speedrun Timer Is a mod made to count the time it took you to beat the Game 
+it features on screen timer and best score count it also save files of speedrun records locally """
+authors = ["Demerobit"]
+owners = ["Demerobit"]
+license = "MIT"
+source = "https://github.com/Demerobit/Speedrun-Timer-Horizon-Rust-Minecraft"
+icon = "https://raw.githubusercontent.com/Demerobit/Speedrun-Timer-Horizon-Rust-Minecraft/main/icon.png"
+key = "RWSN8c+oZYIvyvgXXOpp3RmpTyTijX2OA0iUvsExiaCTn1BawtmLRT6A"
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-03"
+game = "26.3"
+file = "speedrun_timer-1.0.0.hnmod"
+sha256 = "a628fef22b6e072029647970623f9e12e10929069caca9571ca4bb2bbf08a988"
+signature = """
+untrusted comment: speedrun_timer 1.0.0
+RUSN8c+oZYIvyoH9a97dmlDoTaXXaL5RI7SylSk47DKxhoYAcWOoPrsrUtS1VQqoN06ELQMKEfafNiR1qT1QyvmL/5K6ZF/j8Ak=
+trusted comment: timestamp:1793684713\tfile:speedrun_timer-1.0.0.hnmod\thashed
+ZfY1563ZBFhaeAmd+JqVmKRDNgNacSl4QYB+Crf0JrBtEXso3r18hvVI/OgXCdgBszvh/r3ptkakCDWK2HoFBQ=="""
+changelog = "This is the first release of the Mod "
