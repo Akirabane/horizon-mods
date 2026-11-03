@@ -83,7 +83,8 @@ The index: `https://horizon-rust.github.io/horizon-mods/index.json`.
 [horizon-mixins](https://github.com/horizon-rust/horizon-mixins) bundles on Horizon's native hook points
 ([docs/native-mods.md](https://github.com/horizon-rust/horizon/blob/main/docs/native-mods.md)). Each folder keeps the
 history of the repository it came from. A mod builds on any Horizon whose hook points are at least the version its
-`compatibility.json` names; `horizon_revision` is the commit it was last tested on.
+`compatibility.json` names; `horizon_revision` is the commit it was last tested on. `smp` and `voicechat-server`
+are server mods, built into the official server's engine (see their READMEs).
 
 ```sh
 python3 native/tools/native.py check zoom          # apply on the tested Horizon and cargo check the game

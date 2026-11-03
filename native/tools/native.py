@@ -170,7 +170,9 @@ def cargo(stage_dir, action):
 
 
 def package(m):
-    """A deterministic .hnmod: horizon-native.json and the bundle's .rs and .toml files."""
+    """A deterministic .hnmod: horizon-native.json, the bundle's .rs and .toml files (its crates' too) and the mod's
+    LICENSE as mixins/<id>/LICENSE, so the licence's notice travels with the sources (Horizon's bundle reader
+    accepts LICENSE* files there)."""
     manifest = {"schema": 1, "id": m.id, "version": m.version, "game": m.compat["game"],
                 "horizon": m.compat["horizon_revision"], "mixins": m.compat["horizon_mixins_revision"],
                 "hooks": m.compat["hooks"]}
@@ -178,9 +180,13 @@ def package(m):
     if pinned != m.compat["horizon_revision"]:
         sys.exit(f"{m.id}: horizon-mixin.toml pins {pinned}, compatibility.json {m.compat['horizon_revision']}")
     files = {"horizon-native.json": (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode()}
-    for path in sorted(m.bundle.iterdir()):
-        if path.suffix in (".rs", ".toml"):
-            files[f"mixins/{m.id}/{path.name}"] = path.read_bytes()
+    # The helpers and modules, and the sources of the bundle's own crates (horizon-mixins 0.6.0).
+    for path in sorted(m.bundle.rglob("*")):
+        if path.is_file() and path.suffix in (".rs", ".toml"):
+            files[f"mixins/{m.id}/{path.relative_to(m.bundle).as_posix()}"] = path.read_bytes()
+    licence = m.root / "LICENSE"
+    if licence.is_file():
+        files.setdefault(f"mixins/{m.id}/LICENSE", licence.read_bytes())
     out = TARGET / f"{m.id}-{m.version}.hnmod"
     TARGET.mkdir(exist_ok=True)
     with zipfile.ZipFile(out, "w", compression=zipfile.ZIP_DEFLATED) as archive:
