@@ -1,19 +1,29 @@
 id = "crossversion"
 kind = "native-mod"
 name = "Cross Version"
-summary = "Allows joining older version minecraft servers"
+summary = "Allows version hopping offline."
 description = """
-
-
-A native Horizon mod that lets the 26.3 client join servers that speak an older Minecraft protocol.
-
-Horizon talks exactly one protocol (777, Minecraft 26.3). This mod watches a join, asks the server what protocol it speaks in its status reply, and — if it is not 26.3 — starts a ViaProxy instance on a loopback port and points the join at it. The proxy speaks 26.3 to Horizon and the server's own version to the server. Nothing else in the client changes, and a join to a 26.3 server never starts anything."""
+Hop versions, offline.
+Uses ViaProxy as an inbetween for now."""
 authors = ["JustKarkat"]
 owners = ["JustKarkat"]
 license = "MIT"
 source = "https://github.com/JustKarkat/horizon-crossversion/"
 icon = "https://github.com/JustKarkat/horizon-crossversion/blob/master/icon.png?raw=true"
 key = "RWTcPJHJYjPW0pV3lPwr45crCu0wJxW5HbDLc3fr3Eom1TzxO++kHOo4"
+
+[[versions]]
+version = "0.8.0"
+published = "2026-11-03"
+game = "26.3"
+file = "crossversion-0.8.0.hnmod"
+sha256 = "5b371f1b7b3582e0c92aa1dc22b491b50c024fe95833aa2bd9457189631caafd"
+signature = """
+untrusted comment: signature from rsign secret key
+RUTcPJHJYjPW0vc8h9pG+LC/9EkYg60UM28gNkxJ31iDOXapyV80qqnB9H12OuOtzBmPkbB33fkh0IKE5O8zcCzat0jyj6Tpqw8=
+trusted comment: timestamp:1793679858\tfile:crossversion-0.8.0.hnmod\thashed
+3hY5NK517bzva/2q54Pmj9QXO3z6WF0WWMfuA8T9H8qCuOe6TYnmYB5eEagRMpZUNK/ICcrfPEx+DE303XIOAQ=="""
+changelog = "Offline mode only. "
 
 [[versions]]
 version = "0.7.1"
