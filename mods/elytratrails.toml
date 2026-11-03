@@ -1,0 +1,48 @@
+id = "elytratrails"
+kind = "native-mod"
+name = "ElytraTrails"
+summary = "Horizon mod that adds elytra trails."
+description = """
+**Simple Port of ElytraTrails for Horizon** Based on [ElytraTrails](https://github.com/dbrighthd/elytratrails) by dbrighthd.
+
+## What it does
+
+While a player glides with elytra, a ribbon trail streams behind each wing and fades out over about a second. You see your own trail in third person and other players' trails too.
+
+## Settings
+
+Open Options > Mods > ElytraTrails:
+
+- **Trails**: turns every trail on or off.
+- **Your trail**: your own trail, in third person (F5).
+- **Other players' trails**: the trails of the other players in view.
+- **Color**: ice, gold, rose, violet or white.
+- **Length**: short, normal or long. How long a trail stays after its point was made.
+- **Width**: thin, normal or wide.
+
+## Credits
+
+- ElytraTrails by [dbrighthd](https://github.com/dbrighthd/elytratrails), the original idea and visual design.
+
+## License
+
+MPL-2.0."""
+authors = ["soufi"]
+owners = ["soufied"]
+license = "MPL-2.0"
+source = "https://github.com/soufied/ElytraTrails-Horizon"
+icon = "https://raw.githubusercontent.com/soufied/ElytraTrails-Horizon/refs/heads/main/icons/elytratrails.png"
+key = "RWT6eNq4e5WfVDA2lzOOi6XCm/+jJgilqT1+HUUM33ie5MCjcRfSg760"
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-03"
+game = "26.3"
+file = "elytratrails-0.1.0.hnmod"
+sha256 = "e618dddc6b0c28ed490502ac736d55d0222d87e0d99006cca19deaa16bb62578"
+signature = """
+untrusted comment: signature from minisign secret key
+RUT6eNq4e5WfVFtZZ9CWp689nPc4DCUV+KwZvGA1jiXKU50uSENXECcET5vNPRXW/OK2uOpeALdWsqdJdz8K8S1FYKZcFXPM6QY=
+trusted comment: timestamp:1793666214\tfile:elytratrails-0.1.0.hnmod\thashed
+A0e+343jU9ecec8eaEtKriOReHk4iZhWdhBmvVaBT5O6NRXvD90on4MQCeVf2L+Dy0FjArhpN4NQFoMznbzwCg=="""
+changelog = "Initial release."
