@@ -1,0 +1,22 @@
+id = "mod_menu"
+kind = "native-mod"
+name = "Mod Menu"
+summary = "ModMenu For Horizon"
+description = """
+Adds a Mods button next to Accessibility on the title screen. It opens a Mod Menu style screen that lists every mod you have installed, with its icon, name, version and description.
+
+- Search by name, id or description, and filter by on, off, native or content mods.
+- Pick a mod to see its details, turn it on or off, or open its own settings page.
+- Open Mods Folder and Done at the bottom, as in the Java mod."""
+authors = ["tariksabanuz"]
+owners = ["tariksabanuz"]
+license = "MIT"
+source = "https://github.com/tariksabanuz/ModMenuHorizon"
+icon = "https://raw.githubusercontent.com/tariksabanuz/ModMenuHorizon/main/icon.png"
+
+[[versions]]
+version = "0.3.0"
+published = "2026-11-03"
+game = "26.3"
+file = "mod_menu-0.3.0.hnmod"
+sha256 = "7896b3b5ad727ef6e2bc56039796713809483fb157daa385f78ebd3353d653bd"
