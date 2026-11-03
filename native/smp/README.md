@@ -21,7 +21,7 @@ header and footer).
 | `/eco take <player> <amount> [reason]`, `/money take ...` | operators of level 3: takes a cheat's gains out of the game, logged with the reason |
 | `/eco stats` | the money supply and where it sits, what the server made and destroyed today, how evenly money is spread |
 | `/ah` | the auction house: a chest menu of listings by category, cheapest a unit first; click one to buy it or bid; your listings (click to take one back) and your mail |
-| `/ah sell <price> [count]` | lists the stack in your hand (or part of it) at a fixed price, for `listing_hours` (48); listing is free |
+| `/ah sell <price> [count]` | lists the stack in your hand (or part of it), whole (enchantments, name, contents...), at a fixed price, for `listing_hours` (48); listing is free |
 | `/ah auction <start> [hours]` | auctions the stack in your hand from a starting bid, for 1 to 24 hours (12) |
 | `/ah bid <listing> <amount>`, `/ah buy <listing>` | bids (the money is held until someone bids more or it ends), buys a fixed-price listing |
 | `/ah cancel <listing>`, `/ah claim`, `/ah search <words>`, `/ah mine`, `/ah mail` | takes back a listing nobody bid on; gives you your mail; the menu on a search, your listings, your mail |
@@ -261,8 +261,14 @@ raising one's own only holds the difference, and a bid in the last `snipe_second
 60 seconds away. When an auction ends, the seller is paid the winning bid and the items go to the winner's mail. Sellers
 and outbid players who are offline find a note when they come back. Everything (listings, bids, mail, notes) is
 written in `economy.json` with the balances, in one step: a crash can't keep the money and lose the items, or the
-reverse. Only plain items for now (not worn, named or enchanted); whole stacks with their enchantments wait for
-Horizon's `native_give_stack` to be stamped. Survival and adventure players only. `config.json`'s `auction`:
+reverse. A listing carries the whole stack (since 0.31): its enchantments, name, damage, lore, a shulker box's
+or a bundle's contents and every other component, written as the game writes it in player files, and given back
+exactly so (Horizon's `native_give_stack`) to the buyer, the winner, or the seller when it comes back. `/ah sell
+<price> <count>` lists part of the stack in hand; the rest stays in the hand, the same. The menu shows the stack
+itself (its tooltip), with the listing's price, seller and time under it. A stack is taken only if it would come
+back the same (its data written and read back equal); not market charts (free at `/market`), nor a stack holding
+more than 32 KiB of data (a box of books). Listings and mail from before 0.31 hold plain items and are given back as
+before. Survival and adventure players only. `config.json`'s `auction`:
 `enabled`, `max_listings` (8 a player), `listing_hours` (48), `auction_hours` (12),
 `auction_hours_max` (24), `bid_step_percent` (5: the smallest raise), `snipe_seconds` (60). Ended listings are
 looked at once a second (a pass over the open listings).

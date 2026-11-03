@@ -1,6 +1,6 @@
 [package]
 name = "horizon-mod-smp"
-version = "0.30.1"
+version = "0.31.0"
 edition = "2024"
 license = "MIT"
 publish = false

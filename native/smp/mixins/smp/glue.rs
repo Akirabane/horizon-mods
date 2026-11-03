@@ -39,7 +39,7 @@ use std::{path::PathBuf, sync::Mutex};
 /// The mod's id, name and version.
 pub const ID: &str = "smp";
 pub const NAME: &str = "SMP";
-pub const VERSION: &str = "0.30.1";
+pub const VERSION: &str = "0.31.0";
 
 /// `config.json` in `world/horizon-smp/`, written with its defaults the
 /// first time, and again with the keys a newer version adds (values kept).
@@ -426,6 +426,127 @@ impl Bag for GameBag<'_, '_> {
     }
     fn give(&mut self, item: &str, count: u32) -> u32 {
         self.0.native_give_items(item, count)
+    }
+}
+
+/// The most encoded data one listed stack may carry (a shulker box of
+/// written books can hold megabytes; economy.json is written whole).
+const MAX_STACK_DATA: usize = 32 * 1024;
+
+/// A stack as the auction house keeps it: `ItemStack.CODEC`'s NBT (id,
+/// count, components), as the game saves it in player files, in hex.
+fn encode_stack(stack: &ItemStack) -> Option<String> {
+    let tag = horizon_items::item_nbt::item_to_nbt(stack);
+    let bytes = horizon_world::nbt::write_network(&tag, horizon_world::nbt::Limits::saved()).ok()?;
+    Some(bytes.iter().map(|b| format!("{b:02x}")).collect())
+}
+
+fn decode_stack(data: &str) -> Option<ItemStack> {
+    if data.len() % 2 != 0 || data.len() > 2 * MAX_STACK_DATA {
+        return None;
+    }
+    let bytes: Vec<u8> = (0..data.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(data.get(i..i + 2)?, 16).ok())
+        .collect::<Option<_>>()?;
+    let (tag, _) = horizon_world::nbt::read_network(&bytes, horizon_world::nbt::Limits::default()).ok()?;
+    horizon_items::item_nbt::item_from_nbt(&tag)
+}
+
+fn whole_of(stack: &ItemStack) -> Option<smp_auction::Whole> {
+    Some(smp_auction::Whole { item: stack.item.to_string(), count: stack.count, data: encode_stack(stack)? })
+}
+
+/// Why `stack` can't be listed whole, if it can't: only what comes back
+/// exactly as it went (every component read back the same) is taken.
+fn unsellable(stack: &ItemStack) -> Option<String> {
+    if &*stack.item == "minecraft:filled_map" && stack.data().and_then(|d| d.map_id).is_some_and(|m| m >= CHART_MAPS) {
+        return Some("Market charts are free at /market: they can't be sold.".into());
+    }
+    let Some(data) = encode_stack(stack) else {
+        return Some("That stack can't be listed: its data can't be written.".into());
+    };
+    if data.len() > 2 * MAX_STACK_DATA {
+        return Some("That stack holds too much (books, contents...) to be listed.".into());
+    }
+    if decode_stack(&data).as_ref() != Some(stack) {
+        return Some("That stack can't be listed whole: some of its data wouldn't come back the same.".into());
+    }
+    None
+}
+
+/// The same stack but for the count.
+fn same_kind(a: &ItemStack, b: &ItemStack) -> bool {
+    a.item == b.item && a.damage == b.damage && a.extra == b.extra
+}
+
+/// Whether `stack` fits whole in `slots` (the 36 main slots), as
+/// `Inventory.add` places it: onto equal stacks, then into empty slots.
+fn fits_in(slots: &[Option<ItemStack>], stack: &ItemStack, max: u32) -> bool {
+    let room: u32 = slots
+        .iter()
+        .take(36)
+        .map(|s| match s {
+            None => max,
+            Some(s) if same_kind(s, stack) => max.saturating_sub(s.count),
+            Some(_) => 0,
+        })
+        .sum();
+    room >= stack.count
+}
+
+/// `native_give_stack` for the auction house: what didn't fit, encoded
+/// again (all of it when the data can't be read: it waits in the mail).
+fn give_whole_to(game: &mut Game<'_>, uuid: u128, w: &smp_auction::Whole) -> Option<smp_auction::Whole> {
+    let Some(stack) = decode_stack(&w.data) else {
+        log::error!("[smp] auction house: a stack's data can't be read; it stays in the mail");
+        return Some(w.clone());
+    };
+    let rest = game.native_give_stack(uuid, stack)?;
+    Some(whole_of(&rest).unwrap_or_else(|| w.clone()))
+}
+
+impl smp_auction::Hand for GameBag<'_, '_> {
+    /// The acting player's state is swapped into the game inside their
+    /// command, so the hand is the game's selected slot (no helper hands out
+    /// a whole stack yet).
+    fn held_whole(&self) -> Option<Result<smp_auction::Whole, String>> {
+        let s = self.0.inventory.get(self.0.selected)?.as_ref()?;
+        if let Some(why) = unsellable(s) {
+            return Some(Err(why));
+        }
+        whole_of(s).map(Ok)
+    }
+    fn take_held(&mut self, held: &smp_auction::Whole, count: u32) -> Option<smp_auction::Whole> {
+        self.0.player.as_ref()?;
+        let selected = self.0.selected;
+        let slot = self.0.inventory.get_mut(selected)?;
+        let s = slot.as_ref()?;
+        if count == 0 || count > s.count || encode_stack(s).as_deref() != Some(held.data.as_str()) {
+            return None;
+        }
+        let mut taken = s.clone();
+        taken.count = count;
+        let encoded = whole_of(&taken)?;
+        if count == s.count {
+            *slot = None;
+        } else if let Some(s) = slot.as_mut() {
+            s.count -= count;
+        }
+        Some(encoded)
+    }
+    fn fits(&mut self, w: &smp_auction::Whole) -> bool {
+        let Some(stack) = decode_stack(&w.data) else {
+            return false;
+        };
+        let max = self.0.native_max_stack_size(&stack.item).unwrap_or(64).max(1);
+        fits_in(&self.0.inventory, &stack, max)
+    }
+    fn give_whole(&mut self, w: &smp_auction::Whole) -> Option<smp_auction::Whole> {
+        let Some(me) = self.0.native_acting_player() else {
+            return Some(w.clone());
+        };
+        give_whole_to(self.0, me.uuid, w)
     }
 }
 
@@ -1125,6 +1246,25 @@ impl Bag for MenuBag<'_, '_> {
     }
 }
 
+impl smp_auction::Hand for MenuBag<'_, '_> {
+    fn held_whole(&self) -> Option<Result<smp_auction::Whole, String>> {
+        None
+    }
+    fn take_held(&mut self, _held: &smp_auction::Whole, _count: u32) -> Option<smp_auction::Whole> {
+        None
+    }
+    fn fits(&mut self, w: &smp_auction::Whole) -> bool {
+        let Some(stack) = decode_stack(&w.data) else {
+            return false;
+        };
+        let max = self.game.native_max_stack_size(&stack.item).unwrap_or(64).max(1);
+        fits_in(&self.stacks(), &stack, max)
+    }
+    fn give_whole(&mut self, w: &smp_auction::Whole) -> Option<smp_auction::Whole> {
+        give_whole_to(self.game, self.uuid, w)
+    }
+}
+
 /// The shop menu's cells as items.
 fn shop_items(smp: &Smp, uuid: u128) -> Vec<Option<ItemStack>> {
     let economy = smp.economy.as_ref().ok();
@@ -1717,12 +1857,24 @@ fn ah_items(smp: &Smp, uuid: u128) -> Vec<Option<ItemStack>> {
                 C::Listing(id) => {
                     let l = a.listing(id)?;
                     let color = if l.auction { "gold" } else { "white" };
-                    named_stack(&l.item, l.count, &a.label(l, now, &money), color)
+                    let label = a.label(l, now, &money);
+                    match l.stack.as_deref().and_then(decode_stack) {
+                        // The stack itself (its name, enchantments, contents
+                        // in the tooltip), the listing's facts under it.
+                        Some(stack) => {
+                            let lines: Vec<(String, &str)> = label.split(" · ").map(|p| (p.to_owned(), color)).collect();
+                            with_lore(stack, &lines)
+                        }
+                        None => named_stack(&l.item, l.count, &label, color),
+                    }
                 }
                 C::Parcel(i) => {
                     let p = a.parcel(uuid, i)?;
                     let name = format!("Claim {} {} ({})", p.count, smp_shop::title(&p.item), p.why);
-                    named_stack(&p.item, p.count, &name, "green")
+                    match p.stack.as_deref().and_then(decode_stack) {
+                        Some(stack) => with_lore(stack, &[(name, "green")]),
+                        None => named_stack(&p.item, p.count, &name, "green"),
+                    }
                 }
                 C::Confirm(id) => {
                     let l = a.listing(id)?;
