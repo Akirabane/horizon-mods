@@ -2041,6 +2041,13 @@ pub(in crate::game) fn tick(game: &mut Game<'_>) {
                 out.push(Out::Tell(t.uuid, "The teleport failed.".into()));
                 continue;
             }
+            // `/spawn`: on to a safe column within the radius, as vanilla's
+            // respawn does. If none is found the player stays at the spawn.
+            if let Some(spread) = t.spread_line()
+                && !game.native_run_command(&spread)
+            {
+                log::warn!("[smp] no safe spot near the spawn: {spread}");
+            }
             out.push(Out::Tell(t.uuid, t.done.clone()));
         }
     }

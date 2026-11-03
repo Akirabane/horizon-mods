@@ -39,7 +39,7 @@ header and footer).
 | `/casino`, `/casino roulette\|slots\|crash\|blackjack` | the casino's lobby menu, or a game's table (needs `gambling.enabled` and `casino.enabled`) |
 | `/casino help`, `/casino top`, `/casino stats` | every game's odds and house edge and the limits; today's biggest wins; what you bet, won and may still lose today |
 | `/coinflip accept <player>`, `/coinflip cancel`, `/coinflip list` | takes an offer (a fair coin decides, the winner gets both stakes), withdraws yours, lists those waiting |
-| `/spawn` | to the server's spawn; `/setspawn` (operators of level 3) sets it where you stand |
+| `/spawn` | to a safe spot within `places.spawn_radius` of the server's spawn; `/setspawn` (operators of level 3) sets it where you stand |
 | `/home [name]`, `/sethome [name]`, `/delhome [name]`, `/homes` | your homes (`home` when unnamed): go, set or move one where you stand, delete, list |
 | `/warp <name>`, `/warps` | to a warp, the list; `/setwarp <name>`, `/delwarp <name>` for operators of level 3 |
 | `/tpa <player>`, `/tpaccept [player]`, `/tpdeny [player]` | asks to go to a player (60 s to answer); answers a request |
@@ -213,7 +213,7 @@ stays where they are, and `cooldown_seconds` (10) passes between two of one play
 `places.fees` is ignored). `/tpa` takes the
 asker to where the other player is when the warmup ends. Homes grow with the time played on the server since the mod
 was on (`homes`: `[hours, homes]`, by default 1 home, 2 from 5 hours, 3 from 20, 5 from 100). `rules` holds `/rules`'
-lines. Teleports are vanilla's `tp`, run as the server (`execute in <level> run tp`), so they cross levels and land
+lines. `/spawn` lands on a random safe column within `spawn_radius` (250) blocks of the spawn point, like vanilla's `respawn_radius` for a first join or a respawn: after the `tp`, vanilla's `spreadplayers` moves the player off fluid, fire and magma onto solid ground (0: exactly the spawn point; if no column is found the player stays at the spawn point). Teleports are vanilla's `tp`, run as the server (`execute in <level> run tp`), so they cross levels and land
 as any teleport does.
 
 **Claims.** In a claimed chunk, only its owner, the players they trust and operators of level 3 break blocks or right

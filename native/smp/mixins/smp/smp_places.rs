@@ -30,6 +30,10 @@ pub struct Config {
     pub homes: Vec<[i64; 2]>,
     /// `/rules`, a line each.
     pub rules: Vec<String>,
+    /// `/spawn` lands on a random safe column within this many blocks of the
+    /// spawn point, like vanilla's `respawn_radius` for a first join or a
+    /// respawn (0: exactly the spawn point).
+    pub spawn_radius: i64,
 }
 
 impl Default for Config {
@@ -44,6 +48,7 @@ impl Default for Config {
                 "No griefing, no stealing, no cheats.".into(),
                 "The currency is earned in game only: never bought or sold for real money.".into(),
             ],
+            spawn_radius: 250,
         }
     }
 }
@@ -84,6 +89,8 @@ struct Data {
 enum To {
     /// A place, and what it is (`home "base"`).
     Place(Place, String),
+    /// The spawn point: `/spawn` fuzzes it by `spawn_radius`.
+    Spawn(Place),
     /// A player, wherever they are when the warmup ends.
     Player(u128, String),
 }
@@ -116,8 +123,26 @@ pub struct Teleport {
     pub done: String,
     /// Where to, in words (`where you died`).
     pub what: String,
+    /// Land on a safe column within this many blocks of `to` instead of on it
+    /// (0: on it). Only `/spawn` sets it.
+    pub spread: i64,
     /// The cooldown and `/back` before it: `call_off` puts them back.
     undo: (Option<i64>, Option<(Place, bool)>),
+}
+
+impl Teleport {
+    /// The command that moves the player from the point `to` to a safe column
+    /// within `spread` blocks of it: vanilla's `spreadplayers` (a column that
+    /// is not fluid, fire or magma and has solid ground, found by retrying),
+    /// the check behind `respawn_radius`. None when `spread` is 0.
+    pub fn spread_line(&self) -> Option<String> {
+        (self.spread >= 1).then(|| {
+            format!(
+                "execute in {} run spreadplayers {:.3} {:.3} 0 {} false {}",
+                self.to.dimension, self.to.x, self.to.z, self.spread, self.name
+            )
+        })
+    }
 }
 
 /// The places' commands.
@@ -336,7 +361,7 @@ impl Places {
                 out
             }
             ("spawn", []) => match self.data.spawn.clone() {
-                Some(p) => self.start(body, To::Place(p, "the spawn".into()), now),
+                Some(p) => self.start(body, To::Spawn(p), now),
                 None => vec![Out::Error(
                     "No spawn yet: an operator sets it with /setspawn.".into(),
                 )],
@@ -557,8 +582,13 @@ impl Places {
             } else if now < p.due {
                 self.pending.push(p);
             } else {
+                let mut spread = 0;
                 let (to, what) = match &p.to {
                     To::Place(place, what) => (Some(place.clone()), what.clone()),
+                    To::Spawn(place) => {
+                        spread = self.config.spawn_radius.max(0);
+                        (Some(place.clone()), "the spawn".to_owned())
+                    }
                     To::Player(u, name) => (
                         bodies.iter().find(|b| b.uuid == *u).map(|b| b.at.clone()),
                         name.clone(),
@@ -576,6 +606,7 @@ impl Places {
                             to,
                             done: format!("Teleported to {what}."),
                             what,
+                            spread,
                             undo,
                         });
                     }
@@ -821,8 +852,51 @@ mod tests {
             (go[0].to.x, go[0].done.as_str()),
             (7.0, "Teleported to the spawn.")
         );
+        assert_eq!(go[0].spread, 250, "the spawn is fuzzed by default");
         let out = p.command(&player(A, 0), &here, 0, "rules").unwrap();
         assert_eq!(out.len(), 4);
+        let _ = std::fs::remove_dir_all(d);
+    }
+
+    #[test]
+    fn only_the_spawn_is_spread_over_a_safe_spot() {
+        let d = dir();
+        let mut p = Places::open(&d, Config::default()).unwrap();
+        let here = [body(A, 7.0)];
+        p.command(&player(A, 3), &here, 0, "setspawn").unwrap();
+        p.command(&player(A, 3), &here, 0, "setwarp shop").unwrap();
+        p.command(&player(A, 3), &here, 0, "sethome").unwrap();
+        let far = [body(A, 50.0)];
+        p.command(&player(A, 0), &far, 0, "spawn").unwrap();
+        let (_, go) = p.tick(&far, 3_000);
+        assert_eq!(go[0].to, place(7.0));
+        assert_eq!(
+            go[0].spread_line().as_deref(),
+            Some("execute in minecraft:overworld run spreadplayers 7.000 0.000 0 250 false Alex")
+        );
+        for (i, line) in ["warp shop", "home"].into_iter().enumerate() {
+            let t = 100_000 * (i as i64 + 1);
+            p.command(&player(A, 0), &far, t, line).unwrap();
+            let (_, go) = p.tick(&far, t + 3_000);
+            assert_eq!(go.len(), 1, "{line}");
+            assert_eq!(go[0].spread_line(), None, "{line} is exact");
+        }
+        let _ = std::fs::remove_dir_all(d);
+    }
+
+    #[test]
+    fn a_zero_radius_sends_players_to_the_exact_spawn() {
+        let d = dir();
+        let config = Config {
+            spawn_radius: 0,
+            ..Config::default()
+        };
+        let mut p = Places::open(&d, config).unwrap();
+        let here = [body(A, 7.0)];
+        p.command(&player(A, 3), &here, 0, "setspawn").unwrap();
+        p.command(&player(A, 0), &here, 0, "spawn").unwrap();
+        let (_, go) = p.tick(&here, 3_000);
+        assert_eq!(go[0].spread_line(), None);
         let _ = std::fs::remove_dir_all(d);
     }
 }
