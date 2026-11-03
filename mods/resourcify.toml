@@ -1,0 +1,24 @@
+id = "resourcify"
+kind = "native-mod"
+name = "Resourcify"
+summary = "Download resource packs in Horizon"
+description = """
+Resourcify lets you browse and download resource packs without ever leaving Horizon.
+
+Features:
+- Browse resource packs right inside the game
+- One-click download and install
+- Search to find the pack you want quickly
+- Native Horizon mod, fast and lightweight"""
+authors = ["tariksabanuz"]
+owners = ["tariksabanuz"]
+license = "MIT"
+source = "https://github.com/tariksabanuz/ResourcifyHorizon"
+icon = "https://github.com/tariksabanuz/ResourcifyHorizon/blob/364648324ac0e67489a3f06faa716d96d24668ed/icon.png"
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-03"
+game = "26.3"
+file = "resourcify-0.1.0.hnmod"
+sha256 = "789447fb454864af2a711ad8204f395331248d70dba570016b248766b959a2a2"
