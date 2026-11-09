@@ -3,9 +3,11 @@ kind = "native-mod"
 name = "Blood Particles"
 summary = "Blood particles upon a mob hit"
 description = """
-Blood particles upon a mob hit
+Blood particles upon a mob hit 🩸
 
-The mod is customizable"""
+The mod is customizable
+
+made by Bogdan_Tokarev"""
 authors = ["Bogdan_Tokarev"]
 owners = ["bogdan1tokarev1"]
 owner_ids = [350354354]
