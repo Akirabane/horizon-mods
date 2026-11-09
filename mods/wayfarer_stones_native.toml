@@ -28,6 +28,14 @@ categories = ["transportation", "adventure"]
 tags = ["teleport", "waystones", "fast-travel", "villages"]
 
 [[versions]]
+version = "0.6.3"
+published = "2026-11-08"
+game = "26.3"
+file = "wayfarer_stones_native-0.6.3.hnmod"
+sha256 = "56cf931b48d22b55964db2b7977c1c438dc416427dd2d8755e5016131ab739f7"
+changelog = "Saves are retried when a write fails, and stones.json and players.json are kept consistent. Pinned to Nightly 2026-11-04 (67dad0d) and Horizon Mixins e8cd0aa."
+
+[[versions]]
 version = "0.6.1"
 published = "2026-11-05"
 game = "26.3"
