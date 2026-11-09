@@ -1,0 +1,44 @@
+id = "flesh_to_leather"
+kind = "mod"
+name = "Flesh to Leather"
+summary = "Smelt rotten flesh into leather in a furnace."
+description = """
+Rotten flesh finally has a use: smelt it into leather.
+
+Zombies drop it constantly, and it just piles up in chests. This mod lets you put rotten flesh in a furnace with any fuel — about 10 seconds later you get leather, plus a little experience for your trouble.
+
+**How to use**
+
+1. Install the mod and enable it in Options → Mods, then restart the game.
+2. Put rotten flesh in the top slot of a furnace, any fuel below.
+3. Collect your leather — ready for armor, item frames, and books.
+
+**Good to know**
+
+- Uses only vanilla items. No new blocks, textures, or mechanics to learn.
+- Works in single player. On a multiplayer server, the server needs the mod too.
+- Tested on Horizon 0.2.97 (Minecraft Java Edition 26.3).
+- Uninstall any time leather you already smelted stays in your world.
+
+Free and open source under the MIT license. Not an official Minecraft product."""
+authors = ["CGRLabs"]
+owners = ["CGRLabs"]
+owner_ids = [213680048]
+license = "MIT"
+source = "https://github.com/CGRLabs/flesh-to-leather"
+icon = "icons/flesh_to_leather.png"
+categories = ["game-mechanics", "utility"]
+tags = ["rotten-flesh", "leather", "smelting", "furnace", "survival", "vanilla-friendly", "quality-of-life"]
+key = "RWSGDRCSH4aQXiul9gcYYshIYBmd+NcHK1iUWDTpVBF0WRokEBZIyrFr"
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-09"
+game = "26.3"
+file = "flesh_to_leather-1.0.0.hmod"
+sha256 = "2caac39306a051b53ae489137fa2a3a204fc8f156860fcbc4568275392a7e5c6"
+signature = """
+untrusted comment: signature from rsign secret key
+RUSGDRCSH4aQXlr7W0IVfi1Pof8JyHEwpeKc0gS+VmV0zCNLytuZx/LaxT8ipLyvbwziDyTr/4R20rrfw2LQGZPLA3a5AzWM9AU=
+trusted comment: flesh_to_leather 1.0.0
+KlTveC+S+U/E3E5BXxV6ToQq0Qy7tVdgvosSW0UZkCGImkXcXw5G8gg5opRVVKbEb737HRr1zKKeP2uQO84SCw=="""
