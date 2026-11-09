@@ -1,0 +1,35 @@
+id = "factory_blocks"
+kind = "mod"
+name = "Factory Blocks"
+summary = "49 industrial decorative blocks — panels, grates, vents, pipes and hazard stripes — for Horizon."
+description = """
+A port of [Factory Blocks](https://github.com/matthewperiut/factory_blocks) by
+slaincow for Horizon: 49 industrial decorative blocks — factory panels, grating,
+vents, pipes, hazard stripes, riveted plates and machinery faces.
+
+- Craft them from the mod's own recipes and build with them; every block is a
+  full cube with the upstream textures and models.
+- The OptiFine CTM (connected-texture) data is carried, so connected-texture
+  resource packs shade them like the original.
+
+This is a data-tier carry: no block entity and no behaviour hooks. MIT — the
+mod's own loader metadata declares MIT, its Modrinth page lists CC0-1.0, and the
+discrepancy is recorded in the port repository's LICENSE and LICENSE-NOTICE.md;
+original copyright and licence notices are kept there.
+"""
+authors = ["slaincow", "AdLf0208"]
+owners = ["AdLf0208"]
+owner_ids = [107615167]
+license = "MIT"
+source = "https://github.com/AdLf0208/factory_blocks"
+icon = "icons/factory_blocks.png"
+categories = ["decoration"]
+tags = ["port", "building", "blocks", "industrial"]
+
+[[versions]]
+version = "1.4.2"
+published = "2026-11-09"
+game = "26.3"
+file = "factory_blocks.hmod"
+sha256 = "520ad2ca64d2d4a0711a56f538074be64ab9a19337dae018bfee625e8672e43b"
+changelog = "First release"
