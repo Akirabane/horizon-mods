@@ -1,0 +1,35 @@
+id = "mousetweaks"
+kind = "native-mod"
+name = "MouseTweaks"
+summary = "Mouse Tweaks from Java: right-drag to spread, left-drag to gather or quick-move, the wheel moves items one by one."
+description = """
+A port of [Mouse Tweaks](https://github.com/YaLTeR/MouseTweaks) by Ivan Molodetskikh (YaLTeR) to Horizon, as a native mod, with all seven of the original's options.
+
+- **RMB drag**: hold the right button with a stack and drag over slots to drop one item into each.
+- **LMB drag**: with an item on the cursor, drag to gather the same items; with **Shift**, quick-move every slot you pass.
+- **LMB drag with an empty hand + Shift**: quick-move every slot you pass.
+- **Wheel tweak**: the wheel over a slot moves items one at a time between your inventory and the container, crafting results included. Search order, scroll direction (normal, inverted, position-aware) and item scaling as in the original.
+- Works on every container screen and on the player's slots in the creative inventory.
+- While it is on, it replaces Horizon's built-in Extras > Mouse Tweaks.
+
+Settings: Options > Mods > Mouse Tweaks. Every action is an ordinary slot click, so it works on servers too.
+
+Built for Horizon Nightly 2026-11-07 (`2ebf00a`). Native mods are compiled into the game and are not sandboxed: build only code you trust.
+
+**Credits.** Mouse Tweaks is Copyright (c) 2023 Ivan Molodetskikh, BSD 3-Clause License. This port rewrites its logic in Rust under the same licence and is not affiliated with Ivan Molodetskikh, Mojang or Microsoft."""
+authors = ["DeportedToHell"]
+owners = ["DeportedToHell"]
+owner_ids = [344119465]
+license = "BSD-3-Clause"
+source = "https://github.com/DeportedToHell/MCRE-Mods/tree/main/mousetweaks"
+icon = "icons/mousetweaks.png"
+categories = ["storage", "utility"]
+tags = ["inventory", "mouse", "drag", "scroll", "port"]
+
+[[versions]]
+version = "1.0.1"
+published = "2026-11-08"
+game = "26.3"
+file = "mousetweaks-1.0.1.hnmod"
+sha256 = "eded4ef5a60d40ccc1e685e0c89b8dc14498316cfc771527036201738ff238d8"
+changelog = "First release."
