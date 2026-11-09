@@ -28,6 +28,14 @@ categories = ["utility"]
 tags = ["jei", "recipes", "item-list", "recipe-viewer", "search", "port"]
 
 [[versions]]
+version = "1.1.0"
+published = "2026-11-09"
+game = "26.3"
+file = "justenoughitems-1.1.0.hnmod"
+sha256 = "6acc0701e16cbbee5941310dc600f805ebdcf2897d92c62047e8bf8a7e519396"
+changelog = "JEI config screen (MezzConfig GUI, as in Java), opened from Mod Menu, Options > Mods > Just Enough Items > Configure... or JEI's config button. Built for Horizon Nightly 2026-11-08 (fdc87ae)."
+
+[[versions]]
 version = "1.0.0"
 published = "2026-11-08"
 game = "26.3"
