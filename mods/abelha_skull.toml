@@ -1,0 +1,47 @@
+id = "abelha_skull"
+kind = "resourcepack"
+name = "Abelha skull"
+summary = "Turns the Minecraft bee into the YouTuber MoonSkull_tutoriais"
+description = """
+Changes the bee's texture to the YouTuber Moonskull_tutoriais skin.
+
+I made this because I like bee's and it's cool.
+
+The only thing that's changes it's the bee's texture.
+
+The only textures are for the baby bee, the normal bee, angry bee, angry baby bee, the bee spawner egg, the two hives with honey, the humble painting, the black bed, the totem and all textures of honey and honeycomb (including blocks).
+
+Available at:
+
+https://www.curseforge.com/minecraft/texture-packs/abelha-skull-java
+
+https://modrinth.com/project/DjKJnPl4
+
+Bedrock ver available at:
+
+Mcpedl: https://mcpedl.com/abelha-skull/
+
+Curseforge: https://www.curseforge.com/minecraft-bedrock/texture-packs/abelha-skull
+
+Softwares used: https://mc-tools.net/pack-converter
+
+https://packsmc.com/converter
+
+Thanks for reading."""
+authors = ["MoonSkull_tutoriais"]
+owners = ["MoonSkulleu"]
+owner_ids = [289688204]
+license = "All Rights Reserved"
+source = "https://www.curseforge.com/minecraft/texture-packs/abelha-skull-java/files/all?page=1&pageSize=20&showAlphaFiles=hide"
+icon = "icons/abelha_skull.png"
+categories = ["16x", "simplistic", "themed"]
+tags = ["bee", "moonskull"]
+screenshots = ["screenshots/abelha_skull/1.png"]
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-09"
+game = "26.3"
+file = "abelha_skull-1.0.0.zip"
+sha256 = "af7161fdae041b980d97a399af9db7dca183c220b039b78ecbcb5400481aa599"
+changelog = "first file"
