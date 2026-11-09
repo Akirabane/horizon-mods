@@ -12,3 +12,8 @@ id = "crossversion"
 sha256 = "deb9cf8a84838e6c48999f70fbd3c81db90992c456d6e85a0e0746b088c5b8fa"
 reason = "Paused while its Microsoft sign-in for online-mode servers is reviewed with its author; a reviewed version will replace it."
 date = "2026-11-03"
+
+[[revoked]]
+id = "notenoughanimations"
+reason = "Taken down until tr7zw, the original mod's author, gives written permission: its licence does not allow sharing ports of it."
+date = "2026-11-09"
