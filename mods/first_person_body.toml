@@ -1,0 +1,38 @@
+id = "first_person_body"
+kind = "native-mod"
+name = "First Person Body"
+summary = "See your own body in first person: look down to see your legs and feet"
+description = """
+See your own body in first person. Look down and your torso, legs and feet are there, moving as you walk, crouch and fight, instead of the floating hand alone.
+
+- **Your own model in first person**, with your skin, armour and cape.
+- **Head, helmet and head items hidden**, so the camera never looks out of your skull.
+- **The body sits slightly behind the camera**, a little more when you look down or crouch, so you never see inside your chest.
+- **Vanilla first-person hand** by default, or the model's own arms.
+- Steps aside while swimming, crawling, gliding with an elytra, riptide spinning, sleeping and in spectator.
+
+Settings in Options > Mods > First Person Body: on/off, arms, body offset, while riding, lean back looking down, reset, and a toggle key.
+
+Client side only: works in single player and on any server. No network, file or process access beyond its own settings.
+
+Horizon has no hook point for drawing your own player in first person, so besides hook points this mod hooks Horizon's own rendering functions (own_body_in_view, player_model_geometry, player_model_visibility, base_transform and the head-item, ear and cosmetic layers); the README lists each. They act only while your own first-person model is drawn. A later Horizon that changes them needs an update of this mod.
+
+Source: https://github.com/selfmonoraque5/first-person-body
+
+Inspired by First-person Model by tr7zw (https://modrinth.com/mod/first-person-model). Written from scratch for Horizon: it contains none of its code or assets and is not made or endorsed by tr7zw."""
+authors = ["selfmonoraque5"]
+owners = ["selfmonoraque5"]
+owner_ids = [86315101]
+license = "MIT"
+source = "https://github.com/selfmonoraque5/first-person-body"
+icon = "icons/first_person_body.png"
+categories = ["utility", "decoration"]
+tags = ["first-person", "body", "camera", "immersion", "client-side"]
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-09"
+game = "26.3"
+file = "first_person_body-1.0.0.hnmod"
+sha256 = "9ec11dd9cb147bd68f8293c31bda9f189bbda3f6c3feac5c90f454023118d714"
+changelog = "First release"
