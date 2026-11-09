@@ -1,0 +1,30 @@
+id = "zoomify"
+kind = "native-mod"
+name = "Zoomify"
+summary = "A port of Zoomify: a zoom key with smooth transitions, scroll zoom, a secondary zoom and Zoomify's own settings screen."
+description = """
+A port of [Zoomify](https://github.com/isXander/Zoomify) by isXander to Horizon, as a native mod.
+
+- **Zoom** (C, hold or toggle) with Zoomify's transitions, times and initial zoom; **scroll zoom** with the mouse wheel while zooming; the **secondary zoom** (F6), slow and cinematic, that hides the HUD.
+- Relative sensitivity, the cinematic camera while zooming, the hand's field of view and the **spyglass** rules (combine, override, only while holding or carrying it; its overlay and sounds).
+- **Zoomify's own config screen**, as in Java (YACL): Mod Menu's Configure button, Options > Mods > Zoomify > Configure..., or `/zoomify`. Tabs, collapsible groups, sliders and reset buttons, the description panel with Zoomify's animated demo pictures, search, Undo / Reset / Save, and the presets (Default, OptiFine, OK Zoomer). English and Russian.
+
+Built for Horizon Nightly 2026-11-08 (`fdc87ae`). Native mods are compiled into the game and are not sandboxed: build only code you trust.
+
+**Credits.** Zoomify is Copyright (C) isXander, licensed under the GNU LGPL 3.0 or later; this port keeps that licence and is not affiliated with Mojang or Microsoft."""
+authors = ["DeportedToHell"]
+owners = ["DeportedToHell"]
+owner_ids = [344119465]
+license = "LGPL-3.0-or-later"
+source = "https://github.com/DeportedToHell/MCRE-Mods/tree/main/zoomify"
+icon = "icons/zoomify.png"
+categories = ["utility"]
+tags = ["zoom", "camera", "spyglass", "port"]
+
+[[versions]]
+version = "1.1.1"
+published = "2026-11-09"
+game = "26.3"
+file = "zoomify-1.1.1.hnmod"
+sha256 = "d21267c718dca9bc649f7ae47406f9b70b13ad1aaf211654844b56d8da10a7e6"
+changelog = "Built for Horizon Nightly 2026-11-08 (fdc87ae): the look hook follows look_options to game/pointer_capture.rs."
