@@ -36,6 +36,13 @@ Submitting a project, through the form or a pull request, means you confirm that
 You alone are responsible for what you publish and for any claim about it. The Horizon project may refuse, hide or
 remove any project, at any time, without having to give a reason.
 
+## Cheat clients
+
+The registry does not list mods built to cheat on servers: combat and movement cheats (kill aura, reach, fly, fake
+lag, velocity, auto-clickers beyond what vanilla allows) and anything built to get past a server's anticheat (for
+example presets like a "GrimAC mode"). Client-side utilities that give no unfair edge on servers, such as HUDs,
+seed crackers or pathfinding bots, stay welcome, as long as they carry no anticheat-bypass preset.
+
 ## Licences reviewers can read
 
 Reviewers read a project's source before each version is listed; that is how they check it holds nothing harmful.
