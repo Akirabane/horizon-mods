@@ -1,0 +1,21 @@
+id = "livingmotion"
+kind = "native-mod"
+name = "LivingMotion"
+summary = "Punchy moves ported into a hnmod."
+description = "Makes ur avatar animated in 3rd person. simmilar to punchy moves."
+authors = ["bart"]
+owners = ["bartekchomik26-dotcom"]
+owner_ids = [333072545]
+license = "MIT"
+source = "https://github.com/bartekchomik26-dotcom/Living-motion"
+icon = "icons/livingmotion.png"
+categories = ["game-mechanics", "decoration"]
+tags = ["punchy", "animation", "3rdperson"]
+
+[[versions]]
+version = "1.2.0"
+published = "2026-11-07"
+game = "26.3"
+file = "livingmotion-1.2.0.hnmod"
+sha256 = "9aa388f9fe2a776cd4104b89c72c48489641583a8c8e9d427bb0195c5bd64eed"
+changelog = "nothing"
