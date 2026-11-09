@@ -33,6 +33,15 @@ categories = ["decoration", "game-mechanics"]
 tags = ["physics", "ragdolls", "water", "waves", "particles", "capes"]
 
 [[versions]]
+version = "0.20.7"
+published = "2026-11-09"
+game = "26.3"
+file = "horizon_physics-0.20.7.hnmod"
+sha256 = "8eeba82ac0e7755298269fd328679473720a9894cfe10df5c8e3aaf88f59c34c"
+changelog = """
+- PVP Server Compatibility no longer switches the effects off in single player (its own integrated server); it only applies on other servers. Rebuilt for the latest Horizon nightly (fdc87ae, Nov 8)."""
+
+[[versions]]
 version = "0.18.0"
 published = "2026-11-04"
 game = "26.3"
