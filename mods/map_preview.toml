@@ -1,0 +1,36 @@
+id = "map_preview"
+kind = "native-mod"
+name = "Map Preview"
+summary = "See a map's picture in its tooltip and in its inventory slot, so you can tell your maps apart"
+description = """
+See what's on a map without holding it.
+
+- **Tooltip preview**: hover a filled map and its picture shows in the tooltip. Always, or only while holding Shift, in three sizes.
+- **Slot preview**: every map in your hotbar, inventory and chests shows a small copy of its picture instead of the plain map icon, with or without a paper edge.
+- Maps update live as you explore.
+
+All in Options > Mods > Map Preview, with a reset button.
+
+Client side only: it works in single player and on any server. A preview needs the map's picture on your client: the server sends it for maps you carry, as vanilla does, so a map you've never carried may show no preview until you pick it up once.
+
+Horizon has no hook point for a map's pixels, so besides hook points this mod reads the game's own map data (Game.maps, maps::map_id) and palette (MAP_COLORS); a later Horizon that changes those needs an update of this mod.
+
+Source: https://github.com/selfmonoraque5/map-preview
+
+Inspired by Map Tooltip by VendoAU (https://modrinth.com/mod/map-tooltip) and Map In Slot by Crec0 (https://modrinth.com/mod/map-in-slot). Written from scratch for Horizon: it contains none of their code or assets and is not made or endorsed by them."""
+authors = ["selfmonoraque5"]
+owners = ["selfmonoraque5"]
+owner_ids = [86315101]
+license = "MIT"
+source = "https://github.com/selfmonoraque5/map-preview"
+icon = "icons/map_preview.png"
+categories = ["utility"]
+tags = ["maps", "tooltip", "inventory", "preview", "client-side"]
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-09"
+game = "26.3"
+file = "map_preview-1.0.0.hnmod"
+sha256 = "13da8efebaa60aa030d4bc8ce007f82b2c3b21f6cc4c62ef7e906fa45777136a"
+changelog = "First release"
