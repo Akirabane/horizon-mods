@@ -1,0 +1,19 @@
+id = "volexstorm"
+kind = "shader"
+name = "Volex"
+summary = "Volex"
+description = "A realistic visual enhancement shader featuring dynamic lighting, atmospheric skies, immersive weather effects, realistic rain interactions, reflective water, and enhanced natural colors — bringing the Minecraft world to life while maintaining smooth performance."
+authors = ["ZEIBLD"]
+owners = ["ijai76"]
+owner_ids = [97946400]
+license = "MIT"
+source = "https://github.com/ijai76/VOLEX"
+icon = "icons/volexstorm.png"
+categories = ["semi-realistic", "shadows", "low"]
+
+[[versions]]
+version = "2.0.1"
+published = "2026-11-08"
+game = "26.3"
+file = "volexstorm-2.0.1.hshader"
+sha256 = "f7675bcfed4f010fe3bb29e510e7c3aa35b1097621cb34ae8e6fa6c93bc81974"
