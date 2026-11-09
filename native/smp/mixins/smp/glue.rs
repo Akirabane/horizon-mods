@@ -467,6 +467,7 @@ pub fn commands(commands: &mut Vec<NativeCommand>) {
         "claim show",
         "unclaim",
         "claims",
+        "claims map",
         "trust <player:word>",
         "untrust <player:word>",
         "sidebar",
