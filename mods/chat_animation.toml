@@ -16,11 +16,21 @@ a reset button.
 Based on Ezzenix's Chat Animation (MIT), recreated for Horizon."""
 authors = ["tariksabanuz"]
 owners = ["tariksabanuz"]
+owner_ids = [332662152]
 license = "MIT"
 source = "https://github.com/tariksabanuz/ChatAnimationHorizon"
 icon = "icons/chat_animation.png"
 categories = ["utility", "social"]
 tags = ["chat", "animation", "ui", "port"]
+
+[[versions]]
+version = "0.1.3"
+published = "2026-11-09"
+game = "26.3"
+file = "chat_animation-0.1.3.hnmod"
+sha256 = "39b9e2bbf296d69cc43824035f2afcc9d1e8c59e479716230262ee097297f543"
+changelog = """
+- Rebuilt and re-checked against the latest Horizon nightly (fdc87ae, Nov 8)."""
 
 [[versions]]
 version = "0.1.0"
