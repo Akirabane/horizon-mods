@@ -20,7 +20,7 @@ and the launcher to have shipped first.
 **Who is responsible.** Except the projects marked Official (made by the Horizon project), everything here is made and
 owned by its own authors, not by the Horizon project or its maintainers. A listing is not an endorsement. See the
 [mod policy](MOD-POLICY.md): what authors promise when they submit (ports of other mods included), the licences
-whose source reviewers can read, and how to have a project taken down.
+it accepts, and how to have a project taken down.
 
 ## Submit
 

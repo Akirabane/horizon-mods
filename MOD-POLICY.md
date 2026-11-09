@@ -29,7 +29,9 @@ Submitting a project, through the form or a pull request, means you confirm that
    authors' written permission.
 3. It contains no code, assets or data from Minecraft, Mojang or Microsoft beyond what their
    [usage guidelines](https://www.minecraft.net/usage-guidelines) and EULA allow. Horizon players bring their own
-   copy of the game.
+   copy of the game. Game-data tables copied from any version count as Mojang data, whatever licence the project
+   they come from uses: for example recipe tables, or biome parameter tables such as cubiomes'. Read them at runtime
+   from the player's own files instead.
 4. It contains nothing that harms players: no malware, no stealing of accounts or data, no hidden network access.
 5. The `source` link has the code the published files were built from.
 
@@ -43,20 +45,17 @@ lag, velocity, auto-clickers beyond what vanilla allows) and anything built to g
 example presets like a "GrimAC mode"). Client-side utilities that give no unfair edge on servers, such as HUDs,
 seed crackers or pathfinding bots, stay welcome, as long as they carry no anticheat-bypass preset.
 
-## Licences reviewers can read
+## Licences
 
-Reviewers read a project's source before each version is listed; that is how they check it holds nothing harmful.
-They may only read source under a licence that lets them, so a new project, and every new version of a listed one,
-needs source under one of:
+A project may use any licence that lets it be shared, copyleft ones (GPL, LGPL, MPL) included, as long as:
 
-- MIT, MIT-0, BSD-2-Clause, BSD-3-Clause, 0BSD, Apache-2.0, ISC, zlib, Unlicense or CC0-1.0;
-- or any licence, with a written grant from its authors that lets the Horizon reviewers read the source to review it
-  (say so in the pull request, with a link to the grant).
+- the licence its entry names is the one in its source repository;
+- a port follows promise 2 above: the original's licence allows the port, or its authors gave written permission,
+  and the original is credited and linked.
 
-Source under GPL, LGPL, MPL or all rights reserved, without such a grant, can't be reviewed, so it can't be listed or
-updated. The projects already listed under other licences when this rule was written (classic_zoom,
-distant_horizons, fly_speed, serverify) stay listed as they are; their next version needs a licence above or a
-grant. A port also has to follow promise 2 above.
+A licence that reserves all rights, or that doesn't allow sharing the project, needs a written grant from its
+authors that allows publishing it here and lets the Horizon reviewers read the source (say so in the pull request,
+with a link to the grant).
 
 ## Copyright and takedowns
 
