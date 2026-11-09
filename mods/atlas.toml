@@ -1,0 +1,56 @@
+id = "atlas"
+kind = "native-mod"
+name = "Atlas"
+summary = "A clone of Xaero's Minimap and World Map: a sharp minimap, a world map of everywhere you've been, and waypoints."
+description = """
+![Atlas in the game](https://raw.githubusercontent.com/MrCloudy2/horizon-atlas/main/docs/images/hero.jpg)
+
+Atlas is meant to be a close copy of Xaero's Minimap and Xaero's World Map for Horizon: the same look, the same keys and the same settings. The minimap, the world map and the waypoints share one map of the world, kept on disk per world, server and dimension.
+
+- **Minimap**: drawn at your screen's resolution, turns with you, with entity dots that fade with height. Hold Tab for mob faces, player faces and item icons.
+- **World map (M)**: drag and zoom. B makes a waypoint under the pointer.
+- **Map modes**: Auto (the surface in the open, the cave around you under a roof), Cave and Layer.
+- **Waypoints (U, B, H)**: sets, filter, Share, Teleport for operators, deathpoints, temporary waypoints, and labels in the world.
+- **Overlays**: chunk grid, light overlay, slime chunks (with `/atlas seed`).
+- **Settings (Y)**: pages of options with search; `/atlas` sets exact values.
+
+![The minimap, with faces while Tab is held](https://raw.githubusercontent.com/MrCloudy2/horizon-atlas/main/docs/images/minimap-tab.png)
+
+![The world map](https://raw.githubusercontent.com/MrCloudy2/horizon-atlas/main/docs/images/world-map.jpg)
+
+**What it does and doesn't do.** Atlas reads the world your client already has and draws on your screen. It writes only its own folder, `horizon-mods/.horizon-mod-data/atlas/` (settings, waypoints and maps). It opens no network connections. It sends something to the server only when you click Teleport (a `/tp` command, for operators) or Share (a chat message with the waypoint).
+
+Atlas is its own code. It copies the look and features of Xaero's mods, but no code or art comes from them, and it isn't made or endorsed by Xaero. Built on Waypoints by Nirokx (MIT); the map columns follow Horizon's minimap (MIT).
+
+Checked on Horizon Nightly 2026-11-05 (`66f3981`). It reads the game's world directly, so a much newer Nightly may need a new release. Turn off Horizon's own Minimap to avoid two maps."""
+authors = ["MrCloudy2"]
+owners = ["MrCloudy2"]
+owner_ids = [123890706]
+license = "MIT"
+source = "https://github.com/MrCloudy2/horizon-atlas"
+icon = "icons/atlas.png"
+categories = ["transportation", "utility"]
+tags = ["minimap", "world-map", "waypoints", "map", "radar", "cave-map", "navigation", "hud", "xaero"]
+screenshots = ["screenshots/atlas/1.jpg", "screenshots/atlas/2.jpg", "screenshots/atlas/3.jpg", "screenshots/atlas/4.jpg", "screenshots/atlas/5.jpg", "screenshots/atlas/6.jpg"]
+key = "RWQTrUWZqmONrce5kqT1AQVVgH1uvw+OS9esuwQdp05OTlV/VWkKxGUL"
+
+[[versions]]
+version = "0.2.0"
+published = "2026-11-08"
+game = "26.3"
+file = "atlas-0.2.0.hnmod"
+sha256 = "07c3651728523e349858ef7f575b6336508a8e616a99aef2ef19e9723d1694c3"
+signature = """
+untrusted comment: signature from minisign secret key
+RUQTrUWZqmONrfPu+vsbqVJtCB4t6hwK+37eqCkoJuK/6KbddmytzcjWsfLPymi0SWjoObsq6eXKTmKCP5S6GlhOn/KFEXHYoQw=
+trusted comment: timestamp:1794168821\tfile:atlas-0.2.0.hnmod\thashed
+4DXxH4I/7+d/k8l12LymbKG/v8dPOWs8ynsQN84zR4gjJSFPYsL/wn4CgdB9JWH754qOGVF6G+RsePd9NIdUBA=="""
+changelog = """
+Map colours, lighting and slope shading now match Xaero's, measured against Xaero's maps over the same test scene by day, at dusk and at night.
+
+- **Colours**: block colours, terrain depth and water depth follow Xaero's world map. The minimap uses the world map's colours, as Xaero's does.
+- **Lighting**: the map darkens with the time of day and shows block light (torches, lava) at night.
+- **Slopes**: shaded as Xaero's, lit from the north; "Full" is now the default.
+- **Saving**: a map region that can't be written (a full disk, say) is kept and saved again later instead of being lost.
+
+Maps saved by 0.1.0 still load."""
