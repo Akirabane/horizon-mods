@@ -1,0 +1,34 @@
+id = "modmenu"
+kind = "native-mod"
+name = "Mod Menu"
+summary = "A port of TerraformersMC's Mod Menu: a Mods button on the title screen and pause menu opening Mod Menu's list of your mods."
+description = """
+A port of [Mod Menu](https://github.com/TerraformersMC/ModMenu) by Prospector and TerraformersMC to Horizon, as a native mod. It is Mod Menu's own code rewritten in Rust, with Mod Menu's layout, textures and translations.
+
+- **A Mods button** on the title screen (a fourth icon beside Friends, Language and Accessibility, or below, beside or instead of Realms) and in the pause menu (a fifth icon, or a full-width button), and the mod count after the version: "Horizon 26.3 (Rust) (12 Mods)".
+- **The mods screen**: the native mods built into your game, the content mods turned on, Minecraft and Horizon, each with its icon, version, summary and badges.
+- **Details** of the selected mod: description, credits, licence, source, website and issues links, and a newer version when the catalog has one. As in Java, icons, credits and links come from the mods themselves, else from the Horizon catalog.
+- **The update indicator** on the Mods button, flashing like Java's.
+- **Search** by name, id, description and author, Mod Menu's search terms ("lib", "config", "update"), **sorting** and the **library filter**.
+- **Configure** opens the mod's own config screen (for mods that have one), else its settings page, and comes back to the mods screen after; a click on a row's icon or a double click does the same.
+- **Open Mods Folder**, **Mod Menu's 21 options**, an **Open Mod Menu** key. English and Russian.
+
+Built for Horizon Nightly 2026-11-07 (`2ebf00a`). Native mods are compiled into the game and are not sandboxed: build only code you trust.
+
+**Credits.** Mod Menu is Copyright (c) 2018-2020 Prospector, MIT License; the textures are Mod Menu's own. This port rewrites Mod Menu in Rust under the same licence and is not affiliated with TerraformersMC, Prospector, Mojang or Microsoft."""
+authors = ["DeportedToHell"]
+owners = ["DeportedToHell"]
+owner_ids = [344119465]
+license = "MIT"
+source = "https://github.com/DeportedToHell/MCRE-Mods/tree/main/modmenu"
+icon = "icons/modmenu.png"
+categories = ["management", "utility"]
+tags = ["modmenu", "mods-list", "ui", "settings", "port"]
+
+[[versions]]
+version = "1.1.0"
+published = "2026-11-08"
+game = "26.3"
+file = "modmenu-1.1.0.hnmod"
+sha256 = "a4c68812e5b2e90857f09180d1f12577fcbb33f4c58bd3ddfb79a84fe93739cc"
+changelog = "First release."
