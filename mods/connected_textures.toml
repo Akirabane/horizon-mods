@@ -17,11 +17,21 @@ Options > Mods > Connected Textures turns it on and off, and each part on its ow
 Inspired by Continuity (MIT), recreated for Horizon."""
 authors = ["tariksabanuz"]
 owners = ["tariksabanuz"]
+owner_ids = [332662152]
 license = "MIT"
 source = "https://github.com/tariksabanuz/ContinuityHorizon"
 icon = "icons/connected_textures.png"
 categories = ["decoration", "utility"]
 tags = ["connected-textures", "glass", "visual", "port"]
+
+[[versions]]
+version = "0.1.7"
+published = "2026-11-09"
+game = "26.3"
+file = "connected_textures-0.1.7.hnmod"
+sha256 = "47fd568c4e2969122da80550efd9305b527484168541a6bbea44e1fdff16cab1"
+changelog = """
+- Fixes a crash while meshing when a resource pack model uses only a narrow part of its sprite (the seam inset is now capped at half of each piece). Rebuilt for the latest Horizon nightly (fdc87ae, Nov 8)."""
 
 [[versions]]
 version = "0.1.2"
