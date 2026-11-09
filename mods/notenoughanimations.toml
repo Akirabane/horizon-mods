@@ -1,0 +1,53 @@
+id = "notenoughanimations"
+kind = "native-mod"
+name = "Not Enough Animations"
+summary = "tr7zw's third-person animations for Horizon: eating, climbing, rowing, maps and bows."
+description = """
+A native port of [Not Enough Animations](https://github.com/tr7zw/NotEnoughAnimations) by **tr7zw**, brought to Horizon by **romaeboj**.
+
+It improves third-person player animations without changing gameplay:
+
+- **Eat / Drink** — the hand lifts to the mouth while eating or drinking.
+- **Ladder** — arms and legs swing while climbing; the body faces the ladder.
+- **Boat** — each oar sweeps with its own rowing time.
+- **Item Swap** — the arms cross as the hands trade items.
+- **Burning** — the head wobbles and the free arm flails while on fire.
+- **Freezing** — the arms shake in powder snow.
+- **Crawling** — the swimming pose becomes crawling on land.
+- **No Sleep Movement** — the arms lie still in bed.
+- **Maps** — filled maps render in the hand with paper around the content and on the back.
+- **Bow fixes** — the other hand's item hides while a bow or crossbow is drawn or charged; shields never hide.
+
+Every animation has its own toggle in **Options → Mods → Not Enough Animations**. Two extra toggles are **In-World Map Rendering** and **Bow Animation Fixes**. The labels use the original mod's translations (en, de, fr, pl, pt, ru, sv, tr, uk, zh).
+
+Client-side only: it changes how your player model looks, not movement, combat or item stats.
+
+Requires Horizon 26.3. Install it from the launcher's Mods page, then press **Build** on the same page. The source is at the link below; the original mod and its licence are credited there.
+
+Original mod by tr7zw. Horizon port by romaeboj."""
+authors = ["tr7zw", "romaeboj"]
+owners = ["Dbdbdndbbsbs"]
+owner_ids = [97656496]
+license = "tr7zw Protective License"
+source = "https://github.com/Dbdbdndbbsbs/notenoughanimations-horizon"
+icon = "icons/notenoughanimations.png"
+categories = ["decoration", "adventure"]
+tags = ["animations", "third-person", "eating", "climbing", "boats", "maps", "bows", "crossbows", "offhand", "player-model"]
+
+[[versions]]
+version = "0.2.76"
+published = "2026-11-09"
+game = "26.3"
+file = "notenoughanimations-0.2.76.hnmod"
+sha256 = "39e3459d3d6b6ec97f9a9654d2c6b358b085e8158e50de3327873cfbcd114645"
+changelog = """
+Updated to the latest Horizon (`fdc87aecdbd116bf1e08adcd062fcbaea8c2e2ca`).
+
+- Filled maps render on one side only, with paper around the content and on the back; no z-fighting.
+- Maps show in the inventory player preview.
+- Map pose no longer follows head pitch; the right hand matches the left.
+- Empty Map stays a plain vanilla flat item.
+- Offhand items stay hidden for bows and crossbows, except shields.
+- A crossbow also hides a bow in the other hand while charged or drawn.
+- New settings: **In-World Map Rendering** and **Bow Animation Fixes**.
+- Settings labels use the original mod's translations in 14 languages."""
