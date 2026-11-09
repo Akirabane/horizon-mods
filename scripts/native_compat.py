@@ -67,6 +67,7 @@ class Bundle:
         # api.rs), which this script doesn't: they are applied here, not compiled.
         self.api = "api" in manifest or any(isinstance(i, dict) and "trait_method" in i
                                             for i in manifest.get("injection", []))
+        self.mixins_content = has_mixins_content(manifest)
 
     def unpack(self, into, revision):
         out = into / self.id
@@ -84,6 +85,13 @@ class Bundle:
 
 # The tables only the launcher reads; it removes them before horizon-mixins sees the manifest (native_mods/api.rs).
 LAUNCHER_TABLES = ("api", "dependencies")
+
+
+def has_mixins_content(manifest):
+    """Whether horizon-mixins has anything to apply in this manifest. The launcher leaves out a bundle with only
+    [mod], [compatibility] and its own tables, e.g. one that is only an [api] package (native_mods.rs,
+    `mixins_content`); horizon-mixins refuses such a manifest (E_MANIFEST)."""
+    return any(key not in ("mod", "compatibility", *LAUNCHER_TABLES) for key in manifest)
 
 
 def strip_launcher_tables(text):
@@ -163,8 +171,9 @@ def culprit(diagnostic, bundles):
 
 def apply(tool, tree, bundles, revision, name):
     """horizon-mixins on `bundles` together, leaving out each one it refuses (and the ones needing it) until
-    the rest applies: (stage folder or None, {id: diagnostic})."""
-    left, refused = list(bundles), {}
+    the rest applies: (stage folder or None, {id: diagnostic}). Bundles with nothing for horizon-mixins are left
+    out, as the launcher leaves them out."""
+    left, refused = [b for b in bundles if b.mixins_content], {}
     while left:
         mods = WORK / "mods" / name
         shutil.rmtree(mods, ignore_errors=True)
