@@ -14,11 +14,30 @@ A native source mod: it runs with the game's permissions. Upstream authors and d
 its third-party notices."""
 authors = ["hhhhsffd"]
 owners = ["hhhhsffd"]
+owner_ids = [90867279]
 license = "GPL-3.0-or-later"
 source = "https://github.com/hhhhsffd/viahorizon"
 icon = "icons/viahorizon.png"
 categories = ["utility", "social"]
 tags = ["multiplayer", "protocol", "old-servers", "viafabricplus", "port"]
+
+[[versions]]
+version = "0.8.8-dev"
+published = "2026-11-08"
+game = "26.3"
+file = "viahorizon-0.8.8-dev.hnmod"
+sha256 = "ee28b2131a066870acdd853dcf31096bc556cb574a9599f00cd296c1d563a2ba"
+changelog = """
+- Fix the legacy boat cancellable helper to return ControlFlow<Result<bool>>, and adapt block-prediction cleanup to the current Nightly's Prediction struct.
+- Build against the released 8 November Nightly (fdc87ae) and its Horizon Mixins revision (5a64af9).
+- Default new configurations to Auto server version detection; keep saved targets and per-server overrides.
+- Retry temporary authentication-service failures during server login.
+- Fix legacy bed jumping and landing, predicted crafting output in both crafting grids, and sword blocking duration and animation.
+- Preserve explosion lighting and partial chunk/block updates, and mesh loaded chunks at the edge of the server view.
+- Reject items unavailable on the selected server before equipping or using them; handle closed launcher log pipes safely.
+
+Validation: https://github.com/hhhhsffd/viahorizon/blob/v0.8.8-dev/docs/validation/0.8.8/summary.json
+Release and source: https://github.com/hhhhsffd/viahorizon/releases/tag/v0.8.8-dev"""
 
 [[versions]]
 version = "0.8.5-dev"
