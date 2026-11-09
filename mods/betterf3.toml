@@ -1,0 +1,32 @@
+id = "betterf3"
+kind = "native-mod"
+name = "BetterF3"
+summary = "A port of BetterF3: a customizable, colour-coded, human-readable debug screen (F3) with modules and animations."
+description = """
+A port of [BetterF3](https://github.com/TreyRuffy/BetterF3) by cominixo and TreyRuffy to Horizon, as a native mod. It replaces the debug screen (F3) with BetterF3's customizable, colour-coded, human-readable one.
+
+- **Modules** in two columns, each in its own colours (Minecraft, FPS, Graphics, Server, Coordinates, Chunks, Location, Entities, Sounds, Help, System, Misc, Targeted), separators, and BetterF3's extra lines (velocity, slime chunk, days played, time, coloured FPS and memory).
+- Every module and every line on or off, colours, left or right column, order; add and delete modules.
+- Line backgrounds, shadow, font scale, the **sliding animation**; hide the boss bar and sidebar while F3 is open; Auto Start.
+- **F3+M** opens the config, **F3+F** / **Shift+F3+F** change the render distance, **Ctrl+F3+F** the simulation distance.
+- **BetterF3's own config screens** (Cloth Config), from Mod Menu's Configure, Options > Mods > BetterF3 or F3+M. English and Russian.
+
+Built for Horizon Nightly 2026-11-07 (`2ebf00a`). Native mods are compiled into the game and are not sandboxed: build only code you trust.
+
+**Credits.** BetterF3 is Copyright (c) cominixo and TreyRuffy, MIT License. This port rewrites it in Rust under the same licence and is not affiliated with its authors, Mojang or Microsoft."""
+authors = ["DeportedToHell"]
+owners = ["DeportedToHell"]
+owner_ids = [344119465]
+license = "MIT"
+source = "https://github.com/DeportedToHell/MCRE-Mods/tree/main/betterf3"
+icon = "icons/betterf3.png"
+categories = ["utility"]
+tags = ["f3", "debug", "hud", "customization", "port"]
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-09"
+game = "26.3"
+file = "betterf3-1.0.0.hnmod"
+sha256 = "6903e9fd75fc89e1bf780c28944cd4483800e02a258cd69f794a5cbe648a0d9e"
+changelog = "First release."
