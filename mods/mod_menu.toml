@@ -22,6 +22,15 @@ categories = ["utility", "management"]
 tags = ["mod-menu", "mods-list", "settings", "ui", "port"]
 
 [[versions]]
+version = "0.3.5"
+published = "2026-11-09"
+game = "26.3"
+file = "mod_menu-0.3.5.hnmod"
+sha256 = "5fef518e6ce7417944ab2621711be013cf7e25fdd6d3b25922876e78f090bfa3"
+changelog = """
+- Source now matches the published file exactly (the Mods button icon is no longer drawn on the Realms button). Rebuilt for the latest Horizon nightly (fdc87ae, Nov 8)."""
+
+[[versions]]
 version = "0.3.3"
 published = "2026-11-05"
 game = "26.3"
