@@ -1,0 +1,34 @@
+id = "cinematic_interactions"
+kind = "native-mod"
+name = "Cinematic Interactions"
+summary = "Using a crafting table, furnace, anvil, enchanting table and more moves the camera in close for a cinematic, hands-on scene."
+description = """
+By tariksabanuz. Cinematic Interactions for Horizon, a port of Southware's Cinematic Interactions for Fabric: when you use a station,
+the camera glides in and your hands work it in a close-up scene instead of opening a plain menu.
+
+- Crafting table, crafter, stonecutter, loom and cartography table, furnace, smoker, blast furnace and campfire.
+- Anvil with the hammer swing, grindstone, smithing table, enchanting table with its rune circles, brewing stand, beacon, lectern, jukebox and chiseled bookshelf.
+- Right-click the next station beside you to move straight over to it.
+- Cinematic Interaction Settings... in Options: turn stations off, tune the camera speed, lean, zoom, black bars and screen flashes.
+
+Needs the Performance build in the launcher. This is a Rust port of the original mod (Southware, MIT), made from its published source;
+it is released under the same MIT licence."""
+authors = ["tariksabanuz"]
+owners = ["tariksabanuz"]
+owner_ids = [332662152]
+license = "MIT"
+source = "https://github.com/tariksabanuz/CinematicInteractionsHorizon"
+icon = "icons/cinematic_interactions.png"
+categories = ["game-mechanics", "optimization", "technology"]
+tags = ["animation", "interaction", "menu", "cinematic", "port"]
+
+[[versions]]
+version = "0.12.2"
+published = "2026-11-09"
+game = "26.3"
+file = "cinematic_interactions-0.12.2.hnmod"
+sha256 = "b08c342aeca7d053705e2397cd6185f3239a5c51f962f129cea6f545eb293604"
+changelog = """
+- Station scenes with hands and camera, anvil hammer and grindstone, enchanting and beacon effects, move over between stations, settings screen.
+- Kept crafting-table items are saved atomically and are never lost or duplicated if the disk fails.
+- Built for the latest Horizon nightly (fdc87ae, Nov 8)."""
