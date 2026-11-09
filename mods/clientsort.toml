@@ -1,0 +1,36 @@
+id = "clientsort"
+kind = "native-mod"
+name = "ClientSort"
+summary = "Inventory sorting from ClientSort: Sort, Restock and Transfer buttons, middle-click sort, Shift/Ctrl/Alt for other orders."
+description = """
+A port of [ClientSort](https://github.com/TerminalMC/ClientSort) by TerminalMC to Horizon, as a native mod.
+
+- **Trigger buttons** beside each inventory, as in the original: **Sort**, **Restock** (moves the items the other inventory already holds) and **Transfer** (moves as much as fits).
+- **Middle click** over an inventory sorts it.
+- Sort order: the creative inventory's order by default; hold **Shift** for quantity, **Ctrl** for name (A-Z), **Alt** for item ID.
+- The container, the main inventory and the hotbar are sorted on their own.
+- Keys for every operation, including **Fill Stacks**, in Options > Mods > ClientSort.
+- Settings: buttons on/off, default order, click speed, hotbar as its own group, restock by item type, button tooltips.
+- Horizon's own "≡" sort buttons are hidden while ClientSort's are shown.
+
+Every action is an ordinary container click, so it works on servers too.
+
+Built for Horizon Nightly 2026-11-07 (`2ebf00a`). Native mods are compiled into the game and are not sandboxed: build only code you trust.
+
+**Credits.** ClientSort is Copyright 2024-2026 TerminalMC, Apache License 2.0; it uses code from Mouse Wheelie by Siphalor (Apache-2.0) and Inventory Management by Roundaround (MIT). The button sprites are ClientSort's own. This port rewrites ClientSort's logic in Rust under the same licence and is not affiliated with TerminalMC, Mojang or Microsoft."""
+authors = ["DeportedToHell"]
+owners = ["DeportedToHell"]
+owner_ids = [344119465]
+license = "Apache-2.0"
+source = "https://github.com/DeportedToHell/MCRE-Mods/tree/main/clientsort"
+icon = "icons/clientsort.png"
+categories = ["storage", "utility"]
+tags = ["inventory", "sorting", "buttons", "port"]
+
+[[versions]]
+version = "1.1.0"
+published = "2026-11-08"
+game = "26.3"
+file = "clientsort-1.1.0.hnmod"
+sha256 = "a9c3a8e5d67be7bf130fc7f807bf0134464388fff2b504b87083ebdf2f6b9aee"
+changelog = "First release."
