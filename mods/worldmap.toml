@@ -3,21 +3,24 @@ kind = "native-mod"
 name = "World Map"
 summary = "A full screen, self-writing world map with a minimap, waypoints (groups, import and export), day and night, cave layers and teleport."
 description = """
-A full screen map that writes itself as you explore, with a minimap in the corner of the game.
+A full screen map that writes itself as you explore, for Horizon, with a minimap in the game.
 
-- **Self-writing map.** The terrain you have seen stays on the map after you leave, kept per world, dimension and cave layer, in the vanilla map colours. Dark at night, and lit blocks (torches, lava, lanterns) shine.
-- **Minimap.** In a corner of the game: the map round you, turning with you with the sides of the world on its edge (or north up), your waypoints, other players as dots, dark at night. Under a roof or in a cave it shows the floor at your height.
-- **Smooth.** Drag to move (the map glides on when you let go), scroll to zoom towards the pointer; far zoom blurs instead of flickering.
-- **Cave layers.** Under a roof, in a cave or in the Nether the map shows the floor round you; layered or full, with a Top Y slider from -64 to 319.
-- **Dimensions.** One button shows the Overworld, the Nether or the End from any of them, with the other world's coordinates of the place under the pointer.
-- **Waypoints.** Right-click for a menu: add, rename, 16 colours, three shapes, group, teleport (/tp), delete. Waypoints show in the world as a square with a letter, with their name and distance; a waypoint is made where you die; a list with search (L) and groups you can hide; Export and Import of the list (it reads other map mods' waypoints files too).
-- **Also:** the biome under the pointer, other players on the map, go to coordinates (J), a chunk grid, your trail, and an export of the whole map as a PNG.
-- **Keys.** A World Map section in Options > Controls > Key Binds (with Reset), twelve keys, all rebindable. Open the map with M.
-- **Russian** interface when the game is in Russian.
+- **Self-writing map.** The terrain you have seen stays on the map after you leave, per world, dimension and cave layer, in the vanilla map colours, by day and by night (glowing blocks stay lit).
+- **Smooth.** Drag with a glide, scroll to zoom towards the pointer; no flicker when zooming, light on big maps.
+- **Minimap** that can turn with you, with the compass letters, waypoints and other players, and the floor at your head height in caves.
+- **Cave layers.** Under a roof, in a cave or in the Nether the map shows the floor round you; layered or full, with a Top Y slider.
+- **Waypoints.** Right-click menu with hotkeys: add, rename, 16 colours, shapes, groups, hide, teleport, share, delete; markers in the world with name and distance; import and export (also Xaero's format); a waypoint where you die.
+- **Share a waypoint** with a friend through the chat (a green [Add] they click), or with `/wp share <number> <player>` as a private message.
+- **`/wp` commands:** add, del, rename, list, clear, share.
+- **Also:** dimensions button, waypoint list with search, biome under the pointer, go to coordinates, chunk grid, PNG export, Russian interface.
 
-**What it does and doesn't do:** it reads the chunks the game has loaded around you and the game's own state, draws on its own screen and in the game's HUD, and keeps files in `config/worldmap/` (the explored chunks and a waypoints file for each world). It sends `/tp` in chat when you choose Teleport. It makes no network connection and needs no other mod.
+Open it with **M**. Keys are in Options > Mods > World Map, all rebindable.
 
-**Native mod, pinned** to Horizon Nightly `66f3981` (Minecraft 26.3): it adds rows to the game's Key Binds screen and reuses the minimap's colour scan, so it builds on that revision."""
+**What it does and doesn't do:** it reads the chunks the game has loaded around you and the game's own state, draws on its own screen and in the game's HUD, and keeps files in `config/worldmap/` (the explored chunks and a waypoints file for each world). It makes no network connection of its own and needs no other mod. It sends `/tp` in chat when you choose Teleport, and a chat line or a private message (`/msg`) only when you choose to share a waypoint.
+
+**Support the author:** [donatello.to/luminaaa](https://donatello.to/luminaaa)
+
+**Native mod, pinned** to Horizon Nightly `fdc87ae` (Minecraft 26.3): it reuses the minimap's colour scan, so it builds on that revision."""
 authors = ["Px228-Da-Da"]
 owners = ["Px228-Da-Da"]
 owner_ids = [160890712]
@@ -26,7 +29,23 @@ source = "https://github.com/Px228-Da-Da/horizon-worldmap"
 icon = "icons/worldmap.png"
 categories = ["utility", "adventure"]
 tags = ["map", "worldmap", "waypoints", "navigation", "caves", "minimap"]
-screenshots = ["screenshots/worldmap/1.jpg", "screenshots/worldmap/2.png", "screenshots/worldmap/3.jpg", "screenshots/worldmap/4.png", "screenshots/worldmap/5.png", "screenshots/worldmap/6.png"]
+screenshots = ["screenshots/worldmap/1.jpg", "screenshots/worldmap/2.png", "screenshots/worldmap/3.jpg", "screenshots/worldmap/4.png", "screenshots/worldmap/5.png", "screenshots/worldmap/6.png", "screenshots/worldmap/7.jpg", "screenshots/worldmap/8.png"]
+
+[[versions]]
+version = "0.7.1"
+published = "2026-11-08"
+game = "26.3"
+file = "worldmap-0.7.1.hnmod"
+sha256 = "ae6fa84ce4d7b00df776d0f619a927b9903c28b18f3233d6560bb3d7244190f1"
+changelog = """
+- Built for Horizon Nightly fdc87ae (2026-11-08), the newest, and tried on it. The mod is the same as in 0.7.0, which was made for 2ebf00a.
+- `/wp` chat commands: add, del, rename, list, clear and share; `/wp share <number> <player>` sends a waypoint as a private message, `/wp share <number> all` to the whole chat. The chat box colours and completes `/wp` and its words.
+- Share a waypoint through the chat: a player with the mod sees a green [Add] and a click puts it on their map.
+- Minimap in the game: it can turn with you, with compass letters, waypoints and other players; in caves it shows the floor at your head height.
+- A day and night map, glowing blocks stay lit; maps of different worlds with the same name no longer mix.
+- Waypoint groups, hide, import and export (also Xaero's format), a waypoint menu with hotkeys, waypoints in the world with name and distance.
+- Smoother and lighter on big maps: files are read a little in each frame, no flicker when zooming, the zoomed-out map is drawn from its texels, and a slow computer gets a slightly coarser picture instead of lag.
+- The mod's keys are now on its page, Options > Mods > World Map."""
 
 [[versions]]
 version = "0.6.0"
