@@ -1,0 +1,36 @@
+id = "rarity_borders"
+kind = "native-mod"
+name = "Rarity Borders"
+summary = "Adds clean, vanilla-style colored borders to inventory items based on their rarity."
+description = """
+Rarity Borders makes item rarity easier to recognize with subtle, pixel-perfect borders inspired by Minecraft's vanilla interface.
+
+**Features:**
+- Colored borders for Uncommon, Rare, and Epic items.
+- Clean square outlines with a highlighted bottom edge.
+- Works with inventory and container slots.
+- Optional borders for Common items and the hotbar.
+- In-game settings to toggle features.
+- Lightweight, client-side native Rust mod."""
+authors = ["Xariami"]
+owners = ["maliferen"]
+owner_ids = [234505373]
+license = "MIT"
+source = "https://github.com/maliferen/horizon-rarity-borders"
+icon = "icons/rarity_borders.png"
+categories = ["decoration", "equipment", "utility"]
+tags = ["rarity", "borders", "inventory", "items", "equipment", "vanilla", "client-side"]
+screenshots = ["screenshots/rarity_borders/1.png"]
+
+[[versions]]
+version = "0.1.1"
+published = "2026-11-09"
+game = "26.3"
+file = "rarity_borders-0.1.1.hnmod"
+sha256 = "664de3d6ac432c375ab52c26d1dc2ab0b0f2ebe1f1b94a681375ae9e44158089"
+changelog = """
+Bug fixes and stability improvements.
+
+- Fixed settings not restoring correctly after restarting the game.
+- Improved rarity detection and border rendering.
+- Added regression tests for settings and slot decorations."""
