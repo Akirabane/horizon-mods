@@ -12,7 +12,7 @@ For reviewers:
 - It writes only its settings, cached chunks and waypoints under `horizon-mods/.horizon-mod-data/baritone/`, and reads the schematic and explore-filter files the player names in a command.
 - It starts an operating system program in two places, both in `src/utils/notification.rs`: desktop notifications (PowerShell on Windows, osascript on macOS, notify-send on Linux), which are off unless the player sets `desktopNotifications true`, and `#pizza`, which opens a web page in the browser (the Java mod has the same command).
 - The `.hnmod` is built from the source of the tagged release, `python tools/pack.py`, and is the same file every time.
-- Pinned to Nightly 2026-10-30 (ba6344a): the launcher builds the game on that commit, and so does not depend on the Nightly the player has."""
+- Pinned to Nightly 2026-11-04 (6475f62): the launcher builds the game on that commit, and so does not depend on the Nightly the player has."""
 authors = ["luhnox (this port); Baritone by leijurv and the Baritone contributors"]
 owners = ["luhnox"]
 license = "LGPL-3.0-or-later (a derivative of Baritone, https://github.com/cabaletta/baritone)"
@@ -20,17 +20,18 @@ source = "https://github.com/luhnox/horizon-baritone"
 icon = "icons/baritone.png"
 categories = ["utility", "transportation"]
 tags = ["pathfinding", "automation", "bot", "mining", "elytra", "port"]
-key = "RWRTLwnAmb4dyVYWM1egwotcybd6nw1ILTIWGHmQVwiMROClbjW0JoKZ"
+key = "RWTHPH49xk0RxlR1W1RZwYeuLJjnGPW0U/nElRyWuiDh6S1zz9ey1QTj"
 
 [[versions]]
-version = "1.1.38"
-published = "2026-11-04"
+version = "1.1.52"
+published = "2026-11-05"
 game = "26.3"
-file = "baritone-1.1.38.hnmod"
-sha256 = "b1a79d09061c30f757f428d9702a1a9f39a3c11d7ad17c96d48e101150e98e0c"
+file = "baritone-1.1.52.hnmod"
+sha256 = "d46c541d1e673a95f343960b6fb1646a0669ec07df11958af97f1a76b3b14ffa"
 signature = """
-untrusted comment: signature from minisign secret key\r
-RURTLwnAmb4dyQdoJpJlo6cHKjQifEH+yI6oUn+h7Qt0U0nujno7s1PO+nfhF4AxS8m8SVGgPrTl6JPTLuVYXai08leFO6JlVAY=\r
-trusted comment: timestamp:1793793185\tfile:dist/baritone.hnmod\thashed\r
-Rur3Vc4xI4A+zxLLeLBlPg+T3D0yNMhoPgjOutE/SxtQJ9J1Mjh5LsceEF0Peql/fBP+Ja5+2s5iH7BJWCjfBA=="""
-changelog = "`#mine` and `#goto <block>` of a block that is not found underground now explore the surface instead of digging down; the full Mask family, IOpenSet and LinkedListOpenSet; the goal beam shows through terrain; 247 of 297 Baritone 1.21.4 classes ported, none missing (PARITY.md)."
+untrusted comment: signature from minisign secret key
+RUTHPH49xk0RxhlfLndiOa8HfTAj336FilVDzak1NcFaQmpnViG77Tc/cFgoRlssbU8dav6jTZcQ6Ly2DZx1G2cdBdPBgoBAEws=
+trusted comment: baritone 1.1.52 for Nightly 2026-11-04 (6475f62)
+jN9uovvV9H9YiJycFPUVoL7OIu5CGF17uWyVw8RNtFSBtiZJ9y0B2e5TG0E1Py7SRjkX5QA+sOxLIJkbRFClAQ==
+"""
+changelog = "A settings screen (Options > Mods > Baritone) built from Bedrock Edition components in Baritone's purple, where changes wait for Save Changes and block names are offered as you type; the chat no longer freezes when it is opened while Baritone is walking or mining; pinned to Nightly 2026-11-04 (6475f62) only, one download named by Nightly date and commit; the LGPL-3.0 and GPL-3.0 texts and the LICENSE are carried in the .hnmod. 1.1.38 is replaced because it was signed with the lost key (see the README of luhnox/horizon-baritone)."
