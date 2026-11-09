@@ -27,6 +27,14 @@ categories = ["storage", "utility"]
 tags = ["inventory", "mouse", "drag", "scroll", "port"]
 
 [[versions]]
+version = "1.1.0"
+published = "2026-11-09"
+game = "26.3"
+file = "mousetweaks-1.1.0.hnmod"
+sha256 = "5b74114ada20c434408b533bd57dec2725d081e8a8cba4d7de96c3d1502c5a6d"
+changelog = "Mouse Tweaks' own config screen, as in Java, opened from Mod Menu or Options > Mods > Mouse Tweaks > Configure... Built for Horizon Nightly 2026-11-08 (fdc87ae)."
+
+[[versions]]
 version = "1.0.1"
 published = "2026-11-08"
 game = "26.3"
