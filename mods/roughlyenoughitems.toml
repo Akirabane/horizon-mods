@@ -1,0 +1,39 @@
+id = "roughlyenoughitems"
+kind = "native-mod"
+name = "Roughly Enough Items"
+summary = """REI for Horizon: REI's item list, search, recipe screen, favorites, craftable filter and "+" button, in REI's own look."""
+description = """
+A port of [Roughly Enough Items (REI)](https://github.com/shedaniel/RoughlyEnoughItems) by shedaniel to Horizon, as a native mod. It draws REI's own interface, with REI's textures and layout, over the game's container screens.
+
+- **Entry list** beside every container screen and the creative inventory, in pages (arrows, mouse wheel, a click on "1/N" for the first page). Enchanted books, potions, tipped arrows, spawn eggs and music discs are folded into one cell each; **Alt+click** unfolds them.
+- **REI's search**, coloured as you type: words, `"phrases"`, `-exclusions`, `a | b`, `@mod`, `#tooltip`, `$tag`, `*id`, `r/regex/`. The field turns red when nothing matches; Up and Down recall earlier searches.
+- **Craftable filter**: only what you can craft from your inventory now.
+- **Recipes and usages**: left click or **R**, right click or **U**, on the list, the favorites, a recipe's slots or any slot of the screen.
+- **The recipe screen** as in REI: tabs, workstations, pages, Backspace to go back. Crafting (what you can craft now first), smelting, smoking, blasting, campfire, stone cutting, brewing, composting, stripping, smithing, anvil repairs and enchanted books, beacon base and payment, tilling, pathing, waxing, wax scraping, oxidizing, oxidation scraping.
+- **"+"** moves a recipe into the crafting grid (Shift: as many as possible) with ordinary slot clicks, so it works on any server; **Ctrl+click** on an entry crafts it straight away.
+- **Favorites**: **A** to add or remove, or drag entries in and out; the **+** panel has REI's game mode, weather and time shortcuts.
+- **Tag category** with REI's tree view, the **choose-page popup** (Shift+click on "1/N") and the **display history** (A over a recipe's "+").
+- **REI's config screen** (click the gear, or "More Options..."): all twelve categories with REI's options, live previews, the options search and keybinds with Ctrl/Shift/Alt. Light and dark theme, recipe borders, larger tabs, zoom (also Ctrl+wheel), ordering, search modes, clickable recipe arrows and more.
+- **Cheat mode**, REI's hover menus on the gear and the filter button, **Ctrl+O** to hide REI. English and Russian.
+
+It steps aside while Just Enough Items is on: both use the same place on screen.
+
+Built for Horizon Nightly 2026-11-07 (`2ebf00a`). Native mods are compiled into the game and are not sandboxed: build only code you trust.
+
+**Credits.** Roughly Enough Items is Copyright (c) 2018-2023 shedaniel, MIT License; the GUI textures are REI's own. This port rewrites REI in Rust under the same licence and is not affiliated with shedaniel, Mojang or Microsoft."""
+authors = ["DeportedToHell"]
+owners = ["DeportedToHell"]
+owner_ids = [344119465]
+license = "MIT"
+source = "https://github.com/DeportedToHell/MCRE-Mods/tree/main/roughlyenoughitems"
+icon = "icons/roughlyenoughitems.png"
+categories = ["utility"]
+tags = ["rei", "recipes", "item-list", "recipe-viewer", "search", "favorites", "port"]
+
+[[versions]]
+version = "1.0.1"
+published = "2026-11-08"
+game = "26.3"
+file = "roughlyenoughitems-1.0.1.hnmod"
+sha256 = "857947b94a68eac8f43272969bbf94883ca926714b81edd2ef9e323d56c9c3cd"
+changelog = "REI no longer hides when Just Enough Items is installed but not built into the game. Replaces 1.0.0 (#443), which stayed hidden for most players."
