@@ -12,6 +12,7 @@ A camera that moves with you. It leans into strafes, tips as you jump and fall, 
 - **Step bob**: a soft bounce in step with your walking, on top of vanilla's.
 - **Idle breathing** and **Speed FOV** (off by default).
 - **Hand sway**: the held item lags behind fast turns and leans with the camera.
+- **Presets** (Subtle, Default, Cinematic, PvP), **damage shake**, and calmer effects **while aiming** or **riding mounts**.
 
 Every effect has its own strength (OFF to 200%), plus overall intensity, smoothness and bounce presets, how much stays while swimming or flying, when fast travel fades it out (elytra, boats, minecarts, so it stays out of flight mods' way) and the lean direction. All in Options > Mods > Living Camera, with a key to toggle it in game.
 
@@ -28,6 +29,18 @@ source = "https://github.com/selfmonoraque5/living-camera"
 icon = "icons/living_camera.png"
 categories = ["utility"]
 tags = ["camera", "immersion", "client-side", "animation", "fov", "view-bobbing"]
+
+[[versions]]
+version = "1.1.0"
+published = "2026-11-09"
+game = "26.3"
+file = "living_camera-1.1.0.hnmod"
+sha256 = "b813a3231263d2f32511247375f2cd0e220c33afd6fd510509a910a0440d3ef0"
+changelog = """
+- Presets: one click for Subtle, Default, Cinematic or PvP; fine-tune anything after (the preset then reads Custom).
+- Damage shake: getting hit jolts the camera, harder for bigger hits.
+- While aiming: the effects calm down while you draw a bow or look through a spyglass, so your aim stays steady (25% by default).
+- While riding mounts: horses, camels and other mounts get their own strength (75% by default)."""
 
 [[versions]]
 version = "1.0.0"
