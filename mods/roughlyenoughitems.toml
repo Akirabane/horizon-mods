@@ -31,6 +31,14 @@ categories = ["utility"]
 tags = ["rei", "recipes", "item-list", "recipe-viewer", "search", "favorites", "port"]
 
 [[versions]]
+version = "1.1.0"
+published = "2026-11-09"
+game = "26.3"
+file = "roughlyenoughitems-1.1.0.hnmod"
+sha256 = "233416b0010453b3af2b018bf511a3316d104dde281921fac0be623d9153c657"
+changelog = "REI's own config screen now opens from Mod Menu and from Options > Mods > Roughly Enough Items > Configure..., over the title screen or the world. REI no longer hides when Just Enough Items is installed but not built into the game. Built for Horizon Nightly 2026-11-08 (fdc87ae)."
+
+[[versions]]
 version = "1.0.1"
 published = "2026-11-08"
 game = "26.3"
