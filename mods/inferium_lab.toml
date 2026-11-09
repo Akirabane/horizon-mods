@@ -1,0 +1,26 @@
+id = "inferium_lab"
+kind = "native-mod"
+name = "Inferium Lab"
+summary = "Grow Inferium on farmland and harvest its essence in Horizon 26.3."
+description = """
+An experimental native crop mod inspired by [Mystical Agriculture](https://github.com/BlakeBr0/MysticalAgriculture) by BlakeBr0.
+
+Plant Inferium Seeds on ordinary farmland. A young crop drops one seed. At age 7 it drops one seed and one Inferium Essence. Ordinary bone meal is refused.
+
+Build the instance with this native mod in Horizon Launcher. In a new world, use `/give @s inferium_lab:inferium_seeds` to get the first seeds. Tested on Horizon 26.3 Nightly `66f3981` with Horizon Mixins `e8cd0aa`. The bundle credits the MIT-licensed reference in its `NOTICE`."""
+authors = ["pehe1"]
+owners = ["pehe1"]
+owner_ids = [169748294]
+license = "MIT"
+source = "https://github.com/pehe1/horizon/tree/64587f988382bc4b2d69d5d0c00fd6668a40b0fc"
+icon = "icons/inferium_lab.png"
+categories = ["game-mechanics", "magic"]
+tags = ["agriculture", "crops", "inferium"]
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-09"
+game = "26.3"
+file = "inferium_lab-0.1.0.hnmod"
+sha256 = "e05c584fdb5f9caeb67f6a53eb62c71cbc137b4c463c6ee01902509d9624f027"
+changelog = "First native release for Horizon 26.3. Ten checks passed on Windows with the pinned Nightly, covering farmland and dirt, growth, harvest, creative pick block, and bone meal by hand and dispenser with wheat controls. [Validation results](https://github.com/pehe1/horizon/blob/64587f988382bc4b2d69d5d0c00fd6668a40b0fc/README.md#validation)."
