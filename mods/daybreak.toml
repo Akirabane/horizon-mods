@@ -27,6 +27,14 @@ tags = ["shadows", "water", "reflections", "waving-plants", "sun-rays", "bloom",
 screenshots = ["screenshots/daybreak/1.jpg", "screenshots/daybreak/2.jpg", "screenshots/daybreak/3.jpg"]
 
 [[versions]]
+version = "0.2.0"
+published = "2026-11-08"
+game = "26.3"
+file = "daybreak-0.2.0.hshader"
+sha256 = "2da76c32e18a3d16af4eab348683f9e51fe20cc8d1160eb342d5eb56b43fe365"
+changelog = "One pack instead of four: shadows on/off, shadow detail (1024/2048/4096) and shadow distance (64/96/160 blocks) are now options on the Lighting page. The defaults match the old High pack; the Low, Medium and Ultra packs are gone. Needs a Horizon Nightly from 2026-11-05 or newer."
+
+[[versions]]
 version = "0.1.1"
 published = "2026-11-03"
 game = "26.3"
