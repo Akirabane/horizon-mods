@@ -1,0 +1,29 @@
+id = "photon"
+kind = "shader"
+name = "Photon"
+summary = "SixthSurge's Photon shaders ported to Horizon: realistic sky, volumetric clouds, soft coloured shadows, water, fog and bloom."
+description = """
+An unofficial port of [Photon Shaders](https://github.com/sixthsurge/photon) v1.4 by SixthSurge to Horizon's own shader format. All credit for the look goes to SixthSurge and Photon's contributors; this port is not affiliated with or endorsed by them.
+
+**Ported:** Photon's atmosphere, sun, stars and galaxy; soft coloured shadows, subsurface scattering on foliage and block light; water with waves, absorption, refraction and reflections; waving plants; volumetric cumulus and cirrus clouds; fog with light shafts; bloom, colour grading, FXAA and sharpening. 61 of Photon's settings under Shader Options.
+
+**Not possible in Horizon yet:** TAA, ambient occlusion, reflections on land, depth of field, moon phases, some cloud layers, aurora, and shading of entities, the hand and particles.
+
+Source: https://github.com/fbikat/photon-horizon. Licence: Photon's own (in the pack); free to share, not for sale."""
+authors = ["fbi"]
+owners = ["fbikat"]
+owner_ids = [253167313]
+license = "LicenseRef-Photon-Shaders"
+source = "https://github.com/fbikat/photon-horizon"
+icon = "icons/photon.png"
+categories = ["semi-realistic", "atmosphere", "shadows"]
+tags = ["photon", "volumetric-clouds", "shadows", "water", "fog", "port", "sun", "realism", "real", "life"]
+screenshots = ["screenshots/photon/1.png", "screenshots/photon/2.png", "screenshots/photon/3.png"]
+
+[[versions]]
+version = "1.4.0"
+published = "2026-11-09"
+game = "26.3"
+file = "photon-1.4.0.hshader"
+sha256 = "9641bfd672c8b3608025a71d5cc1c927d0da75ed6f8d8c46f29213004a8019ba"
+changelog = "First release: Photon Shaders v1.4 by SixthSurge, ported to Horizon's shader API 0.1."
