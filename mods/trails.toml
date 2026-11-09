@@ -1,0 +1,39 @@
+id = "trails"
+kind = "native-mod"
+name = "Trails"
+summary = "Paw prints, particles, lines or ribbons follow you as you move. Client-side, only you see them."
+description = """
+**Trails** leaves a trail behind you as you move. Only you see it: nothing is sent to the server or to other players.
+
+- **Cat paws**: alternating paw prints on the blocks you walk on. They follow the local light and vanish when the block under them is removed or changes height.
+- **Particle**: sparkles, dust, orbs or hearts drifting behind you.
+- **Line**: a thin line along your path.
+- **Ribbon**: a flat ribbon along your path.
+
+Trails fade after a few seconds, or stay in persistent mode (bounded in memory, never saved into the world). Changing mode, dimension or world clears them.
+
+**Controls**
+- **K** turns trails on and off (rebind it in Options > Mods > Trails).
+- **Options > Mods > Trails > Settings**: mode, colours, sizes, spacing, opacity, glow, rainbow, fade times and render distance.
+- `/trails on|off`, `/trails mode paws|particle|line|ribbon`, `/trails set <setting> <value>` (e.g. `/trails set color #7FD4FF`), `/trails settings`, `/trails clear`, `/trails reset`.
+
+**What it does and doesn't do**: it reads your position, the blocks under you and the light level, draws in the world, and saves its settings in `horizon-mods/.horizon-mod-data/trails/`. It makes no network connections and doesn't change gameplay, the world or any other files.
+
+Known issue: the textures use Horizon's shared mod image slot, so another mod that uploads its own image there can clash with them."""
+authors = ["fbi"]
+owners = ["fbikat"]
+owner_ids = [253167313]
+license = "MIT"
+source = "https://github.com/fbikat/trails-horizon/"
+icon = "icons/trails.png"
+categories = ["decoration", "utility", "social"]
+tags = ["trails", "particles", "paw-prints", "cosmetic", "client-side"]
+screenshots = ["screenshots/trails/1.png", "screenshots/trails/2.png", "screenshots/trails/3.png", "screenshots/trails/4.png", "screenshots/trails/5.png"]
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-08"
+game = "26.3"
+file = "trails-1.0.0.hnmod"
+sha256 = "e5f96de4992d0db3d067cbca41f33f768829977d5014f9589d9578def375098c"
+changelog = "First release."
