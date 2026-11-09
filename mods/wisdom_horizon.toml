@@ -5,8 +5,8 @@ summary = "bobcao3's Wisdom Shaders V3 ported to Horizon's native shader API."
 description = """
 bobcao3's Wisdom Shaders V3 (Build 3300) ported to Horizon's shader API: its sun, ambient and torch colours, Oren-Nayar and GGX lighting, jittered soft shadows, atmosphere, 2D clouds, fog and AgX tonemap, translated from GLSL to WGSL. Adds bloom, FXAA, mob and chest relighting, held light sources and a horizon haze as Horizon post passes.
 
-Unofficial port by tomasmendes01 (in-game name: iLoong). A lighter version for more FPS is published as `wisdom_horizon_lite`."""
-authors = ["bobcao3", "tomasmendes01"]
+Unofficial port by iLoong. A lighter version for more FPS is published as `wisdom_horizon_lite`."""
+authors = ["bobcao3", "iLoong"]
 owners = ["tomasmendes01"]
 owner_ids = [68385376]
 license = "Apache-2.0"
