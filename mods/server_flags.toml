@@ -1,0 +1,37 @@
+id = "server_flags"
+kind = "native-mod"
+name = "Server Flags"
+summary = "A flag beside each server in the Multiplayer list for the country it's hosted in"
+description = """
+A small flag beside each server in your Multiplayer list for the country it's hosted in. Hover the flag for the country's name, and pick servers close to you for a better ping at a glance.
+
+- **Pixel-art flags** after each server's name, or on its icon when the name is long.
+- **67 drawn flags**, the countries servers are most often hosted in; any other country shows its two-letter code.
+- **Country name on hover**, like "Germany (DE)".
+- Servers on your own network are never looked up.
+
+Settings in Options > Mods > Server Flags: lookups on/off, flag position, hover tooltip, codes for countries without a flag, reset.
+
+**Privacy:** to know where a server is, the mod resolves its address and sends only that IP address to https://api.country.is (open source, no account or key), which answers with a country code. Once per server per game session, in the background, only while "Look up server locations" is on. Nothing about you, your account or your other servers is sent; with the setting off, nothing is sent at all.
+
+Horizon has no hook point for the server list, so besides hook points this mod hooks the list's own tooltip pass (Screen::draw_tooltip in multiplayer.rs) and lays the flags out as the list lays out its rows. A later Horizon that changes the server list needs an update of this mod.
+
+Source: https://github.com/selfmonoraque5/server-flags
+
+Inspired by Server Country Flags by Khajiitos (https://modrinth.com/mod/server-country-flags). Written from scratch for Horizon: it contains none of its code or images (the flags are drawn in code) and is not made or endorsed by Khajiitos. Locations by country.is."""
+authors = ["selfmonoraque5"]
+owners = ["selfmonoraque5"]
+owner_ids = [86315101]
+license = "MIT"
+source = "https://github.com/selfmonoraque5/server-flags"
+icon = "icons/server_flags.png"
+categories = ["utility", "social"]
+tags = ["servers", "multiplayer", "flags", "country", "client-side"]
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-09"
+game = "26.3"
+file = "server_flags-1.0.0.hnmod"
+sha256 = "8cbf3a7e23a26786066a41fd58705a2339e035e8e2aa00b0332a05419b25e08b"
+changelog = "First release"
