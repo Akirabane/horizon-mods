@@ -1,0 +1,31 @@
+id = "shulkerboxtooltip"
+kind = "native-mod"
+name = "Shulker Box Tooltip"
+summary = "A port of ShulkerBoxTooltip: the contents of shulker boxes, chests, the ender chest and bundles right in their tooltip."
+description = """
+A port of [ShulkerBoxTooltip](https://github.com/MisterPeModder/ShulkerBoxTooltip) by MisterPeModder to Horizon, as a native mod: the contents of a container item right in its tooltip, with ShulkerBoxTooltip's own window texture, layout and colours.
+
+- **Shift**: compact preview, equal items merged (1.2k, 45k…); **Alt+Shift**: full preview, every slot in place; **Ctrl**: lock the tooltip and hover the items inside it for their own tooltips.
+- Every **shulker box** (tinted with its dye), chests, copper and trapped chests, barrels, furnaces, droppers, dispensers, hoppers, brewing stands, chiseled bookshelves, decorated pots, shelves, lecterns and any item holding contents.
+- The **ender chest** (synced in single player and on Horizon servers with the mod, otherwise what it held when you last opened it) and **bundles** (three themes).
+- **ShulkerBoxTooltip's own config screen** (Mod Menu's Configure, or Options > Mods > Shulker Box Tooltip > Configure...): five tabs, every option, reset and undo. English and Russian.
+
+Built for Horizon Nightly 2026-11-08 (`fdc87ae`). Native mods are compiled into the game and are not sandboxed: build only code you trust.
+
+**Credits.** ShulkerBoxTooltip is Copyright (c) MisterPeModder, MIT License; the textures are its own. This port rewrites it in Rust under the same licence and is not affiliated with MisterPeModder, Mojang or Microsoft."""
+authors = ["DeportedToHell"]
+owners = ["DeportedToHell"]
+owner_ids = [344119465]
+license = "MIT"
+source = "https://github.com/DeportedToHell/MCRE-Mods/tree/main/shulkerboxtooltip"
+icon = "icons/shulkerboxtooltip.png"
+categories = ["storage", "utility"]
+tags = ["shulker", "tooltip", "inventory", "preview", "port"]
+
+[[versions]]
+version = "1.0.1"
+published = "2026-11-09"
+game = "26.3"
+file = "shulkerboxtooltip-1.0.1.hnmod"
+sha256 = "005244f696d9c5214980f554251f6442523768f040a78f505ef8d36090484bba"
+changelog = "Ender chest contents from the server: slots outside the 27-slot chest are ignored, so a hostile server cannot make the client allocate for a huge index (with a regression test). Built for Horizon Nightly 2026-11-08 (fdc87ae)."
