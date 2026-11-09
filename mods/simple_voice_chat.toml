@@ -1,0 +1,32 @@
+## Horizon registry entry for Simple Voice Chat (client half).
+id = "simple_voice_chat"
+kind = "native-mod"
+name = "Simple Voice Chat client (unofficial)"
+summary = "Client-side voice chat: mic capture, Opus, positional mixing, push-to-talk, groups. Speaks Simple Voice Chat 2.6.x protocol (compat version 20)."
+description = """
+**A native Horizon mod**: the launcher builds it into the game (install it on the launcher's Mods page, then press Build there). Native mods are not sandboxed and run with your account's rights, so read the source before you build it. Pinned to the Horizon tree this was built against.
+
+- **Mic capture + playback** through the platform's audio stack, Opus encode/decode (libopus vendored, Xiph BSD).
+- **UDP voice** with positional mixing, so players hear each other from where they stand.
+- **Push-to-talk**, voice **groups**, and activation controls.
+- Speaks the **Simple Voice Chat 2.6.x** protocol (compatibility version 20). Tested so far only against Horizon's own voicechat-server, not yet against the Simple Voice Chat plugin on a Paper or Fabric server.
+
+Clean-room reimplementation of the client half of [Simple Voice Chat](https://modrinth.com/mod/simple-voice-chat) by henkelmax; not affiliated, no code or assets from it. Original implementation, MIT. Includes libopus (Xiph, BSD-style license).
+"""
+authors = ["sparticle62ops"]
+owners = ["sparticle62ops"]
+owner_ids = [209812745]
+license = "MIT"
+source = "https://github.com/Sparticle62ops/horizon-simple-voice-chat"
+categories = ["utility", "social"]
+tags = ["voice", "voicechat", "opus", "multiplayer"]
+
+icon = "icons/simple_voice_chat.png"
+
+[[versions]]
+published = "2026-11-05"
+version = "1.0.0"
+game = "26.3"
+file = "simple_voice_chat-1.0.0.hnmod"
+sha256 = "daab67ade4a5d22f922a681a792d449cea9b91c1d7da0bd710d52c9e7b07f855"
+changelog = "First release: full client bundle (protocol, session, audio, vendored Opus), 19 unit tests green."
