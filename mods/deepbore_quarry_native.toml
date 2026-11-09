@@ -29,6 +29,14 @@ tags = ["quarry", "mining", "machine", "automation", "digging"]
 screenshots = ["screenshots/deepbore_quarry_native/1.jpg", "screenshots/deepbore_quarry_native/2.jpg", "screenshots/deepbore_quarry_native/3.jpg", "screenshots/deepbore_quarry_native/4.png"]
 
 [[versions]]
+version = "0.1.2"
+published = "2026-11-08"
+game = "26.3"
+file = "deepbore_quarry_native-0.1.2.hnmod"
+sha256 = "41865d8459e679b23d3e71fa05f149ddc429dacac057fb350608ce526a486c17"
+changelog = "One file: the assets (textures, text, recipes) are embedded, so the separate deepbore_quarry entry is no longer needed. Clickable links in the chat warnings. Chunk-load ownership saves are retried when a write fails, and a damaged loads.json is kept and reported instead of replaced. Pinned to Nightly 2026-11-04 (67dad0d) and Horizon Mixins e8cd0aa."
+
+[[versions]]
 version = "0.1.0"
 published = "2026-11-05"
 game = "26.3"
