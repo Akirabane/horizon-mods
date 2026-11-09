@@ -1,0 +1,20 @@
+id = "context_tools"
+kind = "native-mod"
+name = "Context_tool_swap"
+summary = "Classic Tool swap"
+description = "Classic Toolswap for Rust. Just press middle click when you have a tool in the hand. It will swap the right tool out."
+authors = ["TTCjonasTTC", "Qwen"]
+owners = ["TTCjonasTTC"]
+owner_ids = [281414981]
+license = "MIT"
+source = "https://github.com/TTCjonasTTC/context_toolswap"
+icon = "icons/context_tools.png"
+categories = ["game-mechanics", "management"]
+
+[[versions]]
+version = "1.3.0"
+published = "2026-11-08"
+game = "26.3"
+file = "context_tools-1.3.0.hnmod"
+sha256 = "3c12569706641ef94ed955ed08c959314dcb95cfec290df19978b8ee3301ccef"
+changelog = "Classic Context tool swap for Rust."
