@@ -25,6 +25,20 @@ categories = ["utility"]
 tags = ["tooltip", "hud", "block-info", "waila", "port"]
 
 [[versions]]
+version = "26.3.8"
+published = "2026-11-08"
+game = "26.3"
+file = "jade-26.3.8.hnmod"
+sha256 = "eeb74fbcfbe75e568ecebdc82c8091c482e4f929dcb1f4d7390052d2ef8c5da8"
+changelog = """
+Still a port of Jade 26.3.5; 26.3.8 is this port's own version number, not a Jade release. Built and tested on Horizon commit 6560641.
+
+- Multiplayer security: command block text needs permission level 2, a client can only narrow what it is shown, reach is checked for everyone but a world's owner, and requests have a size and rate limit.
+- The energy line uses Jade's own energy icon.
+- The FE intake line is hidden on AE2's blocks in every mode.
+- The jade:max_position_deviation game rule goes through Horizon's public hooks."""
+
+[[versions]]
 version = "26.3.6"
 published = "2026-11-05"
 game = "26.3"
