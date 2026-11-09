@@ -26,6 +26,22 @@ categories = ["semi-realistic", "atmosphere", "medium"]
 tags = ["shadows", "clouds", "water", "reflections", "waving-plants", "god-rays", "colored-light"]
 
 [[versions]]
+version = "2.5.1"
+published = "2026-11-09"
+game = "26.3"
+file = "lumen-2.5.1.hshader"
+sha256 = "6ed5abce53d876d334dd6f6bd2604ebe7d24242e473783128dde326f58c1c03c"
+changelog = """
+   - New: Quality setting Low / Medium / High / Ultra to fit your PC
+   - New "Graphics and Performance" page: shadows on/off, shadow resolution (1024–4096), shadow distance (64–256 blocks), reflections
+   - Nicer waves: no repeating pattern, no more lines
+   - Much better underwater: light shafts, floating particles, deeper blue
+   - No more flash when surfacing
+   - Bright sand, snow and quartz no longer glow too much
+   - Softer firefly light
+   - All settings in English"""
+
+[[versions]]
 version = "2.1.0"
 published = "2026-11-06"
 game = "26.3"
