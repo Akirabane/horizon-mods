@@ -121,18 +121,26 @@ def download(url, sha256):
     return cache.read_bytes()
 
 
+def newest_unrevoked(projects, revoked):
+    """The native-mod projects of an index with their newest version that isn't revoked, most downloaded first:
+    [(project, version)]. A revocation names one file by its sha256, or (without one) every version of an id."""
+    files = {r["sha256"] for r in revoked if r.get("sha256")}
+    ids = {r["id"] for r in revoked if not r.get("sha256")}
+    found = []
+    for project in sorted(projects, key=lambda p: -p.get("downloads", 0)):
+        if project.get("kind") != "native-mod" or project["id"] in ids:
+            continue
+        version = next((v for v in project["versions"] if v["file"]["sha256"] not in files), None)
+        if version:
+            found.append((project, version))
+    return found
+
+
 def published():
     """The newest version of every native mod in the published index, most downloaded first."""
     index = json.loads(native.get(INDEX))
-    revoked = {r.get("sha256") for r in index.get("revoked", [])}
-    found = []
-    for project in sorted(index["projects"], key=lambda p: -p.get("downloads", 0)):
-        if project.get("kind") != "native-mod":
-            continue
-        version = next((v for v in project["versions"] if v["file"]["sha256"] not in revoked), None)
-        if version:
-            found.append(Bundle(download(version["file"]["url"], version["file"]["sha256"]), "registry"))
-    return found
+    return [Bundle(download(v["file"]["url"], v["file"]["sha256"]), "registry")
+            for _, v in newest_unrevoked(index["projects"], index.get("revoked", []))]
 
 
 def mixins_tool(bundles):
