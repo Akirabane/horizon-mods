@@ -1,0 +1,34 @@
+id = "additional_lights"
+kind = "mod"
+name = "Additional Lights"
+summary = "80 decorative lamps, floor torches and wall torches with the mod's own light levels and recipes."
+description = """
+A port of [Additional Lights](https://github.com/mgen256/AdditionalLights) by
+mgen256 for Horizon. This slice carries the 80 plain decorative light blocks —
+24 lamps (light 15), 28 floor torches (light 14) and 28 wall torches (light 14)
+— with their materials, shapes, recipes and drops, 1,548 block states in all.
+
+- Place lamps and torches like their vanilla templates; they keep the upstream
+  light levels, including the soul variants' dimmer light.
+- Every block drops itself and is craftable from the mod's own recipes.
+
+The standing-torch and fire-pit pedestals, the fire blocks and the two wands are
+later slices. MIT — original copyright and licence notices are kept in the port
+repository; see LICENSE and LICENSE-NOTICE.md there.
+"""
+authors = ["mgen256", "AdLf0208"]
+owners = ["AdLf0208"]
+owner_ids = [107615167]
+license = "MIT"
+source = "https://github.com/AdLf0208/additional_lights"
+icon = "icons/additional_lights.png"
+categories = ["decoration"]
+tags = ["port", "lighting", "decoration", "blocks"]
+
+[[versions]]
+version = "3.1.4"
+published = "2026-11-09"
+game = "26.3"
+file = "additional_lights.hmod"
+sha256 = "9fc4f2f9e2a259d475202749c269673301da13a9d2ff0cec6346947becaacb83"
+changelog = "First release"
