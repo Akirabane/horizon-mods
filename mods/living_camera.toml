@@ -1,0 +1,38 @@
+id = "living_camera"
+kind = "native-mod"
+name = "Living Camera"
+summary = "A camera that moves with you: it leans into strafes, sways on turns, dips on landing and bobs with your steps"
+description = """
+A camera that moves with you. It leans into strafes, tips as you jump and fall, sways on fast turns, dips when you land, bobs with your steps and breathes while you stand still. Everything runs on springs, so the camera eases into each motion and settles back with a little weight instead of snapping.
+
+- **Strafe and forward lean**: the camera rolls into sideways movement and tips slightly while running.
+- **Turn sway**: fast mouse turns tilt the view.
+- **Jump and fall tilt**: the view lifts going up and dips coming down.
+- **Landing dip**: a hard landing bumps the camera down, then it springs back.
+- **Step bob**: a soft bounce in step with your walking, on top of vanilla's.
+- **Idle breathing** and **Speed FOV** (off by default).
+- **Hand sway**: the held item lags behind fast turns and leans with the camera.
+
+Every effect has its own strength (OFF to 200%), plus overall intensity, smoothness and bounce presets, how much stays while swimming or flying, when fast travel fades it out (elytra, boats, minecarts, so it stays out of flight mods' way) and the lean direction. All in Options > Mods > Living Camera, with a key to toggle it in game.
+
+Client side only: it works in single player and on any server. It reads only your own position, view and the block at your eyes, with no network or file access beyond its own settings.
+
+Source: https://github.com/selfmonoraque5/living-camera
+
+Inspired by Camera Overhaul by Mirsario (https://github.com/Mirsario/Minecraft-CameraOverhaul). Written from scratch for Horizon: it contains none of Camera Overhaul's code or assets and is not made or endorsed by Mirsario."""
+authors = ["selfmonoraque5"]
+owners = ["selfmonoraque5"]
+owner_ids = [86315101]
+license = "MIT"
+source = "https://github.com/selfmonoraque5/living-camera"
+icon = "icons/living_camera.png"
+categories = ["utility"]
+tags = ["camera", "immersion", "client-side", "animation", "fov", "view-bobbing"]
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-09"
+game = "26.3"
+file = "living_camera-1.0.0.hnmod"
+sha256 = "77c59380d6359497a879b29db1b9ae92b4cdd19d7f6e16ca3429cb872904ebb0"
+changelog = "First release"
