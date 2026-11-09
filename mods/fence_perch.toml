@@ -1,0 +1,49 @@
+id = "fence_perch"
+kind = "native-mod"
+name = "Fence Perch"
+summary = "Jump onto fences, walls and closed gates from a standstill, stand on top, step off."
+description = """
+Jump onto fences, walls and closed fence gates from a standstill, stand on top, and step off either side.
+
+### Features
+- Walk up to a fence, wall or closed fence gate and jump while stepping forward: you land on top, no run-up needed.
+- Stand on it, walk along a connected line, then step off on either side.
+- Gates stay closed, so animals stay in the pen while you climb in and out.
+
+### How it works
+For the player only, supported barriers collide like a one-block-high block instead of one and a half. Your jump is not stronger: a 1.5-block ledge stays out of reach and low ceilings still block you. On top of a barrier you stand half a block lower than on a full post. Animals, mobs, open gates and all other blocks keep their normal collision.
+
+Supported: vanilla blocks whose IDs end in `_fence`, `_wall` or `_fence_gate` (gates only while closed).
+
+### Multiplayer
+The host's server checks movement with the same barrier shape, so the mod works in single-player and on LAN games hosted with it. Every player needs the mod. Joining a world or server without it, and dedicated servers, are not supported.
+
+### Compatibility
+For Minecraft 26.3. Each version is built and gameplay-tested on one exact Horizon Nightly; the launcher warns when a newer Nightly breaks it. Tested revisions and results: [Validation](https://github.com/AyanoKaito/horizon-fence-perch/blob/main/VALIDATION.md).
+
+This is a native mod: install only if you trust its source and accept the launcher's native-code warning.
+
+[Watch the demo](https://youtu.be/MNl9MMPWeIY) · [Installation](https://github.com/AyanoKaito/horizon-fence-perch/blob/main/docs/installation.md)"""
+authors = ["AyanoKaito"]
+owners = ["AyanoKaito"]
+owner_ids = [82058189]
+license = "MIT"
+source = "https://github.com/AyanoKaito/horizon-fence-perch"
+icon = "icons/fence_perch.png"
+categories = ["game-mechanics", "utility"]
+tags = ["fences", "movement", "parkour", "farming"]
+screenshots = ["screenshots/fence_perch/1.jpg", "screenshots/fence_perch/2.jpg", "screenshots/fence_perch/3.jpg"]
+key = "RWRDywNNoT8kYatbQtkHxdvUPbWE3YZyJqEAQWJQPIg8sWpTNfBoqSb2"
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-08"
+game = "26.3"
+file = "fence_perch-1.0.0.hnmod"
+sha256 = "d4b3cef31bc299deb5ea1910ed25059ec5a48bd4eff7af36262c216d278bb266"
+signature = """
+untrusted comment: signature from minisign secret key\r
+RURDywNNoT8kYXpKpAW2Z1OqjhzjeeQdumfawuATsoZhnSmy7t+fj6dPctGjKJTVceWErAl04EROFEfs4tPXCru5Vf5yeSVNhQM=\r
+trusted comment: timestamp:1794082945\tfile:fence_perch-1.0.0.hnmod\thashed\r
+8TqlDYaVeuv9xtRP23pHlAJF/bnoSAy1fqGwAy9EZU4Rf9axDT2t/qjIEj+ZVfPjNWtHh9OL4QaOdo59t53BDw=="""
+changelog = "First public release: jump onto fences, walls and closed fence gates from a standstill, stand on top and step off. Player-only collision; animals and jump strength unchanged. Validated in single-player and for LAN host and guest on Horizon Nightly 2026-11-07 (2ebf00a)."
