@@ -51,6 +51,7 @@ License
 MIT. See LICENSE."""
 authors = ["soufi"]
 owners = ["soufied"]
+owner_ids = [47915535]
 license = "MIT"
 source = "https://github.com/soufied/ElytraTrails-Horizon"
 icon = "icons/elytratrails.png"
