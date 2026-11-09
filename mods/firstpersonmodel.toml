@@ -1,0 +1,32 @@
+id = "firstpersonmodel"
+kind = "native-mod"
+name = "First-person Model"
+summary = "A port of First-person Model: see your own body in first person, with offsets for every pose and the original's settings."
+description = """
+A port of [First-person Model](https://github.com/tr7zw/FirstPersonModel) by tr7zw to Horizon, as a native mod. You see your own third-person body in first person.
+
+- **Your body in first person**, head hidden, with your armour, cape, elytra, held items, parrots, arrows and fire.
+- **Offsets for every pose**: standing, sneaking, sitting (boats, minecarts, mounts), crawling and swimming; the standing, sneaking and sitting offsets can be changed.
+- **Vanilla Hands Mode** (Off, Always, Always Both Hands, Item In Hand) and **Dynamic Mode**; item lists that switch to vanilla hands or turn the mod off; hide any of the body's layers.
+- **F6** turns it on and off.
+- **The original's config screen** (four tabs, sliders, item lists with search), from Mod Menu's Configure or Options > Mods > FirstPerson. English and Russian.
+
+Built for Horizon Nightly 2026-11-07 (`2ebf00a`). Native mods are compiled into the game and are not sandboxed: build only code you trust.
+
+**Credits.** First-person Model is Copyright (c) tr7zw, MIT License, with its MIT TRender GUI. This port rewrites it in Rust under the same licence and is not affiliated with tr7zw, Mojang or Microsoft."""
+authors = ["DeportedToHell"]
+owners = ["DeportedToHell"]
+owner_ids = [344119465]
+license = "MIT"
+source = "https://github.com/DeportedToHell/MCRE-Mods/tree/main/firstpersonmodel"
+icon = "icons/firstpersonmodel.png"
+categories = ["decoration", "utility"]
+tags = ["first-person", "player-model", "camera", "immersion", "port"]
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-09"
+game = "26.3"
+file = "firstpersonmodel-1.0.0.hnmod"
+sha256 = "32f5def8886cc6d815efc8295208b37d9791bb17e77874502fd8d51729a03af9"
+changelog = "First release."
