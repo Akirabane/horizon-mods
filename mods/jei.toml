@@ -1,38 +1,40 @@
 id = "jei"
 kind = "native-mod"
 name = "JEI for Horizon"
-summary = "An item and recipe viewer for Horizon: every item beside container screens, with search, recipes and uses"
+summary = "An item and recipe viewer for Horizon: every item beside container screens, with search, recipes, uses, tooltips and bookmarks"
 description = """
 An item and recipe viewer for [Horizon](https://playhorizon.dev), the Rust reimplementation of Minecraft: Java Edition.
 
 Horizon JEI is inspired by [JustEnoughItems (JEI)](https://github.com/mezz/JustEnoughItems). JEI serves as the reference specification, while this project is a completely new Rust implementation built around Horizon's native hook points.
 
-**Version 0.1.0 — Core Viewer**
+**Version 0.2.1 — Overlay and bookmarks**
 
 ### Features
 
-- **Item Browser:** Browse every item registered by the game through a paginated panel alongside container screens, with a search bar supporting JEI's search grammar: words, `"quoted phrases"`, `-exclusions`, `|` alternatives, `@namespace`, and `#tag`.
-- **Recipe Viewer:** Press **R** to view an item's recipes or **U** to see its uses. Both work over the item panel and container slots.
-- **Recipe Categories:** Dedicated tabs for crafting, furnace, blast furnace, smoker, campfire, stonecutter, smithing, and brewing, supporting all five of the game's recipe layouts, including cooking time and XP.
 - **Recipe Navigation:** Browse recipe history with **Back** and click recipe slots to open the corresponding item.
 - **Recipe Placement:** Use the **+** button to place a recipe into the open crafting grid, provided it is available in the recipe book.
 - **Item Giving:** Give items through Options → Mods → JEI or `/jei give`. In creative mode, left-click gives one item and right-click gives a full stack. In survival mode, clicking opens the recipe viewer instead.
+- **Item Tooltips:** Every tooltip the game shows, the panel's included, names the keys and counts exactly: `R: Recipes (12)`, `U: Uses (3)`, and a star on the stacks in your bar.
+- **Subtypes:** Every `(item, components)` pair the recipe tables name is an item of its own in the list, so the potions and the tipped arrows are there like JEI's subtypes.
+- **Bookmarks:** Press **A** over a stack to bookmark it. The bar sits at the screen's top left corner in two columns of twelve: the left button opens a bookmark's recipes, the right one its uses, shift-click or the middle button removes it, and dragging moves it. It is kept in `config/jei/bookmarks.txt` and returns with the next world.
+- **List Order & Config:** By name or by id, from the settings page or `/jei sort name|id`, kept in `config/jei/jei.cfg` along with the tooltip hints and the bar.
+- **World Transition Fix:** Session cache is properly invalidated on world transitions even when JEI is temporarily disabled, preventing stale item IDs or recipes from lingering across worlds.
 - **Localization:** English and Spanish interface translations. Item names are retrieved directly from the game and respect the player's language.
-- **Diagnostics:** `/jei` reports the game's recipe table sizes.
+- **Diagnostics:** `/jei` reports the game's recipe table sizes, `/jei bookmarks clear` empties the bar and `/jei config` says where its files are.
 
 ### Current Limitations
 
-The 0.1.0 release focuses on the core viewer. Bookmarks, container slot click integration, tooltips, creative inventory integration, non-recipe categories (anvil, grindstone, composter, and fuel), and shift-click recipe placement are not yet supported.
+Container slot click integration (R and U work over any slot, a click does not), the creative inventory panel, the non-recipe categories (anvil, grindstone, composter, and fuel), shift-click recipe placement, recipe transfer into furnaces, and the `$tooltip` / `%creative tab` searches are not yet supported.
 
 Some of these features require native hook points that Horizon does not currently expose. See the [JEI parity matrix](https://github.com/enderliker/horizon-jei/blob/main/docs/jei-parity.md) for implementation details.
 
 ### Requirements & Security
 
-Requires Horizon **26.3**, hook points version **2**, and the current Nightly build.
+Requires Horizon **26.3** and hook points version **313** or later: tested and verified on Horizon Nightly (`6560641` and latest `fdc87ae`).
 
 Horizon native mods are compiled directly into the game and are **not sandboxed**. Only build source code you trust.
 
-Horizon JEI reads the game's tables, container interface, chat, and its own settings directory (`horizon-mods/.horizon-mod-data/jei/`). It does not write to any other location.
+Horizon JEI reads the game's items and recipes, its container interface, chat, tooltips and screens. It writes only its own folder, `config/jei/` (`jei.cfg` for the options, `bookmarks.txt` for the bar), and nothing else. It makes no network connections.
 
 *Unofficial project. Not affiliated with mezz, Mojang, Microsoft, or the Horizon project.*"""
 authors = ["enderliker"]
@@ -44,6 +46,18 @@ icon = "icons/jei.png"
 categories = ["utility"]
 tags = ["recipes", "item-browser", "recipe-viewer", "search", "port"]
 key = "RWRqzx718YYz/OHRM+pAnFWlDv8Rrgar5C4NszQg3EKJWQZWNel5Sslf"
+
+[[versions]]
+version = "0.2.1"
+published = "2026-11-08"
+game = "26.3"
+file = "jei-0.2.1.hnmod"
+sha256 = "d0a840069ff9fb877021829584df72441928a9283feb27df30d244837bc7f2af"
+signature = """
+untrusted comment: signature from minisign secret key
+RURqzx718YYz/IMTqxXLr0yxt8BI4Ot8qWMwFObx9H5UjLTNtGMPzIIKcY3ZxSvKiIjsHXRUfYKnU6rgwOf5AF0Oo5iS+gS6KwE=
+trusted comment: jei 0.2.1 for Horizon 26.3
+wv3EhNQzQNHc43Xn0SirRtN5QHxE9jtuEgbRgyMfwIFL7rFvpsZYQGVVsKjZ6NQElq+5smbXNCOgWIGDI1YaDA=="""
 
 [[versions]]
 version = "0.1.0"
