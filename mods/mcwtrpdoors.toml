@@ -1,0 +1,37 @@
+id = "mcwtrpdoors"
+kind = "mod"
+name = "Macaw's Trapdoors"
+summary = "All 179 of Macaw's Trapdoors — vanilla-matched woods plus glass, metal and themed sets."
+description = """
+A port of [Macaw's Trapdoors](https://github.com/sketchmacaw/Trapdoors) by
+Sketch Macaw and Peachy Macaw for Horizon: all 179 trapdoors — the
+vanilla-matched woods plus the glass, metal, barn, beach, cottage and themed
+sets — with their blockstates, models, textures, recipes, loot, advancements and
+language files.
+
+- Every trapdoor is declared from its vanilla trapdoor template with all 64
+  states and its own model; the 191 recipes (179 trapdoors plus 12 prints) and
+  179 loot tables are the mod's own.
+- The 12 print items are carried with their recipes, and the lang files name all
+  179 blocks.
+
+This is a data-tier carry: no native code and no hooks. MIT — original copyright
+and licence notices are kept in the port repository; see LICENSE and
+LICENSE-NOTICE.md there.
+"""
+authors = ["Sketch Macaw", "Peachy Macaw", "AdLf0208"]
+owners = ["AdLf0208"]
+owner_ids = [107615167]
+license = "MIT"
+source = "https://github.com/AdLf0208/mcwtrpdoors"
+icon = "icons/mcwtrpdoors.png"
+categories = ["decoration"]
+tags = ["port", "trapdoors", "building", "blocks"]
+
+[[versions]]
+version = "1.1.5"
+published = "2026-11-09"
+game = "26.3"
+file = "mcwtrpdoors.hmod"
+sha256 = "c75926e47c2649be36cc86880ac3e09a40035b5134ae96dfb4403be3c2d95905"
+changelog = "First release"
