@@ -1,0 +1,42 @@
+id = "imfast"
+kind = "native-mod"
+name = "I'm Fast"
+summary = "Removes Minecraft's server-side player and elytra movement limits."
+description = """
+A port of [I'm Fast](https://github.com/Gabriel-Hiss/Im-Fast) by Gabriel Hiss for
+Horizon: it lifts the server-side movement checks that pull a player back for
+"moved too quickly".
+
+**Implemented so far**
+
+- `player_movement_check` and `elytra_movement_check` are switched off once per
+  open world, so long jumps and fast elytra flight are not refused.
+- Verified with a real LAN guest: a 200-block move is kept while the rules are
+  off and refused when they are back on.
+
+**Not yet ported**
+
+- The two "moved wrongly" thresholds (player and vehicle) and the vehicle speed
+  limit: Horizon has no rule for them, and the hooks that could patch them are
+  not stamped yet.
+
+Original copyright and licence notices are kept in this repository. Pinned to
+Horizon 1d63e0a and horizon-mixins 5a64af93. Help with the remaining thresholds
+is welcome.
+"""
+authors = ["Gabriel Hiss", "AdLf0208"]
+owners = ["AdLf0208"]
+owner_ids = [107615167]
+license = "MIT"
+source = "https://github.com/AdLf0208/imfast"
+icon = "icons/imfast.png"
+categories = ["game-mechanics", "utility"]
+tags = ["port", "movement", "server", "elytra"]
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-09"
+game = "26.3"
+file = "imfast.hnmod"
+sha256 = "bf94eba0b926eae25b782b84f3c0f97de1dcb4c60200b2be15b640e80374a347"
+changelog = "First release: player and elytra movement checks disabled per world"
