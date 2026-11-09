@@ -1,0 +1,52 @@
+id = "silentgems"
+kind = "mod"
+name = "Silent's Gems"
+summary = "21 gems with storage blocks and 84 ores, plus overworld, nether and end worldgen."
+description = """
+A port of [Silent's Gems](https://github.com/SilentChaos512/SilentGems) by SilentChaos512
+for Horizon: 21 gems, their storage blocks and their ores.
+
+Implemented so far:
+- The 21 gems as items (ruby, carnelian, topaz, citrine, heliodor, moldavite, peridot,
+  turquoise, kyanite, sapphire, iolite, alexandrite, ammolite, rose quartz, garnet,
+  aquamarine, tanzanite, opal, pearl, black diamond and white diamond) with their own
+  textures and rarities.
+- Their 21 storage blocks and 42 compression/decompression recipes, with 105 loot tables
+  and the mod's own textures, models and language file.
+- 84 ore blocks — overworld stone, deepslate, nether and end variants of every gem —
+  with their block/item tags.
+- Ore worldgen: the mod's own overworld, nether and end ore features, placed features
+  and biome modifiers (56 worldgen files).
+- A creative tab listing the 126 items of this slice.
+
+Not yet ported:
+- Slices 1–2 only: glowrose and other plants, tool/armour sets, lamps, glass, bricks and
+  tiles, teleporters, the silver/chaos material line, food and the Silent Gear
+  integration are not registered yet.
+- An ore always drops one gem: silk touch returns the gem rather than the ore block and
+  fortune does not multiply (the pin has no `match_tool`/`apply_bonus`).
+- Ore experience is the template's (lapis, 2–5), not upstream's fixed 1–5 provider.
+- Gem names use per-gem keys (`item.silentgems.ruby`) rather than upstream's shared `%s`
+  template.
+- No tooltip shows a gem's colour or harvest tier.
+
+A content/logic data carry: the 21-gem registry is a test-only Rust module (no injection). MIT — the original copyright and licence notices are kept in
+the port repository (see LICENSE and LICENSE-NOTICE.md there). Pinned to
+Horizon 1d63e0a and horizon-mixins 5a64af93.
+"""
+authors = ["SilentChaos512", "AdLf0208"]
+owners = ["AdLf0208"]
+owner_ids = [107615167]
+license = "MIT"
+source = "https://github.com/AdLf0208/silentgems"
+icon = "icons/silentgems.png"
+categories = ["technology", "game-mechanics"]
+tags = ["port", "gems", "ores", "worldgen"]
+
+[[versions]]
+version = "5.2.0"
+published = "2026-11-09"
+game = "26.3"
+file = "silentgems.hmod"
+sha256 = "cd47ec932c984e81ce5b9450a65eeec8ac3b3c48206cc468a63d9979eee0343b"
+changelog = "First release: the slice described above."
