@@ -1,0 +1,25 @@
+id = "vivid_horizon"
+kind = "shader"
+name = "Vivid Horizon"
+summary = "Vivid colours, volumetric clouds, mirror-like water, rain that soaks the ground and warm torch-lit nights."
+description = """
+An original shader pack in the spirit of the classic vibrant shaders: a soft blue sky with volumetric clouds and the Milky Way, warm sunlight and cool blue shadows, ambient occlusion, god rays, coloured block light, turquoise water with reflections and caustics, glassy waterfalls, raindrop rings and wet ground that reflects the world, depth of field and lens flare.
+
+Every effect can be tuned or turned off in Shader Options (Colour, Light, Sky, Water and plants). About 4.5 ms of GPU at 1440p on an RTX 5070 Ti; on a slower GPU, lower Shadows, Volumetric clouds and Wet ground reflections first."""
+authors = ["Evan-lhm"]
+owners = ["Evan-lhm"]
+owner_ids = [182446547]
+license = "MIT"
+source = "https://github.com/Evan-lhm/vivid-horizon"
+icon = "icons/vivid_horizon.png"
+categories = ["semi-realistic", "atmosphere", "reflections"]
+tags = ["vibrant", "volumetric-clouds", "water", "rain", "milky-way"]
+screenshots = ["screenshots/vivid_horizon/1.jpg", "screenshots/vivid_horizon/2.jpg", "screenshots/vivid_horizon/3.jpg", "screenshots/vivid_horizon/4.jpg", "screenshots/vivid_horizon/5.jpg", "screenshots/vivid_horizon/6.jpg"]
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-08"
+game = "26.3"
+file = "vivid_horizon-1.0.0.hshader"
+sha256 = "0f8a0acb769e93a0821d147e544dcbf7209296e5131fe89399b45b8e5f0a2aa4"
+changelog = "First public release."
