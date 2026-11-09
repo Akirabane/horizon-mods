@@ -36,14 +36,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.base.sha }}
-          path: base
+      # The new versions are the ones the pull request adds to the main it is merged into. Not the event's
+      # base.sha: a re-run (or a run that waited in the queue) keeps the old one while the merge commit is
+      # made on today's main, so every version main gained in between counted as new (#425: context_tools
+      # and strangely_charming, which don't apply on the Nightly, turned a re-run red).
       - uses: actions/checkout@v4
         with:
           path: head
           persist-credentials: false
+          fetch-depth: 2
+      - name: The main commit it is merged into
+        id: merged
+        run: echo "base=$(git -C head rev-parse HEAD^1)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.merged.outputs.base }}
+          path: base
       - name: Does it change a native mod?
         id: native
         run: |
