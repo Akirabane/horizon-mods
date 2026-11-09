@@ -1,0 +1,20 @@
+id = "aurora"
+kind = "shader"
+name = "Aurora Shaders Horizon"
+summary = "A shader pack for Horizon, written against Horizon's native shader API 0.1"
+description = "Aurora brings a full desktop-style shader pipeline to Horizon: real-time shadows, volumetric light shafts, water, clouds, lens flare and HDR emissive lighting. Its GLSL source is translated to WGSL, with adapters that emulate the Iris pipeline inside Horizon."
+authors = ["iLoong"]
+owners = ["tomasmendes01"]
+owner_ids = [68385376]
+license = "Apache-2.0"
+source = "https://github.com/tomasmendes01/aurora-horizon"
+icon = "icons/aurora.png"
+categories = ["semi-realistic", "atmosphere", "medium"]
+screenshots = ["screenshots/aurora/1.png", "screenshots/aurora/2.png", "screenshots/aurora/3.png", "screenshots/aurora/4.png", "screenshots/aurora/5.png", "screenshots/aurora/6.png", "screenshots/aurora/7.png", "screenshots/aurora/8.png"]
+
+[[versions]]
+version = "5.9.3"
+published = "2026-11-09"
+game = "26.3"
+file = "aurora-5.9.3.hshader"
+sha256 = "2849af94ccc5601e5de733ec0de6fce78b5b6bce9e85b4f166048c62674165c5"
