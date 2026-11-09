@@ -1,0 +1,30 @@
+id = "dynamiclights"
+kind = "native-mod"
+name = "Dynamic Lights"
+summary = "Torches and other glowing items light up the world while you hold them; dropped items, burning mobs and glowing creatures too."
+description = """
+Glowing items light up the world around you while you carry them.
+
+- **Held items**, in either hand, for you, other players, mobs and armor stands: an item is as bright as its block (torch 14, lantern 15, …).
+- **Dropped items** glow on the ground; **burning** players, mobs, items and arrows glow like fire.
+- **Glowing creatures** (blaze, magma cube, glow squid, allay, vex), **projectiles** (fireballs, wither skulls, spectral arrows, rockets), **primed TNT** and lit minecarts.
+- **Water puts out fire** (optional): torches and fireballs go dark underwater, lanterns stay lit.
+- Settings: each source on or off, brightness, range and how many lights at once, and a key to toggle the mod. English and Russian.
+
+Built on Horizon's own dynamic light system (it takes over Horizon Extras > Dynamic lights while it is on). Built for Horizon Nightly 2026-11-07 (`2ebf00a`). Native mods are compiled into the game and are not sandboxed: build only code you trust."""
+authors = ["DeportedToHell"]
+owners = ["DeportedToHell"]
+owner_ids = [344119465]
+license = "MIT"
+source = "https://github.com/DeportedToHell/MCRE-Mods/tree/main/dynamiclights"
+icon = "icons/dynamiclights.png"
+categories = ["utility", "decoration"]
+tags = ["lighting", "dynamic-lights", "torch", "visual"]
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-08"
+game = "26.3"
+file = "dynamiclights-1.0.0.hnmod"
+sha256 = "a625397a4979b4a7e361041f3b04c529f399e823eed9e2e273060a6ae6f811ff"
+changelog = "First release."
