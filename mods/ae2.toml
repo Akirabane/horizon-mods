@@ -46,6 +46,24 @@ categories = ["technology", "utility", "storage"]
 tags = ["ae2", "applied-energistics", "storage", "autocrafting", "automation"]
 
 [[versions]]
+version = "15.4.17"
+published = "2026-11-08"
+game = "26.3"
+file = "ae2-15.4.17.hnmod"
+sha256 = "d69efc90f11ae6cc455454096d0c097de0d2534fef3e8dcdd8109b12c8f70e17"
+changelog = """
+```markdown
+Ported from AE2 15.4.12 (Fabric); 15.4.17 is this port's own version number, not an AE2 release. Built and tested on Horizon commit 6560641.
+
+- ME P2P tunnels now work as AE2's: a main node on the host and an outer node on the block in front. The carried network goes in at the front and both hosts must share a network, so **a build that carried a network host to host needs rewiring**. The nested tunnel error is AE2's own rule, per grid.
+- Other mods' machines in a job's time left: Iron Furnaces and Hostile Neural Networks tell AE2 how long their machines take, so the time left is right from the first craft.
+- Crafting time left is closer: tested 0.3 to 1.0% off on average across furnace, factory, simulation chamber and assembler jobs, 1.8% at worst.
+- The guide key follows Options > Mods and defaults to W; the tooltip hint shows the bound key.
+- Terminal tooltips show the stack's whole tooltip; middle click on a craftable opens the amount dialog.
+- Power, channels and crafting time closer to AE2's.
+- Works with JEI 0.1 and 0.2."""
+
+[[versions]]
 version = "15.4.14"
 published = "2026-11-06"
 game = "26.3"
