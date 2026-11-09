@@ -17,15 +17,23 @@ Every action is an ordinary container click, so it works on servers too.
 
 Built for Horizon Nightly 2026-11-07 (`2ebf00a`). Native mods are compiled into the game and are not sandboxed: build only code you trust.
 
-**Credits.** ClientSort is Copyright 2024-2026 TerminalMC, Apache License 2.0; it uses code from Mouse Wheelie by Siphalor (Apache-2.0) and Inventory Management by Roundaround (MIT). The button sprites are ClientSort's own. This port rewrites ClientSort's logic in Rust under the same licence and is not affiliated with TerminalMC, Mojang or Microsoft."""
+**Credits.** ClientSort is Copyright 2024-2026 TerminalMC, Apache License 2.0; it uses code from Mouse Wheelie by Siphalor (Apache-2.0) and Inventory Management by Roundaround (MIT). The button sprites are ClientSort's own. Since 1.2.0 the config screen follows [Cloth Config](https://github.com/shedaniel/cloth-config) by shedaniel and uses its texture, under the GNU LGPL 3.0 or later. This port rewrites ClientSort's logic in Rust under ClientSort's licence and is not affiliated with TerminalMC, Mojang or Microsoft."""
 authors = ["DeportedToHell"]
 owners = ["DeportedToHell"]
 owner_ids = [344119465]
-license = "Apache-2.0"
+license = "Apache-2.0 AND LGPL-3.0-or-later"
 source = "https://github.com/DeportedToHell/MCRE-Mods/tree/main/clientsort"
 icon = "icons/clientsort.png"
-categories = ["storage", "utility"]
+categories = ["utility", "storage"]
 tags = ["inventory", "sorting", "buttons", "port"]
+
+[[versions]]
+version = "1.2.0"
+published = "2026-11-09"
+game = "26.3"
+file = "clientsort-1.2.0.hnmod"
+sha256 = "8aac1c3e1e2b77dd5e93b9944db0faf09cab44815548894005a41a36409eecfe"
+changelog = "ClientSort's own config screen (Cloth Config, as in Java), opened from Mod Menu or Options > Mods > ClientSort > Configure...; key binds editable there; more of ClientSort's options. Built for Horizon Nightly 2026-11-08 (fdc87ae)."
 
 [[versions]]
 version = "1.1.0"
