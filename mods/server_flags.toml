@@ -12,6 +12,8 @@ A small flag beside each server in your Multiplayer list for the country it's ho
 
 Settings in Options > Mods > Server Flags: lookups on/off, flag position, hover tooltip, codes for countries without a flag, reset.
 
+- A grey **?** marks a server whose location can't be shown; hover it for why (an ad blocker blocking the lookup, DDoS protection, or a wrong address).
+
 **Privacy:** to know where a server is, the mod resolves its address and sends only that IP address to https://api.country.is (open source, no account or key), which answers with a country code. Once per server per game session, in the background, only while "Look up server locations" is on. Nothing about you, your account or your other servers is sent; with the setting off, nothing is sent at all.
 
 Horizon has no hook point for the server list, so besides hook points this mod hooks the list's own tooltip pass (Screen::draw_tooltip in multiplayer.rs) and lays the flags out as the list lays out its rows. A later Horizon that changes the server list needs an update of this mod.
@@ -27,6 +29,18 @@ source = "https://github.com/selfmonoraque5/server-flags"
 icon = "icons/server_flags.png"
 categories = ["utility", "social"]
 tags = ["servers", "multiplayer", "flags", "country", "client-side"]
+
+[[versions]]
+version = "1.0.1"
+published = "2026-11-09"
+game = "26.3"
+file = "server_flags-1.0.1.hnmod"
+sha256 = "470d97afdbf8d954a50aec4e7ec38c2934766825c47f0955a968a1dacc3fa640"
+changelog = """
+- A grey "?" marks servers whose location can't be shown; hover it for why (blocked by an ad blocker, behind DDoS protection, or an address that doesn't resolve). New setting to hide it.
+- A line in the game log says why a lookup failed, once per server.
+- Blocked or failed lookups are retried after a minute (3 times at most): unblocking api.country.is works without a restart.
+- README: "No flags?" with allowlist steps for AdGuard Home, AdGuard and Pi-hole."""
 
 [[versions]]
 version = "1.0.0"
