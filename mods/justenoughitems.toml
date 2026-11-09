@@ -1,6 +1,6 @@
 id = "justenoughitems"
 kind = "native-mod"
-name = "JustEnoughItems"
+name = "Just Enough Items"
 summary = """JEI for Horizon: every item beside your inventory, JEI's search, recipes and uses, the "+" button, bookmarks and cheat mode."""
 description = """
 A port of [Just Enough Items (JEI)](https://github.com/mezz/JustEnoughItems) by mezz to Horizon, as a native mod. It draws JEI's own interface, with JEI's sprites and layout, over the game's container screens.
@@ -15,7 +15,7 @@ A port of [Just Enough Items (JEI)](https://github.com/mezz/JustEnoughItems) by 
 
 Turn other recipe viewers off while this one is on: they use the same place on screen.
 
-Built for Horizon Nightly 2026-11-07 (`2ebf00a`). Native mods are compiled into the game and are not sandboxed: build only code you trust.
+Built for Horizon Nightly 2026-11-08 (`fdc87ae`). Native mods are compiled into the game and are not sandboxed: build only code you trust.
 
 **Credits.** Just Enough Items is Copyright (c) 2014-2015 mezz, MIT License; the GUI sprites are JEI's own. This port rewrites JEI in Rust under the same licence and is not affiliated with mezz, Mojang or Microsoft."""
 authors = ["DeportedToHell"]
