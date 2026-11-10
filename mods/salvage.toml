@@ -1,0 +1,55 @@
+id = "salvage"
+kind = "mod"
+name = "Salvage"
+summary = "Smelt old leather gear, saddles and wooden tools back into useful materials."
+description = """
+**Nothing in that chest is trash anymore.** Salvage lets you smelt old gear back into useful
+materials in a normal furnace.
+
+Leather helmets from zombie drops, the saddle from a horse you never ride, the wooden pickaxe
+you outgrew ten minutes in — put any of them in a furnace with any fuel and you get leather,
+charcoal or string back, plus a little experience for your trouble.
+
+| Smelt this | Get this |
+| --- | --- |
+| Leather helmet / chestplate / leggings / boots | Leather |
+| Leather horse armor, saddle | Leather |
+| Wooden sword / pickaxe / axe / shovel / hoe | Charcoal |
+| Bow, fishing rod | String |
+
+**How to use**
+
+1. Install the mod and enable it in Options → Mods, then restart the game.
+2. Put the old gear in the top slot of a furnace, any fuel below.
+3. Collect the material — ready for armor, bows, and charcoal for your next build.
+
+**Good to know**
+
+- Uses only vanilla items. No new blocks, textures, or mechanics to learn.
+- Works in single player. On a multiplayer server, the server needs the mod too.
+- Tested on Horizon 0.2.97 (Minecraft Java Edition 26.3).
+- Uninstall any time — materials you already smelted stay in your world; the recipes simply
+  stop working.
+
+Free and open source under the MIT license. Not an official Minecraft product."""
+authors = ["CGRLabs"]
+owners = ["CGRLabs"]
+owner_ids = [213680048]
+license = "MIT"
+source = "https://github.com/CGRLabs/salvage"
+icon = "icons/salvage.png"
+categories = ["game-mechanics", "utility"]
+tags = ["smelting", "furnace", "leather", "recycling", "salvage", "quality-of-life", "survival", "vanilla-friendly"]
+key = "RWTDxzLUJVk6XFJWJw1WcVOeEbSCS1OUG9MkdU9b1q08Ynf54O92X64F"
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-10"
+game = "26.3"
+file = "salvage-1.0.0.hmod"
+sha256 = "9404e1a91b474118635ff2c743f41af2b03e809fe419ef7ab3d8f9d48dab5641"
+signature = """
+untrusted comment: signature from rsign secret key
+RUTDxzLUJVk6XKdTUZuQmUQtr02bFIk5LE6zwWODz/kLNpGs2OGVM5tpfhtdyAtMYak0k5MTW2Y2jq6hk+3vAKmlE4qf6C1lWQk=
+trusted comment: salvage 1.0.0
+Ado5T98mZ8dCjmZPrjadGDhZg2dZy/PewnhQ05B9nAA8eQlUbFTq26HRe082T4wrtO7Y7iZurXlMYtnuIgSNBg=="""
