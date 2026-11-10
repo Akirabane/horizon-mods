@@ -44,13 +44,24 @@ The physical key checks currently use the vanilla defaults (Left Control for spr
 ## License
 
 MIT"""
-authors = []
+authors = ["Unidex101"]
 owners = ["UniDex101"]
 owner_ids = [289881197]
 license = "MIT"
 source = "https://github.com/UniDex101/movement-status/tree/main"
 icon = "icons/movement_status.png"
 categories = ["game-mechanics"]
+
+[[versions]]
+version = "0.1.1"
+published = "2026-11-10"
+game = "26.3"
+file = "movement_status-0.1.1.hnmod"
+sha256 = "2684d7f5646ea39651ca7731c0aa27160431035c5e50ac6177e957e89c12f8cf"
+changelog = """
+I removed the mod file that I had built myself through the "add from github" button and then download my own mod through the launcher, but I encountered a 422 error, and my agent advised me in updating the mod so it wouldn't have a 422 error anymore, apparently I had made a mistake when managing the horizon version and the horizon mixin, i had set them both to the same commit version, sorry to waste tokens and money for the agent that will review this update, the only files that were updated were `compatibility.json`, `horizon_mod.toml`, `mixins/movement_status/horizon-mixin.toml`, `mixins/movement_status/runtime.rs`
+
+I apologize for the inconvenience and the version bump up, hopefully the mixin and horizon version are both correct now, because weirdly i didn't run into this build error when using "add from github" option?"""
 
 [[versions]]
 version = "0.1.0"
