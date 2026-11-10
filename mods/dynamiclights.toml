@@ -1,25 +1,45 @@
 id = "dynamiclights"
 kind = "native-mod"
-name = "Dynamic Lights"
-summary = "Torches and other glowing items light up the world while you hold them; dropped items, burning mobs and glowing creatures too."
+name = "Better Dynamic Lights"
+summary = "Horizon's built-in dynamic lights, with more: glowing creatures, projectiles and TNT shine too, water puts out fire, a switch for every light."
 description = """
-Glowing items light up the world around you while you carry them.
+**Horizon's dynamic lights, taken further.** Horizon already has built-in dynamic lights (Options > Horizon Extras > Dynamic lights, off by default): items in your hands, dropped items and burning mobs light up the world, with one on/off switch. Better Dynamic Lights uses the same light renderer and takes the place of that switch while it is on, with much more.
 
-- **Held items**, in either hand, for you, other players, mobs and armor stands: an item is as bright as its block (torch 14, lantern 15, …).
-- **Dropped items** glow on the ground; **burning** players, mobs, items and arrows glow like fire.
-- **Glowing creatures** (blaze, magma cube, glow squid, allay, vex), **projectiles** (fireballs, wither skulls, spectral arrows, rockets), **primed TNT** and lit minecarts.
-- **Water puts out fire** (optional): torches and fireballs go dark underwater, lanterns stay lit.
-- Settings: each source on or off, brightness, range and how many lights at once, and a key to toggle the mod. English and Russian.
+| | Built into Horizon | Better Dynamic Lights |
+|---|---|---|
+| Held items (yours, other players', mobs') and dropped items | ✅ | ✅ + armor stands |
+| Burning mobs and items | ✅ | ✅ + burning arrows and tridents |
+| Glowing creatures: blazes, magma cubes, glow squids, allays, vexes | — | ✅ |
+| Projectiles: fireballs, wither skulls, shulker bullets, spectral arrows, firework rockets | — | ✅ |
+| Primed TNT, TNT and furnace minecarts | — | ✅ |
+| Water puts out fire (lanterns keep shining) | — | ✅ |
+| A switch for every kind of light | — | ✅ |
+| Brightness, range and number of lights | — | ✅ |
+| A key to turn the lights on and off | — | ✅ |
+| Its own settings screen, Mod Menu, English and Russian | — | ✅ |
+| On by default | off | on |
 
-Built on Horizon's own dynamic light system (it takes over Horizon Extras > Dynamic lights while it is on). Built for Horizon Nightly 2026-11-07 (`2ebf00a`). Native mods are compiled into the game and are not sandboxed: build only code you trust."""
+An item glows as brightly as its block does when placed (torch 14, lantern and glowstone 15, soul torch 10…). Turn the mod off in Options > Mods and Horizon's own switch works as before. Client side: it changes only what you see, on any server.
+
+Built for Horizon Nightly 2026-11-08 (`fdc87ae`). Native mods are compiled into the game and are not sandboxed: build only code you trust.
+
+**Credits.** An original mod for Horizon by DeportedToHell, MIT License, written from scratch. Not affiliated with Mojang or Microsoft. Found a bug? [Report it here](https://github.com/DeportedToHell/MCRE-Mods/issues)."""
 authors = ["DeportedToHell"]
 owners = ["DeportedToHell"]
 owner_ids = [344119465]
 license = "MIT"
-source = "https://github.com/DeportedToHell/MCRE-Mods/tree/main/dynamiclights"
+source = "https://github.com/DeportedToHell/MCRE-Mods/tree/main/betterdynamiclights"
 icon = "icons/dynamiclights.png"
 categories = ["utility", "decoration"]
-tags = ["lighting", "dynamic-lights", "torch", "visual"]
+tags = ["lighting", "dynamic-lights", "torch", "visual", "better-dynamic-lights"]
+
+[[versions]]
+version = "1.0.3"
+published = "2026-11-10"
+game = "26.3"
+file = "dynamiclights-1.0.3.hnmod"
+sha256 = "bfc3e95726255b34e19aa98a239281149bdc5824abbf5d33b4f67fe865652168"
+changelog = "Renamed to Better Dynamic Lights; the page compares it with the dynamic lights built into Horizon; the source moved to betterdynamiclights/. Replaces 1.0.1 (#518) and 1.0.2 (#652). Built for Horizon Nightly 2026-11-08 (fdc87ae)."
 
 [[versions]]
 version = "1.0.0"
