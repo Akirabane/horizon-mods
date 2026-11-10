@@ -1,0 +1,31 @@
+id = "atomic_industry"
+kind = "modpack"
+name = "Atomic Industry"
+summary = "Nuclear bombs, deep quarries, factories and wayfarer stones, with JEI, Jade and quality-of-life mods."
+description = """
+A tech pack built around industry and its consequences. Mine and automate with **Deepbore Quarry**, **Applied Energistics 2**, **ProjectE**, **Voltz** and **Factory Blocks**, travel with **Wayfarer Stones**, and when the factory is done, take it apart with **Big Nukes**.
+
+- **Build**: AE2 storage networks, ProjectE transmutation, Voltz machines and Factory Blocks.
+- **Dig**: Deepbore quarries that empty whole areas down to bedrock.
+- **Travel**: wayfarer stones and scrolls between the places you know.
+- **Blast**: bombs, missiles and the Sunbreaker, with fallout and bunkers to survive it.
+- **Comfort**: JEI, Jade, AppleSkin, Atlas maps, Inventory Wizard, Shulker Box Tooltip, Toggle Sprint, Zoom, connected textures, extra lights and physics.
+
+All 26 mods come from the Horizon registry, pinned by version. Install the pack, press Build and confirm the native-code warning: native mods run with your account's permissions. The full list is in the source repository."""
+authors = ["bioneisme"]
+owners = ["Bioneisme"]
+owner_ids = [92920845]
+license = "MIT"
+source = "https://github.com/Bioneisme/atomic-industry"
+icon = "icons/atomic_industry.png"
+categories = ["technology", "kitchen-sink"]
+tags = ["tech", "nuclear", "automation", "quarry", "factory", "kitchen-sink"]
+screenshots = ["screenshots/atomic_industry/1.jpg", "screenshots/atomic_industry/2.jpg", "screenshots/atomic_industry/3.jpg", "screenshots/atomic_industry/4.jpg", "screenshots/atomic_industry/5.jpg", "screenshots/atomic_industry/6.jpg", "screenshots/atomic_industry/7.jpg"]
+
+[[versions]]
+version = "1.0.0"
+published = "2026-11-10"
+game = "26.3"
+file = "atomic_industry-1.0.0.hpack"
+sha256 = "52717a00d1007247330e68922c64943c119ab744c0a8ad177f7aef8a91857c79"
+changelog = "First release: 26 mods from the Horizon registry, built together and played on one Nightly."
