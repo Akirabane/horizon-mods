@@ -1,0 +1,31 @@
+id = "kotost_body"
+kind = "native-mod"
+name = "Kotost Bust"
+summary = "A bust drawn from your own skin that bounces only when you move, an hourglass figure, chestplates in its shape."
+description = """
+- **A bust for your own player**, drawn by the mod and textured from your own skin: no cosmetics item, no resource pack, nothing on the server.
+- **It moves only when you move**: a small spring bounce on each step (more when running) and on jumps and landings. Standing still, it stays still.
+- **An hourglass figure**: a torso that narrows to the waist and widens to the hips, your own skin stretched over it.
+- **Chestplates keep the figure**: a vanilla chestplate is drawn in the same shape, with cups that bounce with the bust.
+- **Who gets it is up to you**: `config/kotost-body.txt` picks you only (default), a list of names, slim skins, everyone or nobody.
+
+Client side only. Works alone or with Kotost First Person.
+
+Native source mod: the launcher compiles it after a warning; it runs with your account's permissions. No Minecraft code or assets are included."""
+authors = ["Kotost Games"]
+owners = ["Leks2000"]
+owner_ids = [107043945]
+license = "MIT"
+source = "https://github.com/Leks2000/kotost-body"
+icon = "icons/kotost_body.png"
+categories = ["decoration", "game-mechanics"]
+tags = ["cosmetic", "skin", "player-model", "physics", "figure"]
+screenshots = ["screenshots/kotost_body/1.png", "screenshots/kotost_body/2.png", "screenshots/kotost_body/3.png"]
+
+[[versions]]
+version = "0.4.0"
+published = "2026-11-11"
+game = "26.3"
+file = "kotost_body-0.4.0.hnmod"
+sha256 = "738330cfc25708a5b388d08de3b210fe2ea8224f3cd75e6a9131627bb026f0fa"
+changelog = "Kotost Body is split in two: this mod is the bust and the figure, and first person is its own mod, Kotost First Person (kotost_firstperson). New since 0.2.1: the hourglass figure for every bust wearer, vanilla chestplates drawn in the figure's shape with cups over the bust, other mods' dresses can take the bust over. Settings of first person moved to the new mod."
