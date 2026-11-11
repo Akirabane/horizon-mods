@@ -51,6 +51,7 @@ header and footer).
 | `/claim`, `/claim info`, `/unclaim` | claims the chunk you stand in (all its height), says whose it is, frees it (operators of level 3: anyone's) |
 | `/claim show` | draws the border of the chunk you stand in for 10 s, for you only: green yours or a trusting owner's, red someone else's, white free |
 | `/claims` | your chunks, how many you may hold, and who you trust |
+| `/claims map` | the claimed chunks around you in the chat, 11 by 11 chunks with north up: `O` where you stand, `#` yours, `+` an owner who trusts you, `X` someone else's, `-` free |
 | `/pingsound`, `/pingsound on`, `/pingsound off` | whether you hear a ding when someone names you in chat or `/msg`s you; turns it on or off |
 | `/trust <player>`, `/untrust <player>` | lets a player (or no longer) build and use things on all your land |
 | `/nick <name>`, `/nick off`, `/nick` | operators of level 3 (with `ops_only`, the default): another name for you in chat and the Tab list, shown as `~name` (hovering it gives your real one); `/nick off` (anyone with a nickname) takes it off; `/nick` alone says how |

@@ -433,6 +433,27 @@ impl Claims {
             .collect()
     }
 
+    /// The chunks within `MAP_RADIUS` of chunk (`cx`, `cz`) as text, north
+    /// (lower z) at the top and east (higher x) on the right, one character
+    /// per chunk, all of one width in the game's font: `O` the chunk `who`
+    /// stands in, `#` theirs, `+` an owner's who trusts them, `X` someone
+    /// else's, `-` free.
+    pub fn map(&self, dimension: &str, cx: i32, cz: i32, who: u128) -> Vec<String> {
+        (cz - MAP_RADIUS..=cz + MAP_RADIUS)
+            .map(|z| {
+                (cx - MAP_RADIUS..=cx + MAP_RADIUS)
+                    .map(|x| match self.chunk_owner(dimension, x, z) {
+                        _ if (x, z) == (cx, cz) => 'O',
+                        None => '-',
+                        Some(u) if u == who => '#',
+                        Some(u) if self.trusts(u, who) => '+',
+                        Some(_) => 'X',
+                    })
+                    .collect()
+            })
+            .collect()
+    }
+
     /// How many chunks a player may hold after `played` seconds here.
     pub fn limit(&self, played: i64) -> usize {
         self.config
@@ -516,6 +537,13 @@ impl Claims {
                 Some(u) => vec![Out::Error(format!("This chunk is {}'s.", name_of(u)))],
                 None => vec![Out::Error("This chunk isn't claimed.".into())],
             },
+            ("claims", ["map"]) => {
+                let mut out = vec![Out::Reply(format!(
+                    "Claims around chunk {cx} {cz}, north up (O you, # yours, + trusts you, X someone else's, - free):"
+                ))];
+                out.extend(self.map(here, cx, cz, me.uuid).into_iter().map(Out::Reply));
+                out
+            }
             ("claims", []) => {
                 let mine: Vec<String> = self
                     .data
@@ -592,12 +620,15 @@ impl Claims {
                 }
             },
             _ => vec![Out::Error(
-                "Usage: /claim, /claim info, /claim show, /unclaim, /claims, /trust <player>, /untrust <player>"
+                "Usage: /claim, /claim info, /claim show, /unclaim, /claims, /claims map, /trust <player>, /untrust <player>"
                     .into(),
             )],
         })
     }
 }
+
+/// How many chunks `/claims map` shows on each side of the player's.
+const MAP_RADIUS: i32 = 5;
 
 /// The claims' commands.
 pub const COMMANDS: [&str; 5] = ["claim", "unclaim", "claims", "trust", "untrust"];
@@ -916,6 +947,166 @@ mod tests {
                 .is_err()
         );
         std::fs::remove_dir_all(d).unwrap();
+    }
+
+    #[test]
+    fn the_map_shows_who_holds_the_chunks_around_you() {
+        let d = dir();
+        let mut c = Claims::open(&d, Config::default()).unwrap();
+        let (alex, steve) = (player(A, 0), player(B, 0));
+        // Alex holds chunks 0 0 and 1 0; Steve holds chunk 0 -2.
+        for (who, x, z) in [(&alex, 8.0, 8.0), (&alex, 24.0, 8.0), (&steve, 8.0, -24.0)] {
+            c.command(who, &at(x, z), 0, &find, &name_of, "claim")
+                .unwrap();
+        }
+        let ask = |c: &mut Claims, who: &Player, x, z| {
+            c.command(who, &at(x, z), 0, &find, &name_of, "claims map")
+                .unwrap()
+        };
+        // Standing in chunk 0 0: a header, then 11 rows of 11 chunks, north
+        // (chunk z -5) first, west (chunk x -5) on the left.
+        let out = ask(&mut c, &alex, 8.0, 8.0);
+        let Out::Reply(header) = &out[0] else {
+            panic!("{out:?}")
+        };
+        assert!(header.contains("chunk 0 0"), "{header}");
+        let rows: Vec<&str> = out[1..]
+            .iter()
+            .map(|o| match o {
+                Out::Reply(r) => r.as_str(),
+                other => panic!("{other:?}"),
+            })
+            .collect();
+        assert_eq!(rows.len(), 11);
+        assert!(rows.iter().all(|r| r.len() == 11));
+        assert_eq!(rows[5], "-----O#----", "{rows:?}");
+        assert_eq!(rows[3], "-----X-----", "{rows:?}");
+        assert_eq!(
+            rows.iter()
+                .flat_map(|r| r.chars())
+                .filter(|&c| c != '-')
+                .count(),
+            3
+        );
+        // Steve trusting Alex turns his chunk into a `+` on Alex's map.
+        c.command(&steve, &at(8.0, -24.0), 0, &find, &name_of, "trust alex")
+            .unwrap();
+        let out = ask(&mut c, &alex, 8.0, 8.0);
+        assert!(
+            matches!(&out[4], Out::Reply(r) if r == "-----+-----"),
+            "{out:?}"
+        );
+        // From the chunk next door the same claims shift one column left, and
+        // Steve sees Alex's chunks as someone else's.
+        let out = ask(&mut c, &steve, 24.0, 8.0);
+        assert!(
+            matches!(&out[6], Out::Reply(r) if r == "----XO-----"),
+            "{out:?}"
+        );
+        assert!(
+            matches!(&out[4], Out::Reply(r) if r == "----#------"),
+            "{out:?}"
+        );
+        // The Nether holds none of them; the map is all free but its center.
+        let nether = Place {
+            dimension: "minecraft:the_nether".into(),
+            ..at(8.0, 8.0)
+        };
+        let out = c
+            .command(&alex, &nether, 0, &find, &name_of, "claims map")
+            .unwrap();
+        assert!(
+            matches!(&out[6], Out::Reply(r) if r == "-----O-----"),
+            "{out:?}"
+        );
+        assert!(
+            matches!(&out[1], Out::Reply(r) if r == "-----------"),
+            "{out:?}"
+        );
+        // Far from every claim the map is empty, and with claims off it says so.
+        let out = ask(&mut c, &alex, 8000.0, 8000.0);
+        assert!(
+            out[1..]
+                .iter()
+                .all(|o| matches!(o, Out::Reply(r) if r.chars().all(|ch| ch == '-' || ch == 'O')))
+        );
+        c.config.enabled = false;
+        let out = ask(&mut c, &alex, 8.0, 8.0);
+        assert!(
+            matches!(&out[0], Out::Error(e) if e.contains("off")),
+            "{out:?}"
+        );
+        let _ = std::fs::remove_dir_all(d);
+    }
+
+    #[test]
+    fn the_map_reaches_five_chunks_each_way_in_negative_coordinates_too() {
+        let d = dir();
+        let mut c = Claims::open(&d, Config::default()).unwrap();
+        let (alex, steve) = (player(A, 0), player(B, 0));
+        // The middle of chunk `n` is block `n * 16 + 8`. Alex holds chunk
+        // -1 0 (x -16 to -1, west of the origin); Steve the corners 5 chunks
+        // away (-5 -5 and 5 5) and a chunk 6 away on each side of 0 0.
+        let played = 1_000_000;
+        c.command(&alex, &at(-8.0, 8.0), played, &find, &name_of, "claim")
+            .unwrap();
+        for (cx, cz) in [(-5, -5), (5, 5), (-6, 0), (6, 0), (0, -6), (0, 6)] {
+            let place = at(f64::from(cx * 16 + 8), f64::from(cz * 16 + 8));
+            let out = c
+                .command(&steve, &place, played, &find, &name_of, "claim")
+                .unwrap();
+            assert!(matches!(&out[0], Out::Reply(_)), "{out:?}");
+        }
+        let rows = |c: &mut Claims, x, z| -> Vec<String> {
+            let out = c
+                .command(&alex, &at(x, z), played, &find, &name_of, "claims map")
+                .unwrap();
+            out[1..]
+                .iter()
+                .map(|o| match o {
+                    Out::Reply(r) => r.clone(),
+                    other => panic!("{other:?}"),
+                })
+                .collect()
+        };
+        // From chunk 0 0: the corners at 5 chunks are on the grid's edge, the
+        // chunks 6 away are off it, and Alex's chunk at x -16 to -1 is left of
+        // the middle.
+        assert_eq!(
+            rows(&mut c, 8.0, 8.0),
+            [
+                "X----------",
+                "-----------",
+                "-----------",
+                "-----------",
+                "-----------",
+                "----#O-----",
+                "-----------",
+                "-----------",
+                "-----------",
+                "-----------",
+                "----------X",
+            ]
+        );
+        // From chunk -1 -1, with a negative x and z: Steve's -5 -5 is one
+        // column in, his -6 0 on the left edge and his 0 -6 on the top row.
+        assert_eq!(
+            rows(&mut c, -8.0, -8.0),
+            [
+                "------X----",
+                "-X---------",
+                "-----------",
+                "-----------",
+                "-----------",
+                "-----O-----",
+                "X----#-----",
+                "-----------",
+                "-----------",
+                "-----------",
+                "-----------",
+            ]
+        );
+        let _ = std::fs::remove_dir_all(d);
     }
 
     #[test]
