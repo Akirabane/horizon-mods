@@ -26,6 +26,14 @@ categories = ["management", "utility"]
 tags = ["modmenu", "mods-list", "ui", "settings", "port"]
 
 [[versions]]
+version = "1.1.2"
+published = "2026-11-09"
+game = "26.3"
+file = "modmenu-1.1.2.hnmod"
+sha256 = "fbd89bef60008e2c845f03191ce249ccef4dff32f41f1ce89688549220c0fb76"
+changelog = "The pause menu's server links button shows its tooltip above the Mods icon, as in Java. Built for Horizon Nightly 2026-11-08 (fdc87ae)."
+
+[[versions]]
 version = "1.1.0"
 published = "2026-11-08"
 game = "26.3"
