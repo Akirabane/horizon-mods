@@ -1,0 +1,29 @@
+id = "kotost_roulette"
+kind = "native-mod"
+name = "Kotost Roulette"
+summary = "Stake game items, spin a wheel, win a dearer item or lose the stake. Every item has a price in points; Russian and English."
+description = """
+Open the Roulette (every player gets the item on joining or respawning, or `/roulette`), drag a stack from your inventory onto the left panel and pick the reward: **x2, x4, x5, x8, x10**, a chance (**30 %, 50 %, 70 %**), or any item from the searchable catalog. The chance is shown before the spin: 0.996 / multiplier (x2 is 49.8 %). The ring turns for three seconds, slows down, clicks over the sectors, and plays a win or a loss sound.
+
+The roll is the server's: it takes the stake the moment it rolls, so leaving mid-spin never returns or duplicates anything. A reward goes to your inventory, onto the ground when it is full, or into your saved inventory if you left. Game items only: no money, nothing to buy.
+
+About 400 vanilla items have a price in points (flower 8, iron ingot 10, diamond 100, netherite ingot 1000); edit `config/kotost_roulette.txt` on the server to change or add prices (mods' items too). Items without a price can't be staked. Needed on the server and the client. Screen and messages are in Russian or English by the player's game language.
+
+Native source mod: the launcher compiles it after a warning; it runs with your account's permissions. No Minecraft code or assets are included."""
+authors = ["Kotost Games"]
+owners = ["Leks2000"]
+owner_ids = [107043945]
+license = "MIT"
+source = "https://github.com/Leks2000/kotost-roulette"
+icon = "icons/kotost_roulette.png"
+categories = ["minigame", "game-mechanics"]
+tags = ["items", "wheel", "minigame", "luck"]
+screenshots = ["screenshots/kotost_roulette/1.png", "screenshots/kotost_roulette/2.png", "screenshots/kotost_roulette/3.png"]
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-11"
+game = "26.3"
+file = "kotost_roulette-0.1.0.hnmod"
+sha256 = "df27032d1c05c0e8f7a23c783f4494209374520f1782523ce87be5e526e79105"
+changelog = "First release."
