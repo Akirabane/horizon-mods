@@ -1,0 +1,31 @@
+id = "kotost_firstperson"
+kind = "native-mod"
+name = "Kotost First Person"
+summary = "Your own body, legs and arms in first person, items in your 3D hands, the game's hands for eating."
+description = """
+- **Your own body in first person**: look down and see your body, legs and both arms in 3D, in your own skin, instead of the flat floating hands. The body leans back as you look down.
+- **Items in your 3D hands**, main hand and off hand.
+- **Eating and drinking**: the game's own hands bring the food before your face while you eat, or the 3D arm does (`eat_hand = 0`).
+- **One shadow**: with a shader pack, the shadow pass keeps the head where it really is.
+- **Settings** in `config/kotost-firstperson.txt` (re-read while you play). Kotost Body 0.3's first-person lines are carried over on the first run.
+
+Works alone. With Kotost Bust your body has its bust and figure; whatever a mod draws on the player model shows on it. Client side only.
+
+Native source mod: the launcher compiles it after a warning; it runs with your account's permissions. No Minecraft code or assets are included."""
+authors = ["Kotost Games"]
+owners = ["Leks2000"]
+owner_ids = [107043945]
+license = "MIT"
+source = "https://github.com/Leks2000/kotost-firstperson"
+icon = "icons/kotost_firstperson.png"
+categories = ["decoration", "utility"]
+tags = ["first-person", "player-model", "body", "immersion"]
+screenshots = ["screenshots/kotost_firstperson/1.png", "screenshots/kotost_firstperson/2.png", "screenshots/kotost_firstperson/3.png"]
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-11"
+game = "26.3"
+file = "kotost_firstperson-0.1.0.hnmod"
+sha256 = "181790b3f02e773a55c3de67ad79af2170a2aa784456d7939be451e1941ad880"
+changelog = "First release, split out of Kotost Body 0.3 (kotost_body), where it was the first-person half."
