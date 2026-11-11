@@ -1,0 +1,27 @@
+id = "kotost_chest"
+kind = "native-mod"
+name = "Kotost Chest"
+summary = "Two buttons beside a chest's sort button: everything into the chest, everything out of it."
+description = """
+Two buttons beside a chest's sort button: **arrow up** moves your whole main inventory into the chest (the hotbar stays), **arrow down** moves everything out of the chest into your inventory.
+
+Each button is a run of ordinary Shift-clicks, so it works on any server, vanilla included, and nothing is needed on the server. Needs Horizon's sort buttons on (`sort:true` in `horizon-extras.txt`).
+
+Native source mod: the launcher compiles it after a warning; it runs with your account's permissions. No Minecraft code or assets are included."""
+authors = ["Kotost Games"]
+owners = ["Leks2000"]
+owner_ids = [107043945]
+license = "MIT"
+source = "https://github.com/Leks2000/kotost-chest"
+icon = "icons/kotost_chest.png"
+categories = ["utility", "storage"]
+tags = ["chest", "inventory", "quality-of-life"]
+screenshots = ["screenshots/kotost_chest/1.png"]
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-11"
+game = "26.3"
+file = "kotost_chest-0.1.0.hnmod"
+sha256 = "e19ec3d7c922661610b07a751ad7dd3218d781a7887cadd2ecf5bd00c0566601"
+changelog = "First release."
