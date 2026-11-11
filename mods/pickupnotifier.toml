@@ -1,0 +1,34 @@
+id = "pickupnotifier"
+kind = "native-mod"
+name = "Pick Up Notifier"
+summary = "A port of Pick Up Notifier: the items, experience and arrows you pick up, listed in a corner of the screen."
+description = """
+A port of [Pick Up Notifier](https://github.com/Fuzss/pickupnotifier) by Fuzs to Horizon, as a native mod. Items, experience and arrows you pick up show in a list in a corner of the screen; old entries move out and fade, and picking up more of an item adds to its entry.
+
+- Items, experience orbs (with their value) and arrows, each on or off; off in creative if you like; a list of items never shown.
+- Entries combined always, never, or except named items; how long they stay, how they move out (sideways, up/down, both or not at all) and fade.
+- The item's sprite, its name in its rarity colour or a colour of your choice, the amount as a sprite count, text or both, and how many you now have in your inventory.
+- Any of nine screen positions with offsets, a maximum height and a scale; no background, the chat's or a tooltip's.
+- Pick Up Notifier's settings: Options > Mods > Pick Up Notifier, Mod Menu's Configure, or `/pickupnotifier`. English and Russian.
+
+Built for Horizon Nightly 2026-11-08 (`fdc87ae`). Native mods are compiled into the game and are not sandboxed: build only code you trust.
+
+**Permission.** Fuzs, Pick Up Notifier's author, agreed on Discord (2026-11-09) to this port being listed, under the MPL-2.0.
+
+**Credits.** Pick Up Notifier is by Fuzs (heyitsfuzs), Mozilla Public License 2.0; this port keeps that licence. The original's assets (All Rights Reserved) are not used. Not affiliated with Fuzs, Mojang or Microsoft."""
+authors = ["DeportedToHell"]
+owners = ["DeportedToHell"]
+owner_ids = [344119465]
+license = "MPL-2.0"
+source = "https://github.com/DeportedToHell/MCRE-Mods/tree/main/pickupnotifier"
+icon = "icons/pickupnotifier.png"
+categories = ["utility"]
+tags = ["pickup", "hud", "items", "notifications", "port"]
+
+[[versions]]
+version = "1.1.0"
+published = "2026-11-09"
+game = "26.3"
+file = "pickupnotifier-1.1.0.hnmod"
+sha256 = "2b38c66503114deb8f58c62c7c1f64ca31568c947c1b32b91395400027bd2af2"
+changelog = "First release. Built for Horizon Nightly 2026-11-08 (fdc87ae)."
