@@ -48,7 +48,7 @@ header and footer).
 | `/back` | back to where you died, or where your last teleport took you from (warmup and cooldown as any teleport) |
 | `/afk` | marks you away from the keyboard until you move, turn or run a command |
 | `/playtime [player]` | how long you (or a player who is on) have played here |
-| `/claim`, `/claim info`, `/unclaim` | claims the chunk you stand in (all its height), says whose it is, frees it (operators of level 3: anyone's) |
+| `/claim`, `/claim info`, `/unclaim` | claims the chunk you stand in (all its height; not one that holds an End portal frame), says whose it is, frees it (operators of level 3: anyone's) |
 | `/claim show` | draws the border of the chunk you stand in for 10 s, for you only: green yours or a trusting owner's, red someone else's, white free |
 | `/claims` | your chunks, how many you may hold, and who you trust |
 | `/claims map` | the claimed chunks around you in the chat, 11 by 11 chunks with north up: `O` where you stand, `#` yours, `+` an owner who trusts you, `X` someone else's, `-` free |
@@ -254,7 +254,7 @@ click blocks: doors, chests, levers, buttons, placing a block, a bucket or flint
 nothing, and the action bar says whose land it is. The chunks a player may hold grow with the time played here
 (`claims.chunks`: `[hours, chunks]`, by default 4, 16 from 5 hours, 36 from 20, 64 from 100); `claims.enabled`
 turns them off. `claims.free_radius` (0, none) keeps the land within that many blocks of 0 0, in every dimension, free
-for all: no one claims a chunk that touches it, and claims already there are dropped at start (each logged). The world stays out too: no water or lava flows, no fire spreads or burns, and no piston pushes into
+for all: no one claims a chunk that touches it, and claims already there are dropped at start (each logged). A stronghold's End portal stays reachable too: a chunk that holds an End portal frame can't be claimed, and a claim does not stop anyone breaking, placing or right clicking blocks within 4 of a frame along any axis, also in a chunk claimed before this rule. The world stays out too: no water or lava flows, no fire spreads or burns, and no piston pushes into
 a claim from land that isn't its owner's (or a player's they trust), and explosions break no claimed block, whoever
 lit them (a TNT cannon, a creeper, a crystal, a bed, a wither skull), nor the claim's animals, paintings and item
 frames. Buckets are guarded where they fill or empty; nothing is placed against a claim's border from outside (a

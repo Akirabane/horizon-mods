@@ -1015,7 +1015,11 @@ pub(in crate::game) fn perform(
                 .unwrap_or_else(|| smp_store::uuid_string(u))
         };
         match (&mut smp.claims, at) {
-            (Ok(c), Some(at)) => c.command(&me, &at, played, &find, &name_of, line).unwrap_or_default(),
+            (Ok(c), Some(at)) => {
+                let game = &*game;
+                let portal = |dimension: &str, cx: i32, cz: i32| holds_portal(game, dimension, cx, cz);
+                c.command(&me, &at, played, &find, &name_of, &portal, line).unwrap_or_default()
+            }
             (Ok(_), None) => vec![Out::Error("You are not in the world.".into())],
             (Err(_), _) => vec![Out::Error(
                 "Claims are off: their file can't be read (see the server log).".into(),
@@ -1172,6 +1176,10 @@ pub(in crate::game) fn guard(game: &mut Game<'_>, pos: [i32; 3], canceled: &mut 
     };
     let now = chrono::Utc::now().timestamp_millis();
     if let Err(line) = claims.check(&me, &who.dimension, pos, &name_of, now) {
+        // The room around an End portal frame is never protected: the portal stays reachable.
+        if in_portal_room(game, &who.dimension, pos) {
+            return;
+        }
         *canceled = true;
         drop(guard);
         if let Some(line) = line {
@@ -1179,6 +1187,52 @@ pub(in crate::game) fn guard(game: &mut Game<'_>, pos: [i32; 3], canceled: &mut 
         }
     }
 }
+/// Whether the loaded chunk (`cx`, `cz`) of `dimension` holds an End portal frame (a claim there
+/// is refused: `Claims::command`).
+fn holds_portal(game: &Game<'_>, dimension: &str, cx: i32, cz: i32) -> bool {
+    let Some(chunk) = game.native_chunk_snapshot(dimension, [cx, cz]) else {
+        return false;
+    };
+    let (low, top) = chunk.height();
+    let mut frames = std::collections::HashMap::new();
+    for y in low..top {
+        for x in cx * 16..cx * 16 + 16 {
+            for z in cz * 16..cz * 16 + 16 {
+                let Some(state) = chunk.block_state(x, y, z) else {
+                    continue;
+                };
+                let frame = *frames.entry(state).or_insert_with(|| {
+                    game.native_state_block(state) == Some("minecraft:end_portal_frame")
+                });
+                if frame {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
+/// Whether an End portal frame of the loaded chunks stands within `smp_claims::PORTAL_RADIUS`
+/// blocks of `pos` along every axis: the blocks there are no claim's to protect, so the portal
+/// stays reachable and usable, also in a chunk claimed before frames were refused.
+fn in_portal_room(game: &Game<'_>, dimension: &str, pos: [i32; 3]) -> bool {
+    let mut frames = std::collections::HashMap::new();
+    let mut chunks = std::collections::HashMap::new();
+    smp_claims::portal_room(pos).any(|[x, y, z]| {
+        let chunk = [x >> 4, z >> 4];
+        let snapshot = chunks
+            .entry(chunk)
+            .or_insert_with(|| game.native_chunk_snapshot(dimension, chunk));
+        let Some(state) = snapshot.as_ref().and_then(|c| c.block_state(x, y, z)) else {
+            return false;
+        };
+        *frames.entry(state).or_insert_with(|| {
+            game.native_state_block(state) == Some("minecraft:end_portal_frame")
+        })
+    })
+}
+
 /// A player hits the entity of type `kind` at `pos`: canceled when claims
 /// protect that type and the chunk is claimed by someone who doesn't trust
 /// them (`native_attack_entity`).

@@ -4,7 +4,9 @@
 // block), or hit its frames, armor stands and animals. Nothing flows, burns
 // or is pushed into it from land of someone else, and explosions spare it.
 // The chunks a player may hold grow with the time they played here.
-// Operators of level 3 pass everywhere and may `/unclaim` any chunk. Kept in
+// A chunk that holds an End portal frame can't be claimed, and the blocks around a frame are
+// never protected, so a stronghold's portal stays reachable for everyone. Operators of level 3
+// pass everywhere and may `/unclaim` any chunk. Kept in
 // `claims.json`, written atomically. No game types. Added to the game as
 // `game::smp_claims`; also a module of this crate, for its tests.
 
@@ -467,7 +469,9 @@ impl Claims {
 
     /// The claims' commands; None for another command. `at` is where the
     /// player stands; `find` a player's UUID and name from a name (on or
-    /// known); `name_of` a name from a UUID.
+    /// known); `name_of` a name from a UUID; `holds_portal` whether a chunk (dimension, chunk
+    /// x, chunk z) holds an End portal frame, which can't be claimed.
+    #[allow(clippy::too_many_arguments)]
     pub fn command(
         &mut self,
         me: &Player,
@@ -475,6 +479,7 @@ impl Claims {
         played: i64,
         find: &dyn Fn(&str) -> Option<(u128, String)>,
         name_of: &dyn Fn(u128) -> String,
+        holds_portal: &dyn Fn(&str, i32, i32) -> bool,
         line: &str,
     ) -> Option<Vec<Out>> {
         let words: Vec<&str> = line.split_whitespace().collect();
@@ -503,6 +508,9 @@ impl Claims {
                     "No claims within {} blocks of 0 0: that land is free for all.",
                     self.config.free_radius
                 ))],
+                None if holds_portal(here, cx, cz) => vec![Out::Error(
+                    "An End portal is in this chunk: it stays free so everyone can reach it.".into(),
+                )],
                 None => {
                     let (held, limit) = (self.held(me.uuid), self.limit(played));
                     if held >= limit {
@@ -630,6 +638,17 @@ impl Claims {
 /// How many chunks `/claims map` shows on each side of the player's.
 const MAP_RADIUS: i32 = 5;
 
+/// How far from an End portal frame, in blocks along each axis, nothing is protected by a claim.
+pub const PORTAL_RADIUS: i32 = 4;
+
+/// The blocks within [`PORTAL_RADIUS`] of `pos` along every axis, `pos` included: `pos` is in the
+/// room of an End portal frame when one of them is a frame.
+pub fn portal_room(pos: [i32; 3]) -> impl Iterator<Item = [i32; 3]> {
+    let near = move |c: i32| c - PORTAL_RADIUS..=c + PORTAL_RADIUS;
+    near(pos[0])
+        .flat_map(move |x| near(pos[1]).flat_map(move |y| near(pos[2]).map(move |z| [x, y, z])))
+}
+
 /// The claims' commands.
 pub const COMMANDS: [&str; 5] = ["claim", "unclaim", "claims", "trust", "untrust"];
 
@@ -661,6 +680,11 @@ mod tests {
             level,
         }
     }
+    /// No chunk holds an End portal frame.
+    fn no_portal(_: &str, _: i32, _: i32) -> bool {
+        false
+    }
+
     fn find(n: &str) -> Option<(u128, String)> {
         match n.to_ascii_lowercase().as_str() {
             "alex" => Some((A, "Alex".into())),
@@ -685,8 +709,16 @@ mod tests {
         );
         let d = dir();
         let mut c = Claims::open(&d, Config::default()).unwrap();
-        c.command(&player(A, 0), &at(8.0, 8.0), 0, &find, &name_of, "claim")
-            .unwrap();
+        c.command(
+            &player(A, 0),
+            &at(8.0, 8.0),
+            0,
+            &find,
+            &name_of,
+            &no_portal,
+            "claim",
+        )
+        .unwrap();
         let ow = "minecraft:overworld";
         assert_eq!(c.relation(ow, 3, 3, A), Some(true));
         assert_eq!(c.relation(ow, 3, 3, B), Some(false));
@@ -700,8 +732,16 @@ mod tests {
         let mut c = Claims::open(&d, Config::default()).unwrap();
         let alex = player(A, 0);
         for (x, z) in [(8.0, 8.0), (-520.0, 8.0), (600.0, 600.0)] {
-            c.command(&alex, &at(x, z), 1_000_000, &find, &name_of, "claim")
-                .unwrap();
+            c.command(
+                &alex,
+                &at(x, z),
+                1_000_000,
+                &find,
+                &name_of,
+                &no_portal,
+                "claim",
+            )
+            .unwrap();
         }
         c.save().unwrap();
         let config = Config {
@@ -722,6 +762,7 @@ mod tests {
                 1_000_000,
                 &find,
                 &name_of,
+                &no_portal,
                 "claim",
             )
             .unwrap();
@@ -732,7 +773,9 @@ mod tests {
             ..at(8.0, 8.0)
         };
         let out = c
-            .command(&alex, &nether, 1_000_000, &find, &name_of, "claim")
+            .command(
+                &alex, &nether, 1_000_000, &find, &name_of, &no_portal, "claim",
+            )
             .unwrap();
         assert!(matches!(&out[0], Out::Error(e) if e.contains("free for all")));
         // Saved without them.
@@ -743,12 +786,80 @@ mod tests {
     }
 
     #[test]
+    fn a_chunk_holding_an_end_portal_frame_cannot_be_claimed() {
+        let d = dir();
+        let mut c = Claims::open(&d, Config::default()).unwrap();
+        let alex = player(A, 0);
+        // The frame is in chunk 3 -2 of the Overworld (x 48 to 63, z -32 to -17).
+        let portal = |dimension: &str, cx: i32, cz: i32| {
+            dimension == "minecraft:overworld" && (cx, cz) == (3, -2)
+        };
+        let out = c
+            .command(
+                &alex,
+                &at(50.0, -20.0),
+                1_000_000,
+                &find,
+                &name_of,
+                &portal,
+                "claim",
+            )
+            .unwrap();
+        assert!(matches!(&out[0], Out::Error(e) if e.contains("End portal")));
+        assert_eq!(c.held(A), 0);
+        assert_eq!(c.owner("minecraft:overworld", 50, -20), None);
+        // The chunk beside it, and the same chunk in another dimension, are claimable.
+        let nether = Place {
+            dimension: "minecraft:the_nether".into(),
+            ..at(50.0, -20.0)
+        };
+        for place in [at(70.0, -20.0), nether] {
+            let out = c
+                .command(&alex, &place, 1_000_000, &find, &name_of, &portal, "claim")
+                .unwrap();
+            assert!(matches!(&out[0], Out::Reply(r) if r.starts_with("Claimed this chunk")));
+        }
+        assert_eq!(c.held(A), 2);
+        let _ = std::fs::remove_dir_all(d);
+    }
+
+    #[test]
+    fn a_portal_room_is_the_nine_by_nine_by_nine_blocks_around() {
+        let pos = [-10, 30, 7];
+        let room: Vec<[i32; 3]> = portal_room(pos).collect();
+        // Four blocks each way along every axis: 9 x 9 x 9, each block once.
+        assert_eq!(room.len(), 729);
+        assert_eq!(room.iter().collect::<HashSet<_>>().len(), 729);
+        assert!(room.contains(&pos));
+        assert!(room.contains(&[-14, 26, 3]) && room.contains(&[-6, 34, 11]));
+        // Five blocks away on any one axis is outside.
+        for outside in [
+            [-15, 30, 7],
+            [-5, 30, 7],
+            [-10, 35, 7],
+            [-10, 25, 7],
+            [-10, 30, 12],
+            [-10, 30, 2],
+        ] {
+            assert!(!room.contains(&outside), "{outside:?}");
+        }
+    }
+
+    #[test]
     fn shots_lava_and_blasts_from_outside_spare_a_claim() {
         let d = dir();
         let mut c = Claims::open(&d, Config::default()).unwrap();
         // Alex holds chunk 0 0 (x 0 to 15, z 0 to 15).
-        c.command(&player(A, 0), &at(8.0, 8.0), 0, &find, &name_of, "claim")
-            .unwrap();
+        c.command(
+            &player(A, 0),
+            &at(8.0, 8.0),
+            0,
+            &find,
+            &name_of,
+            &no_portal,
+            "claim",
+        )
+        .unwrap();
         let ow = "minecraft:overworld";
         let (cow, zombie) = (Some("minecraft:cow"), Some("minecraft:zombie"));
         // Steve's arrow: not on Alex's blocks or cows, yes on a zombie there
@@ -775,6 +886,7 @@ mod tests {
             0,
             &find,
             &name_of,
+            &no_portal,
             "trust steve",
         )
         .unwrap();
@@ -785,6 +897,7 @@ mod tests {
             0,
             &find,
             &name_of,
+            &no_portal,
             "untrust steve",
         )
         .unwrap();
@@ -809,6 +922,7 @@ mod tests {
             0,
             &find,
             &name_of,
+            &no_portal,
             "trust steve",
         )
         .unwrap();
@@ -823,8 +937,16 @@ mod tests {
     fn the_world_stays_out_of_a_claim() {
         let d = dir();
         let mut c = Claims::open(&d, Config::default()).unwrap();
-        c.command(&player(A, 0), &at(8.0, 8.0), 0, &find, &name_of, "claim")
-            .unwrap();
+        c.command(
+            &player(A, 0),
+            &at(8.0, 8.0),
+            0,
+            &find,
+            &name_of,
+            &no_portal,
+            "claim",
+        )
+        .unwrap();
         let ow = "minecraft:overworld";
         // Into Alex's chunk from outside: refused; inside it and out of it: allowed.
         assert!(!c.spread_allowed(ow, [16, 64, 8], [15, 64, 8]));
@@ -832,8 +954,16 @@ mod tests {
         assert!(c.spread_allowed(ow, [15, 64, 8], [16, 64, 8]));
         assert!(c.spread_allowed("minecraft:the_nether", [16, 64, 8], [15, 64, 8]));
         // From Steve's chunk next door: allowed once Alex trusts Steve.
-        c.command(&player(B, 0), &at(24.0, 8.0), 0, &find, &name_of, "claim")
-            .unwrap();
+        c.command(
+            &player(B, 0),
+            &at(24.0, 8.0),
+            0,
+            &find,
+            &name_of,
+            &no_portal,
+            "claim",
+        )
+        .unwrap();
         assert!(!c.spread_allowed(ow, [16, 64, 8], [15, 64, 8]));
         c.command(
             &player(A, 0),
@@ -841,6 +971,7 @@ mod tests {
             0,
             &find,
             &name_of,
+            &no_portal,
             "trust steve",
         )
         .unwrap();
@@ -865,7 +996,15 @@ mod tests {
         let d = dir();
         let mut c = Claims::open(&d, Config::default()).unwrap();
         let out = c
-            .command(&player(A, 0), &at(-3.5, 20.0), 0, &find, &name_of, "claim")
+            .command(
+                &player(A, 0),
+                &at(-3.5, 20.0),
+                0,
+                &find,
+                &name_of,
+                &no_portal,
+                "claim",
+            )
             .unwrap();
         assert!(
             matches!(&out[0], Out::Reply(s) if s.contains("x -16 to -1, z 16 to 31")),
@@ -907,6 +1046,7 @@ mod tests {
             0,
             &find,
             &name_of,
+            &no_portal,
             "trust steve",
         )
         .unwrap();
@@ -921,6 +1061,7 @@ mod tests {
                 0,
                 &find,
                 &name_of,
+                &no_portal,
                 "unclaim",
             )
             .unwrap();
@@ -938,6 +1079,7 @@ mod tests {
                 0,
                 &find,
                 &name_of,
+                &no_portal,
                 "untrust Steve",
             )
             .unwrap();
@@ -956,11 +1098,11 @@ mod tests {
         let (alex, steve) = (player(A, 0), player(B, 0));
         // Alex holds chunks 0 0 and 1 0; Steve holds chunk 0 -2.
         for (who, x, z) in [(&alex, 8.0, 8.0), (&alex, 24.0, 8.0), (&steve, 8.0, -24.0)] {
-            c.command(who, &at(x, z), 0, &find, &name_of, "claim")
+            c.command(who, &at(x, z), 0, &find, &name_of, &no_portal, "claim")
                 .unwrap();
         }
         let ask = |c: &mut Claims, who: &Player, x, z| {
-            c.command(who, &at(x, z), 0, &find, &name_of, "claims map")
+            c.command(who, &at(x, z), 0, &find, &name_of, &no_portal, "claims map")
                 .unwrap()
         };
         // Standing in chunk 0 0: a header, then 11 rows of 11 chunks, north
@@ -989,8 +1131,16 @@ mod tests {
             3
         );
         // Steve trusting Alex turns his chunk into a `+` on Alex's map.
-        c.command(&steve, &at(8.0, -24.0), 0, &find, &name_of, "trust alex")
-            .unwrap();
+        c.command(
+            &steve,
+            &at(8.0, -24.0),
+            0,
+            &find,
+            &name_of,
+            &no_portal,
+            "trust alex",
+        )
+        .unwrap();
         let out = ask(&mut c, &alex, 8.0, 8.0);
         assert!(
             matches!(&out[4], Out::Reply(r) if r == "-----+-----"),
@@ -1013,7 +1163,7 @@ mod tests {
             ..at(8.0, 8.0)
         };
         let out = c
-            .command(&alex, &nether, 0, &find, &name_of, "claims map")
+            .command(&alex, &nether, 0, &find, &name_of, &no_portal, "claims map")
             .unwrap();
         assert!(
             matches!(&out[6], Out::Reply(r) if r == "-----O-----"),
@@ -1048,18 +1198,34 @@ mod tests {
         // -1 0 (x -16 to -1, west of the origin); Steve the corners 5 chunks
         // away (-5 -5 and 5 5) and a chunk 6 away on each side of 0 0.
         let played = 1_000_000;
-        c.command(&alex, &at(-8.0, 8.0), played, &find, &name_of, "claim")
-            .unwrap();
+        c.command(
+            &alex,
+            &at(-8.0, 8.0),
+            played,
+            &find,
+            &name_of,
+            &no_portal,
+            "claim",
+        )
+        .unwrap();
         for (cx, cz) in [(-5, -5), (5, 5), (-6, 0), (6, 0), (0, -6), (0, 6)] {
             let place = at(f64::from(cx * 16 + 8), f64::from(cz * 16 + 8));
             let out = c
-                .command(&steve, &place, played, &find, &name_of, "claim")
+                .command(&steve, &place, played, &find, &name_of, &no_portal, "claim")
                 .unwrap();
             assert!(matches!(&out[0], Out::Reply(_)), "{out:?}");
         }
         let rows = |c: &mut Claims, x, z| -> Vec<String> {
             let out = c
-                .command(&alex, &at(x, z), played, &find, &name_of, "claims map")
+                .command(
+                    &alex,
+                    &at(x, z),
+                    played,
+                    &find,
+                    &name_of,
+                    &no_portal,
+                    "claims map",
+                )
                 .unwrap();
             out[1..]
                 .iter()
@@ -1121,13 +1287,22 @@ mod tests {
                     0,
                     &find,
                     &name_of,
+                    &no_portal,
                     "claim",
                 )
                 .unwrap();
             assert!(matches!(&out[0], Out::Reply(_)), "{out:?}");
         }
         let out = c
-            .command(&player(A, 0), &at(64.0, 0.0), 0, &find, &name_of, "claim")
+            .command(
+                &player(A, 0),
+                &at(64.0, 0.0),
+                0,
+                &find,
+                &name_of,
+                &no_portal,
+                "claim",
+            )
             .unwrap();
         assert!(
             matches!(&out[0], Out::Error(s) if s.contains("4 of 4")),
@@ -1140,6 +1315,7 @@ mod tests {
                 5 * 3600,
                 &find,
                 &name_of,
+                &no_portal,
                 "claim",
             )
             .unwrap();
@@ -1148,16 +1324,40 @@ mod tests {
             "{out:?}"
         );
         let out = c
-            .command(&player(B, 0), &at(0.0, 0.0), 0, &find, &name_of, "claim")
+            .command(
+                &player(B, 0),
+                &at(0.0, 0.0),
+                0,
+                &find,
+                &name_of,
+                &no_portal,
+                "claim",
+            )
             .unwrap();
         assert_eq!(out, vec![Out::Error("This chunk is Alex's.".into())]);
         // An operator may free any chunk.
         let out = c
-            .command(&player(B, 3), &at(0.0, 0.0), 0, &find, &name_of, "unclaim")
+            .command(
+                &player(B, 3),
+                &at(0.0, 0.0),
+                0,
+                &find,
+                &name_of,
+                &no_portal,
+                "unclaim",
+            )
             .unwrap();
         assert!(matches!(&out[0], Out::Reply(_)));
         let out = c
-            .command(&player(A, 0), &at(0.0, 0.0), 0, &find, &name_of, "claims")
+            .command(
+                &player(A, 0),
+                &at(0.0, 0.0),
+                0,
+                &find,
+                &name_of,
+                &no_portal,
+                "claims",
+            )
             .unwrap();
         assert!(
             matches!(&out[0], Out::Reply(s) if s.starts_with("Your chunks (4 of 4)")),

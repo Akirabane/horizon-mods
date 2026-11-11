@@ -450,7 +450,15 @@ mod tests {
             ("minecraft:the_nether", -3.0, -3.0),
         ] {
             let out = c
-                .command(&steve, &at(dim, x, 64.0, z), 0, &fnd, &nm, "claim")
+                .command(
+                    &steve,
+                    &at(dim, x, 64.0, z),
+                    0,
+                    &fnd,
+                    &nm,
+                    &|_, _, _| false,
+                    "claim",
+                )
                 .unwrap();
             assert!(!out.is_empty());
         }
@@ -460,6 +468,7 @@ mod tests {
             0,
             &fnd,
             &nm,
+            &|_, _, _| false,
             "trust alex",
         )
         .unwrap();
