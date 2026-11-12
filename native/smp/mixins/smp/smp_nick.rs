@@ -304,7 +304,7 @@ impl Nicks {
                 _,
                 ..,
             ] => 1,
-            ["eco" | "money", "give" | "take" | "set", _, _] => 2,
+            ["eco" | "money", "give" | "take", _, ..] => 2,
             _ => return None,
         };
         let word = words[at];
@@ -773,6 +773,22 @@ mod tests {
             Some("trade accept Steve")
         );
         assert_eq!(r("eco give Rocky 5").as_deref(), Some("eco give Steve 5"));
+        // `/eco give` needs a reason, so the words after the amount are kept.
+        assert_eq!(
+            r("eco give Rocky 5 event prize").as_deref(),
+            Some("eco give Steve 5 event prize")
+        );
+        assert_eq!(
+            r("eco take ~rocky 5 cheat").as_deref(),
+            Some("eco take Steve 5 cheat")
+        );
+        assert_eq!(
+            r("money give Rocky 5 bug refund").as_deref(),
+            Some("money give Steve 5 bug refund")
+        );
+        assert_eq!(r("eco give Steve 5 prize"), None, "a real name stays");
+        assert_eq!(r("eco give * 5 prize"), None);
+        assert_eq!(r("eco stats"), None);
         assert_eq!(r("pay Steve 50"), None, "a real name stays");
         assert_eq!(r("trade accept"), None);
         assert_eq!(r("eco give * 5"), None);
