@@ -1196,7 +1196,7 @@ mod tests {
             .collect();
         assert_eq!(kinds, ["bank_closed", "bank_closed", "futures_closed"]);
         e.save().unwrap();
-        assert!(super::super::smp_store::flush().is_empty());
+        assert!(super::super::smp_store::flush_dir(&dir).is_empty());
         let saved = fs::read_to_string(dir.join("economy.json")).unwrap();
         assert!(!saved.contains("treasury"), "{saved}");
         // Only once.

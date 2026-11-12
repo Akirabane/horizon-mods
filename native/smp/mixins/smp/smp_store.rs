@@ -116,6 +116,36 @@ pub fn take_errors() -> Vec<String> {
     )
 }
 
+/// [`flush`] for a test: writes what waits, and returns only the errors of
+/// files under `dir`. The errors of every other folder stay for the test
+/// they belong to. The writer is one for the whole process, so a plain
+/// `flush` in one test takes the errors another test is waiting for.
+#[cfg(test)]
+pub(crate) fn flush_dir(dir: &Path) -> Vec<String> {
+    let dir = dir.to_string_lossy().into_owned();
+    let mut q = WRITER.queue.lock().unwrap_or_else(|e| e.into_inner());
+    while q.writing.is_some() {
+        q = WRITER.changed.wait(q).unwrap_or_else(|e| e.into_inner());
+    }
+    let mut errors = std::mem::take(&mut q.errors);
+    while let Some(path) = q.order.pop_front() {
+        if let Some(bytes) = q.bytes.remove(&path)
+            && let Err(e) = write_atomic(&path, &bytes)
+        {
+            errors.push(format!("{}: {e}", path.display()));
+        }
+    }
+    let (mine, others): (Vec<String>, Vec<String>) = errors.into_iter().partition(|e| {
+        e.strip_prefix(dir.as_str())
+            .is_some_and(|rest| rest.starts_with(['/', std::path::MAIN_SEPARATOR]))
+    });
+    // Put back while the queue is still locked: no other flush sees a gap.
+    q.errors.extend(others);
+    drop(q);
+    WRITER.changed.notify_all();
+    mine
+}
+
 struct Writer {
     queue: Mutex<Queue>,
     changed: Condvar,
@@ -322,13 +352,10 @@ mod tests {
     }
 
     /// The writer is shared by every test in the crate: other modules' tests queue saves into folders they
-    /// remove, and their errors surface in whichever `flush` runs next. Keep only this test's.
+    /// remove, and their errors surface in whichever `flush` runs next. Take only this test's, and leave the
+    /// others' (`flush_dir`).
     fn flush_in(dir: &Path) -> Vec<String> {
-        let dir = dir.to_string_lossy().into_owned();
-        flush()
-            .into_iter()
-            .filter(|e| e.starts_with(&dir))
-            .collect()
+        flush_dir(dir)
     }
 
     #[test]
@@ -417,6 +444,28 @@ mod tests {
         assert!(flush_in(&dir).is_empty());
         assert_eq!(read_json::<Vec<u32>>(&path).unwrap(), [2]);
         fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn a_flush_for_one_folder_leaves_the_errors_of_another_folders_saves() {
+        // The admin and economy tests flush for their own folders while this
+        // module's failed-save test has a save waiting that must fail: their
+        // flush must not take its error.
+        let _turn = WRITER_TESTS.lock().unwrap_or_else(|e| e.into_inner());
+        let failing = scratch("keep-failing");
+        let other = scratch("keep-other");
+        fs::create_dir_all(&failing).unwrap();
+        let blocker = failing.join("sub");
+        fs::write(&blocker, b"not a folder").unwrap();
+        save_json(&blocker.join("nicks.json"), &vec![1u32]).unwrap();
+        assert!(flush_in(&other).is_empty());
+        let errors = flush_in(&failing);
+        assert!(
+            !errors.is_empty() && errors.iter().all(|e| e.contains("nicks.json")),
+            "{errors:?}"
+        );
+        assert!(flush_in(&failing).is_empty(), "taken once");
+        fs::remove_dir_all(failing).unwrap();
     }
 
     #[test]
