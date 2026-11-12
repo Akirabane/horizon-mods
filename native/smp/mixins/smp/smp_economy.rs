@@ -939,8 +939,17 @@ impl Economy {
     }
 }
 
-/// A positive whole amount, `1250` or `1,250`.
+/// A positive whole amount, `1250` or `1,250` (a comma only groups thousands).
 pub fn parse_amount(s: &str) -> Option<i64> {
+    // A comma only groups thousands: 1 to 3 digits, then groups of exactly 3.
+    // `1,5` is refused, not read as 15.
+    if s.contains(',') {
+        let mut groups = s.split(',');
+        let first = groups.next().unwrap_or_default();
+        if !(1..=3).contains(&first.len()) || !groups.all(|g| g.len() == 3) {
+            return None;
+        }
+    }
     let digits: String = s.chars().filter(|c| *c != ',').collect();
     if digits.is_empty() || !digits.chars().all(|c| c.is_ascii_digit()) {
         return None;
@@ -1043,6 +1052,42 @@ mod tests {
             2,
             "nothing logged but the two accounts"
         );
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn parse_amount_refuses_misplaced_commas() {
+        // `1250` and `1,250`: a comma only groups thousands.
+        for (text, amount) in [
+            ("1250", 1250),
+            ("999", 999),
+            ("1,250", 1250),
+            ("12,345,678", 12_345_678),
+            ("1,000,000,000,000", MAX_AMOUNT),
+        ] {
+            assert_eq!(parse_amount(text), Some(amount), "{text}");
+        }
+        // A player who writes a decimal comma must be refused, not paid 15.
+        for text in [
+            "1,5", "12,34", "1,2,3", ",5", "5,", "1,,000", "1,25,000", "1250,000", ",", "",
+        ] {
+            assert_eq!(parse_amount(text), None, "{text}");
+        }
+    }
+
+    #[test]
+    fn a_decimal_comma_is_not_a_payment() {
+        let (mut e, dir) = economy("decimal-comma");
+        let out = e
+            .command(&player(ALEX, "Alex", 0), &[], "pay Steve 1,5")
+            .unwrap();
+        assert_eq!(
+            out,
+            vec![Out::Error(
+                "The amount must be a positive whole number.".into()
+            )]
+        );
+        assert_eq!((e.balance(ALEX), e.balance(STEVE)), (100, 100));
         fs::remove_dir_all(dir).unwrap();
     }
 

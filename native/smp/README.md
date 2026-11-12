@@ -87,7 +87,8 @@ money and the room before anything moves.
 - There are no daily coin or per-item limits on market sales, or daily limits on `/pay` receipts.
   The former `daily_sell_coins` and `daily_sell_items` settings and `market.json` counts are ignored,
   including in existing server files.
-- Amounts are checked: no price above 1,000,000,000,000, no sum that overflows.
+- Amounts are checked: no price above 1,000,000,000,000, no sum that overflows. A typed amount or count is a whole number,
+  `1250` or `1,250`: a comma only groups thousands, so `1,5` is refused instead of read as 15.
 - The coinflip and the lottery give the winner all the stakes: they move money between players and never make any.
 
 Default prices (coins; "buy only": the market sells it but doesn't buy it, "sell only" the other way):
