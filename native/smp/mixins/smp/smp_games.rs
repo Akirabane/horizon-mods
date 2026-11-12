@@ -144,7 +144,7 @@ impl Games {
                 let open: Vec<String> = self
                     .offers
                     .iter()
-                    .filter(|o| o.to.is_none_or(|t| t == me.uuid))
+                    .filter(|o| o.from == me.uuid || o.to.is_none_or(|t| t == me.uuid))
                     .map(|o| format!("{}: {}", o.from_name, economy.money(o.amount)))
                     .collect();
                 if open.is_empty() {
@@ -424,6 +424,44 @@ mod tests {
             &run(&mut e, &mut g, A, 30_000, true, "coinflip 10")[0],
             Out::Reply(_)
         ));
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn the_list_shows_your_own_named_offer_and_hides_it_from_others() {
+        let (mut e, mut g, dir) = setup("list");
+        run(&mut e, &mut g, A, 0, true, "coinflip 50 steve");
+        let waiting = |out: Vec<Out>| match out.as_slice() {
+            [Out::Reply(s)] => s.clone(),
+            other => panic!("{other:?}"),
+        };
+        // The one who offered holds the stake, so they must see the offer.
+        assert_eq!(
+            waiting(run(&mut e, &mut g, A, 1, true, "coinflip list")),
+            "Coinflips waiting: Alex: 50 coins"
+        );
+        // So does the player it is named for.
+        assert_eq!(
+            waiting(run(&mut e, &mut g, B, 1, true, "coinflip list")),
+            "Coinflips waiting: Alex: 50 coins"
+        );
+        // Anyone else does not.
+        let bob = Player {
+            uuid: 3,
+            name: "Bob".into(),
+            level: 0,
+        };
+        let out = g
+            .command(&mut e, &bob, &online, 1, &mut || true, "coinflip list")
+            .unwrap();
+        assert_eq!(waiting(out), "No coinflip is waiting.");
+        // An offer open to anyone is listed to everyone, as before.
+        run(&mut e, &mut g, A, 1, true, "coinflip cancel");
+        run(&mut e, &mut g, A, 1, true, "coinflip 60");
+        assert_eq!(
+            waiting(run(&mut e, &mut g, A, 2, true, "coinflip list")),
+            "Coinflips waiting: Alex: 60 coins"
+        );
         std::fs::remove_dir_all(dir).unwrap();
     }
 
