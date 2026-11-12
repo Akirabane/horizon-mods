@@ -8,7 +8,7 @@ priority = 100
 # hanging break, entity join and dispenser hooks (API 359), the entity handles and native_player_chat (in its source,
 # stamped later on main as API 399), on top of native_hide_player (API 314) and horizon#6106's helpers.
 [compatibility]
-horizon_revision = "5de5b6fd91b70be34562f56b747c9e06db692fa3"
+horizon_revision = "3ac7c8881bd8ffd254038dee523619706e325ab3"
 
 [[module]]
 id = "store"

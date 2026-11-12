@@ -235,15 +235,19 @@ was on (`homes`: `[hours, homes]`, by default 1 home, 2 from 5 hours, 3 from 20,
 lines. `/spawn` lands on a random safe column within `spawn_radius` (250) blocks of the spawn point, like vanilla's `respawn_radius` for a first join or a respawn: after the `tp`, vanilla's `spreadplayers` moves the player off fluid, fire and magma onto solid ground (0: exactly the spawn point; if no column is found the player stays at the spawn point). Teleports are vanilla's `tp`, run as the server (`execute in <level> run tp`), so they cross levels and land
 as any teleport does.
 
-`/rtp` (or `/wild`) draws `rtp_attempts` (6) chunks at random between `rtp_min_distance` (500) and `rtp_max_distance`
+`/rtp` (or `/wild`) draws 96 columns at random between `rtp_min_distance` (500) and `rtp_max_distance`
 (10000) blocks from the spawn (`/setspawn`'s point, 0 0 without one), uniform over the ring's area and at least 16 blocks
-inside the world border (as last saved in `world_border.dat`), then holds them loaded one after another with vanilla's
-`forceload` while the warmup runs: the game generates them on its worker threads, never on the server tick. Once a
-chunk is loaded, the Overworld's tick reads its 256 columns (`native_read_columns`, the top block below the
-`MOTION_BLOCKING_NO_LEAVES` height and the two above it) and the player lands, still standing still, on a random one
-whose top block is solid ground (no fluid, fire, cactus, magma, powder snow, berry bush or dripstone) with air or grass
-above it, outside another player's claim and still in the ring and the border; with none the next chunk is tried. With
-no spot after the six, or no land loaded `rtp_search_seconds` (30) after the warmup, it says so and nothing is spent.
+inside the world border (as last saved in `world_border.dat`), and asks the game's terrain generator about all of them at
+once (`native_terrain_surface`: no chunk is loaded for it). It keeps the dry land: no water over the ground, solid ground
+that is not a hazard, not an ocean or river biome; the chunks of up to `rtp_attempts` (6) of those are the ones it tries.
+It holds the first with a chunk ticket while the warmup runs, never on the server tick, so an ocean costs no chunk load.
+Trees, lava and cacti come with the chunk's decoration, so once it is loaded, the Overworld's tick reads its 256 columns
+(`native_read_columns`, the top block below the `MOTION_BLOCKING_NO_LEAVES` height and the two above it) and the player
+lands, still standing still, on a random one whose top block is solid ground (no fluid, fire, cactus, magma, powder snow,
+berry bush or dripstone) with air or grass above it, outside another player's claim and still in the ring and the border;
+with none the next chunk is tried. On a game that cannot say what the terrain is, every drawn column counts. With no dry
+land among the 96, no spot after the six, or no land loaded `rtp_search_seconds` (30) after the warmup, it says so and
+nothing is spent.
 A teleport made starts `rtp_cooldown_seconds` (300) for that player, kept in `places.json` over restarts ("Wait 2 min
 before your next /rtp."); a teleport called off (a move, a hit, the game failing it) doesn't. Elsewhere than the
 Overworld it refuses. The chunks it forced are let go 10 s after the landing, or at the next start if the server
