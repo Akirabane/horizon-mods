@@ -54,7 +54,8 @@ impl Default for Config {
             warmup_seconds: 3,
             request_seconds: 60,
             cooldown_seconds: 10,
-            homes: vec![[0, 1], [5, 2], [20, 3], [100, 5]],
+            // 2 homes to start, one more every 10 hours played, up to 7.
+            homes: (0..=5).map(|i| [i * 10, 2 + i]).collect(),
             rules: vec![
                 "Be respectful to everyone.".into(),
                 "No griefing, no stealing, no cheats.".into(),
@@ -1152,30 +1153,31 @@ mod tests {
         let mut p = Places::open(&d, Config::default()).unwrap();
         let here = [body(A, 0.0)];
         p.command(&player(A, 0), &here, 0, "sethome").unwrap();
-        let out = p.command(&player(A, 0), &here, 0, "sethome two").unwrap();
+        p.command(&player(A, 0), &here, 0, "sethome two").unwrap();
+        let out = p.command(&player(A, 0), &here, 0, "sethome three").unwrap();
         assert!(
-            matches!(&out[0], Out::Error(s) if s.contains("1 of 1")),
+            matches!(&out[0], Out::Error(s) if s.contains("2 of 2")),
             "{out:?}"
         );
         // Moving a home is always allowed.
         let out = p.command(&player(A, 0), &here, 0, "sethome home").unwrap();
         assert!(matches!(&out[0], Out::Reply(_)));
         p.save(0).unwrap();
-        for _ in 0..5 * 3600 {
+        for _ in 0..10 * 3600 {
             p.played(&[A], 0);
         }
-        assert_eq!(p.home_limit(A), 2);
+        assert_eq!(p.home_limit(A), 3);
         // Time played is written once a minute.
         p.save(59_999).unwrap();
         assert_eq!(
             Places::open(&d, Config::default()).unwrap().home_limit(A),
-            1
+            2
         );
         p.save(60_000).unwrap();
-        let out = p.command(&player(A, 0), &here, 0, "sethome two").unwrap();
+        let out = p.command(&player(A, 0), &here, 0, "sethome three").unwrap();
         assert!(matches!(&out[0], Out::Reply(_)), "{out:?}");
         let again = Places::open(&d, Config::default()).unwrap();
-        assert_eq!(again.home_limit(A), 2);
+        assert_eq!(again.home_limit(A), 3);
         std::fs::remove_dir_all(d).unwrap();
     }
 

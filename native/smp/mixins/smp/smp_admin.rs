@@ -511,7 +511,7 @@ mod tests {
         assert_eq!(
             texts,
             [
-                "Steve's claims: 4 chunks in 3 areas (may hold 4).",
+                "Steve's claims: 4 chunks in 3 areas (may hold 10).",
                 "overworld: x 0 to 31, z 0 to 15 (2 chunks, 32x16 blocks)",
                 "overworld: x 96 to 111, z -48 to -33 (1 chunk, 16x16 blocks)",
                 "the_nether: x -16 to -1, z -16 to -1 (1 chunk, 16x16 blocks)",
@@ -559,7 +559,7 @@ mod tests {
         let alex = run(&look, 3, "smpadmin claims alex");
         assert_eq!(
             alex[0].text,
-            "Alex's claims: 0 chunks in 0 areas (may hold 4)."
+            "Alex's claims: 0 chunks in 0 areas (may hold 10)."
         );
         assert_eq!(
             run(&look, 3, "smpadmin lastpos alex")[0].text,

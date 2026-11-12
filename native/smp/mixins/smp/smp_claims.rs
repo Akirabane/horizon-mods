@@ -34,7 +34,8 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             enabled: true,
-            chunks: vec![[0, 4], [5, 16], [20, 36], [100, 64]],
+            // 10 chunks to start, one more each hour played, up to 200.
+            chunks: (0..=190).map(|h| [h, 10 + h]).collect(),
             protected_entities: PROTECTED
                 .iter()
                 .map(|&e| format!("minecraft:{e}"))
@@ -1113,7 +1114,7 @@ mod tests {
     fn chunks_grow_with_time_played() {
         let d = dir();
         let mut c = Claims::open(&d, Config::default()).unwrap();
-        for x in 0..4 {
+        for x in 0..10 {
             let out = c
                 .command(
                     &player(A, 0),
@@ -1127,24 +1128,24 @@ mod tests {
             assert!(matches!(&out[0], Out::Reply(_)), "{out:?}");
         }
         let out = c
-            .command(&player(A, 0), &at(64.0, 0.0), 0, &find, &name_of, "claim")
+            .command(&player(A, 0), &at(160.0, 0.0), 0, &find, &name_of, "claim")
             .unwrap();
         assert!(
-            matches!(&out[0], Out::Error(s) if s.contains("4 of 4")),
+            matches!(&out[0], Out::Error(s) if s.contains("10 of 10")),
             "{out:?}"
         );
         let out = c
             .command(
                 &player(A, 0),
-                &at(64.0, 0.0),
-                5 * 3600,
+                &at(160.0, 0.0),
+                3600,
                 &find,
                 &name_of,
                 "claim",
             )
             .unwrap();
         assert!(
-            matches!(&out[0], Out::Reply(s) if s.contains("5 of 16")),
+            matches!(&out[0], Out::Reply(s) if s.contains("11 of 11")),
             "{out:?}"
         );
         let out = c
@@ -1160,7 +1161,7 @@ mod tests {
             .command(&player(A, 0), &at(0.0, 0.0), 0, &find, &name_of, "claims")
             .unwrap();
         assert!(
-            matches!(&out[0], Out::Reply(s) if s.starts_with("Your chunks (4 of 4)")),
+            matches!(&out[0], Out::Reply(s) if s.starts_with("Your chunks (10 of 10)")),
             "{out:?}"
         );
         let _ = std::fs::remove_dir_all(d);
