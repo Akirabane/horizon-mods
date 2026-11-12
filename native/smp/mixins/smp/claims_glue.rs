@@ -8,7 +8,6 @@ use crate::game::{Game, smp_claims::Source, smp_glue};
 use horizon_client::items::ItemStack;
 use std::collections::HashMap;
 use std::sync::Mutex;
-use std::sync::atomic::{AtomicBool, Ordering::Relaxed};
 
 fn block_of(p: [f64; 3]) -> [i32; 3] {
     p.map(|v| v.floor() as i32)
@@ -214,90 +213,49 @@ pub(in crate::game) fn impact(
     }
 }
 
-/// This tick's blasts near a claim (dimension, centre), and the protected
-/// mobs in claims they reach: spared from the blast's damage.
+/// This tick's blasts near a claim (dimension, centre).
 struct Blasts {
     tick: u64,
     centres: Vec<(String, [f64; 3])>,
-    shielded: Vec<u32>,
 }
 static BLASTS: Mutex<Blasts> = Mutex::new(Blasts {
     tick: u64::MAX,
     centres: Vec::new(),
-    shielded: Vec::new(),
 });
-/// Whether `BLASTS` may hold this tick's: the damage hook's fast way out.
-static SHIELD: AtomicBool = AtomicBool::new(false);
 /// How far a blast reaches entities: twice the strongest vanilla power (a
 /// charged creeper 6, a wither's spawn 7), plus its box.
 const REACH: f64 = 16.0;
 
 /// A blast at `center` is about to hit (`native_explosion_detonate`): when
-/// it is near a claim, the protected mobs it may reach in claimed land are
-/// noted for `damage`, and the blast for `hanging_break`. Blocks are
-/// spared by `smp_glue::explosion`. Nothing more for a blast far from
-/// every claim.
-pub(in crate::game) fn blast(game: &Game<'_>, dimension: &str, center: [f64; 3]) {
+/// it is near a claim, it is noted for `hanging_break`. Blocks are spared by
+/// `smp_glue::explosion`, animals by `spare`. Nothing more for a blast far
+/// from every claim.
+pub(in crate::game) fn blast(dimension: &str, center: [f64; 3]) {
     let c = block_of(center);
     if smp_glue::with_claims(|cl| cl.near(dimension, c, REACH as i32)) != Some(true) {
         return;
     }
-    let shielded = smp_glue::with_claims(|cl| {
-        game.mobs
-            .iter()
-            .filter(|m| !m.removed && m.alive())
-            .filter(|m| {
-                let d = [
-                    m.position.x - center[0],
-                    m.position.y - center[1],
-                    m.position.z - center[2],
-                ];
-                d[0] * d[0] + d[1] * d[1] + d[2] * d[2] <= REACH * REACH
-            })
-            .filter(|m| {
-                let p = block_of([m.position.x, m.position.y, m.position.z]);
-                cl.owner(dimension, p[0], p[2]).is_some()
-                    && cl.protects(&crate::game::native_hooks::mob_kind(m))
-            })
-            .map(|m| m.id)
-            .collect::<Vec<u32>>()
-    })
-    .unwrap_or_default();
     let now = smp_glue::ticks();
     let mut b = BLASTS.lock().unwrap_or_else(|e| e.into_inner());
     if b.tick != now {
         b.tick = now;
         b.centres.clear();
-        b.shielded.clear();
     }
     b.centres.push((dimension.to_owned(), center));
-    b.shielded.extend(shielded);
-    SHIELD.store(true, Relaxed);
 }
 
-/// A living entity is about to be hurt (`native_living_incoming_damage`):
-/// a blast spares the claim's animals it noted this tick. An atomic load
-/// for any other damage.
-pub(in crate::game) fn damage(entity: i32, damage_type: &str, canceled: &mut bool) {
-    if *canceled || !SHIELD.load(Relaxed) {
-        return;
-    }
-    if !matches!(
-        damage_type,
-        "minecraft:explosion" | "minecraft:player_explosion" | "minecraft:bad_respawn_point"
-    ) {
-        return;
-    }
-    let Ok(b) = BLASTS.try_lock() else {
-        return;
-    };
-    if b.tick != smp_glue::ticks() {
-        SHIELD.store(false, Relaxed);
-        return;
-    }
-    if u32::try_from(entity).is_ok_and(|id| b.shielded.contains(&id)) {
-        *canceled = true;
-    }
+/// A blast is about to hurt and push `entities` (`native_explosion_entities`):
+/// the protected mobs on claimed land are spared.
+pub(in crate::game) fn spare(game: &Game<'_>, dimension: &str, entities: &mut Vec<u32>) {
+    smp_glue::with_claims(|cl| {
+        entities.retain(|&id| {
+            !game.mobs.iter().find(|m| m.id == id).is_some_and(|m| {
+                let p = block_of([m.position.x, m.position.y, m.position.z]);
+                cl.owner(dimension, p[0], p[2]).is_some()
+                    && cl.protects(&crate::game::native_hooks::mob_kind(m))
+            })
+        });
+    });
 }
 
 /// A painting, frame or other hanging entity at `pos` is about to break

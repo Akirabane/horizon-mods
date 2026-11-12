@@ -1,6 +1,6 @@
 [mod]
 id = "smp"
-version = "0.36.0"
+version = "0.36.1"
 priority = 100
 
 # The commit of horizon CI tests it on (the minimap's: mods on the newest hooks share one; the official server's
@@ -475,14 +475,14 @@ bindings = [
 ]
 
 [[injection]]
-id = "living_damage"
+id = "explosion_entities"
 kind = "HEAD"
-target = "horizon_client::game::native_hooks::Game<'_>::native_living_incoming_damage"
-helper = "living_damage.rs"
+target = "horizon_client::game::native_hooks::Game<'_>::native_explosion_entities"
+helper = "explosion_entities.rs"
 bindings = [
-  { name = "entity", ty = "i32", value = "entity" },
-  { name = "damage_type", ty = "&str", value = "damage_type" },
-  { name = "canceled", ty = "&mut bool", value = "&mut *canceled" },
+  { name = "game", ty = "&crate::game::Game<'_>", value = "&*self" },
+  { name = "dimension", ty = "&str", value = "dimension" },
+  { name = "entities", ty = "&mut Vec<u32>", value = "&mut *entities" },
 ]
 
 [[injection]]
