@@ -79,7 +79,8 @@ jobs:
           manifest = json.loads(zipfile.ZipFile(path).read("horizon-native.json"))
           assert manifest["hooks"] >= 1, manifest
           bundle = f"mixins/{manifest['id']}/"
-          assert all(n == "horizon-native.json" or n == bundle + "LICENSE" or (n.startswith(bundle) and n.endswith((".rs", ".toml"))) for n in names), names
+          # `native.py package` also adds the data folders: the bundle's `data/` and each crate's `data/`.
+          assert all(n == "horizon-native.json" or n == bundle + "LICENSE" or (n.startswith(bundle) and (n.endswith((".rs", ".toml")) or "data" in n[len(bundle):].split("/")[:-1])) for n in names), names
           assert bundle + "LICENSE" in names, "the mod's LICENSE travels in its package"
           print(path, manifest)
           PY
