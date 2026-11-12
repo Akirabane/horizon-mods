@@ -1,14 +1,15 @@
 [mod]
 id = "smp"
-version = "0.36.0"
+version = "0.36.1"
 priority = 100
 
 # The commit of horizon CI tests it on (the minimap's: mods on the newest hooks share one; the official server's
 # engine, r9.1 52882c1, descends from it with the same hooks): it needs the projectile impact,
 # hanging break, entity join and dispenser hooks (API 359), the entity handles and native_player_chat (in its source,
-# stamped later on main as API 399), on top of native_hide_player (API 314) and horizon#6106's helpers.
+# stamped later on main as API 399), on top of native_hide_player (API 314) and horizon#6106's helpers;
+# native_explosion_entities (horizon#15529) is in its source too, its number stamped later.
 [compatibility]
-horizon_revision = "5de5b6fd91b70be34562f56b747c9e06db692fa3"
+horizon_revision = "ac2603ed41953f1b8b791ca8396a0eb5147baea7"
 
 [[module]]
 id = "store"
@@ -475,14 +476,14 @@ bindings = [
 ]
 
 [[injection]]
-id = "living_damage"
+id = "explosion_entities"
 kind = "HEAD"
-target = "horizon_client::game::native_hooks::Game<'_>::native_living_incoming_damage"
-helper = "living_damage.rs"
+target = "horizon_client::game::native_hooks::Game<'_>::native_explosion_entities"
+helper = "explosion_entities.rs"
 bindings = [
-  { name = "entity", ty = "i32", value = "entity" },
-  { name = "damage_type", ty = "&str", value = "damage_type" },
-  { name = "canceled", ty = "&mut bool", value = "&mut *canceled" },
+  { name = "game", ty = "&crate::game::Game<'_>", value = "&*self" },
+  { name = "dimension", ty = "&str", value = "dimension" },
+  { name = "entities", ty = "&mut Vec<u32>", value = "&mut *entities" },
 ]
 
 [[injection]]
