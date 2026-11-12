@@ -651,3 +651,44 @@ fn repeated_secret_requests_and_group_changes_stay_bounded() {
     // Its bucket refilled during the wait: 10 of the 100.
     assert_eq!(joined, OPS_BURST as usize);
 }
+
+/// A `State` with no sockets: the rules a player's secret and buckets follow.
+fn bare_state() -> State {
+    State {
+        config: Config::default(),
+        port: 0,
+        clients: HashMap::new(),
+        players: HashMap::new(),
+        groups: HashMap::new(),
+        changed: HashSet::new(),
+        outbox: HashMap::new(),
+    }
+}
+
+#[test]
+fn a_new_secret_does_not_refill_the_rate_buckets() {
+    // Group and state changes: a burst of 10, then 2 a second. Asking for a
+    // new secret (once a second) must not hand the burst back.
+    let rng = SystemRandom::new();
+    let mut st = bare_state();
+    st.give_secret(&rng, A, false);
+    let spent = (0..12).filter(|_| st.spend_op(A)).count();
+    assert_eq!(spent, OPS_BURST as usize, "a burst of 10");
+    st.give_secret(&rng, A, false);
+    let after = (0..12).filter(|_| st.spend_op(A)).count();
+    // Only what a second of refilling gives, not another burst.
+    assert!(
+        after <= 2,
+        "{after}: a client's own request is not a refill"
+    );
+    // The same for the voice packets' burst of 30.
+    st.clients.get_mut(&A).unwrap().tokens = 0.0;
+    st.give_secret(&rng, A, false);
+    assert!(st.clients[&A].tokens < 1.0, "{}", st.clients[&A].tokens);
+    // The server's own new secret already keeps them.
+    st.clients.get_mut(&A).unwrap().ops = 0.0;
+    st.clients.get_mut(&A).unwrap().tokens = 0.0;
+    st.give_secret(&rng, A, true);
+    assert!(!st.spend_op(A));
+    assert!(st.clients[&A].tokens < 1.0);
+}

@@ -469,11 +469,17 @@ impl State {
         }
         let mut client = Client::new(secret, Instant::now());
         let old = self.clients.remove(&player);
-        if rekey && let Some(old) = &old {
-            client.group = old.group;
-            client.disabled = old.disabled;
+        if let Some(old) = &old {
+            // The rate limits belong to the player, not to the secret: a new
+            // secret, asked for once a second, must not hand the bursts back.
+            client.tokens = old.tokens;
+            client.refilled = old.refilled;
             client.ops = old.ops;
             client.ops_refilled = old.ops_refilled;
+            if rekey {
+                client.group = old.group;
+                client.disabled = old.disabled;
+            }
         }
         self.clients.insert(player, client);
         if !rekey && let Some(g) = old.and_then(|o| o.group) {
