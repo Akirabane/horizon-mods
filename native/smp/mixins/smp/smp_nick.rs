@@ -239,7 +239,10 @@ impl Nicks {
                 ));
             }
         }
-        let own = skeleton(real);
+        // One's own name as a nickname hides nothing.
+        if nick.eq_ignore_ascii_case(real) {
+            return None;
+        }
         let others = names
             .known()
             .into_iter()
@@ -253,8 +256,9 @@ impl Nicks {
                     .map(|(_, n)| n),
             );
         for name in others {
-            let k = skeleton(&name);
-            if k != own && looks_like(&s, &k) {
+            // One's own name, also as an `ops.json` or `protected` entry, never counts;
+            // another player's does, even when it reads like one's own.
+            if !name.eq_ignore_ascii_case(real) && looks_like(&s, &skeleton(&name)) {
                 return Some(format!("{nick} looks like the name of another player."));
             }
         }
@@ -670,6 +674,46 @@ mod tests {
         for bad in ["rocky", "R0cky", "Rocky_2", "RockyRoad"] {
             assert!(try_nick(&mut n, bad).contains("another player"), "{bad}");
         }
+        fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
+    fn a_look_alike_of_another_real_name_is_refused_even_when_it_reads_like_ones_own() {
+        let (mut n, dir) = setup("lookalike");
+        // "AIex" (capital i) and "Rd8t" read like "Alex" and the Team's "rdbt".
+        let k = Known(vec![
+            (ALEX, "Alex"),
+            (4, "AIex"),
+            (STEVE, "Steve"),
+            (5, "Rd8t"),
+            (OP, "SomeOp"),
+        ]);
+        let mut ask = |uuid, name, level, nick: &str| {
+            n.command(
+                &player(uuid, name, level),
+                &k,
+                HOUR,
+                0,
+                &format!("nick {nick}"),
+            )
+            .unwrap()
+        };
+        assert_eq!(
+            ask(4, "AIex", 0, "Alex"),
+            [Out::Error(
+                "Alex looks like the name of another player.".into()
+            )]
+        );
+        assert_eq!(
+            ask(5, "Rd8t", 0, "RDBT"),
+            [Out::Error(
+                "RDBT looks like the name of another player.".into()
+            )]
+        );
+        // One's own name in another case is no disguise, even with a look-alike around.
+        assert_eq!(ask(ALEX, "Alex", 0, "~alex"), []);
+        // An operator's own name is also listed without a UUID (`ops.json`).
+        assert_eq!(ask(OP, "SomeOp", 4, "SomeOp_the_Great"), []);
         fs::remove_dir_all(dir).ok();
     }
 
