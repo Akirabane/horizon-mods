@@ -456,16 +456,19 @@ impl Places {
         };
     }
 
+    /// Whole seconds left before the player's next teleport, if any.
+    fn cooldown_left(&self, uuid: u128, now: i64) -> Option<i64> {
+        let t = *self.last.get(&uuid)?;
+        let wait = t + self.config.cooldown_seconds * 1000 - now;
+        (wait > 0).then(|| (wait + 999) / 1000)
+    }
+
     /// Starts a teleport's warmup, or says why not.
     fn start(&mut self, me: &Body, to: To, now: i64) -> Vec<Out> {
-        if let Some(&t) = self.last.get(&me.uuid) {
-            let wait = t + self.config.cooldown_seconds * 1000 - now;
-            if wait > 0 {
-                return vec![Out::Error(format!(
-                    "Wait {} s before your next teleport.",
-                    (wait + 999) / 1000
-                ))];
-            }
+        if let Some(wait) = self.cooldown_left(me.uuid, now) {
+            return vec![Out::Error(format!(
+                "Wait {wait} s before your next teleport."
+            ))];
         }
         self.pending.retain(|p| p.uuid != me.uuid);
         self.pending.push(Pending {
@@ -880,6 +883,15 @@ impl Places {
                 let Some(from) = bodies.iter().find(|b| b.uuid == r.from) else {
                     return Some(vec![Out::Error(format!("{} is gone.", r.from_name))]);
                 };
+                // The request stays: the asker's cooldown is not the accepter's doing.
+                if let Some(wait) = self.cooldown_left(from.uuid, now) {
+                    let error = format!(
+                        "{} can't teleport for {wait} s. Use /tpaccept again then.",
+                        r.from_name
+                    );
+                    self.requests.insert(i, r);
+                    return Some(vec![Out::Error(error)]);
+                }
                 let mut out = vec![Out::Reply(format!("{} is on the way.", r.from_name))];
                 let start = self.start(from, To::Player(me.uuid, me.name.clone()), now);
                 // The warmup's lines are for the one who moves.
@@ -1222,6 +1234,35 @@ mod tests {
         );
         let out = p.command(&player(B, 0), &later, 90_000, "tpdeny").unwrap();
         assert!(matches!(&out[0], Out::Error(_)));
+    }
+
+    #[test]
+    fn tpaccept_during_the_askers_cooldown_is_not_on_the_way() {
+        let d = dir();
+        let mut p = Places::open(&d, Config::default()).unwrap();
+        let both = [body(A, 10.0), body(B, 100.0)];
+        p.command(&player(A, 0), &both, 0, "sethome base").unwrap();
+        p.command(&player(A, 0), &both, 0, "home base").unwrap();
+        // Alex's teleport is made at 3 s: his cooldown (10 s) runs to 13 s.
+        assert_eq!(p.tick(&both, 3_000).1.len(), 1);
+        p.command(&player(A, 0), &both, 5_000, "tpa steve").unwrap();
+        let out = p.command(&player(B, 0), &both, 6_000, "tpaccept").unwrap();
+        assert_eq!(
+            out,
+            vec![Out::Error(
+                "Alex can't teleport for 7 s. Use /tpaccept again then.".into()
+            )]
+        );
+        // The request is still there: accepted once the cooldown is over.
+        let out = p.command(&player(B, 0), &both, 13_000, "tpaccept").unwrap();
+        assert_eq!(
+            out,
+            vec![
+                Out::Reply("Alex is on the way.".into()),
+                Out::Tell(A, "Teleporting in 3 s: don't move.".into())
+            ]
+        );
+        let _ = std::fs::remove_dir_all(d);
     }
 
     #[test]

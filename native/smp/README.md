@@ -230,7 +230,8 @@ told to everyone. Settings in `config.json`'s `casino`, also `crash_edge_percent
 **Places.** A teleport waits `warmup_seconds` (3) in `config.json`'s `places`; a player who moves or is hurt meanwhile
 stays where they are, and `cooldown_seconds` (10) passes between two of one player's teleports. Teleports are free (an older config's
 `places.fees` is ignored). `/tpa` takes the
-asker to where the other player is when the warmup ends. Homes grow with the time played on the server since the mod
+asker to where the other player is when the warmup ends; `/tpaccept` while the asker's cooldown still runs is refused with the
+seconds left, and the request stays for a new `/tpaccept`. Homes grow with the time played on the server since the mod
 was on (`homes`: `[hours, homes]`, by default 2 to start, one more every 10 hours played, up to 7). `rules` holds `/rules`'
 lines. `/spawn` lands on a random safe column within `spawn_radius` (250) blocks of the spawn point, like vanilla's `respawn_radius` for a first join or a respawn: after the `tp`, vanilla's `spreadplayers` moves the player off fluid, fire and magma onto solid ground (0: exactly the spawn point; if no column is found the player stays at the spawn point). Teleports are vanilla's `tp`, run as the server (`execute in <level> run tp`), so they cross levels and land
 as any teleport does.
