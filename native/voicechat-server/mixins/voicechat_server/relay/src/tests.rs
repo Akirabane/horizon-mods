@@ -616,6 +616,47 @@ fn a_client_the_server_stops_hearing_gets_a_fresh_secret() {
 }
 
 #[test]
+fn at_most_128_groups_exist() {
+    // README: "128 groups". Players each make one group (a group is gone once empty, so a
+    // single player cannot hold more than one): the 129th and later are refused.
+    let s = server();
+    let many: Vec<Player> = (0..140u128)
+        .map(|i| player(0x1000 + i, &format!("q{i}"), "minecraft:overworld", 0.0))
+        .collect();
+    s.tick(many.clone());
+    let mut made = 0;
+    for p in &many {
+        ask_secret(&s, p.uuid);
+        s.message(
+            p.uuid,
+            proto::CREATE_GROUP,
+            &Out::default().text(&p.name).flag(false).short(0).done(),
+        );
+        made += s
+            .outgoing(usize::MAX)
+            .iter()
+            .filter(|m| m.0 == p.uuid && m.1 == proto::JOINED_GROUP)
+            .count();
+    }
+    assert_eq!(made, 128, "players who got into a group they made");
+    // Leaving empties a group, which goes away: that makes room for exactly one more.
+    s.message(many[0].uuid, proto::LEAVE_GROUP, &[]);
+    let creates = |who: u128, name: &str| {
+        s.message(
+            who,
+            proto::CREATE_GROUP,
+            &Out::default().text(name).flag(false).short(0).done(),
+        );
+        s.outgoing(usize::MAX)
+            .iter()
+            .filter(|m| m.0 == who && m.1 == proto::JOINED_GROUP)
+            .count()
+    };
+    assert_eq!(creates(many[128].uuid, "late"), 1, "one place was freed");
+    assert_eq!(creates(many[129].uuid, "later"), 0, "and it is full again");
+}
+
+#[test]
 fn repeated_secret_requests_and_group_changes_stay_bounded() {
     let s = server();
     // 40 players, each in a group of their own.
