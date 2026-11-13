@@ -580,6 +580,38 @@ mod tests {
     }
 
     #[test]
+    fn every_look_alike_of_the_readme_folds_and_the_limits_are_exact() {
+        // README: "look-alikes folded (`0`->o, `1`/`i`->l, `3`->e, `4`->a, `5`->s, `7`->t,
+        // `8`->b, `9`->g)", "3 to 16 letters, digits or `_`", "containing (from 4 letters)".
+        for (digit, letter) in [
+            ('0', "o"),
+            ('1', "l"),
+            ('3', "e"),
+            ('4', "a"),
+            ('5', "s"),
+            ('7', "t"),
+            ('8', "b"),
+            ('9', "g"),
+        ] {
+            assert_eq!(skeleton(&digit.to_string()), letter, "{digit}");
+        }
+        assert_eq!(skeleton("i"), "l");
+        assert_eq!(skeleton("a2b6c"), "abc", "the other digits are dropped");
+        assert!(
+            !valid(&"a".repeat(2)) && valid(&"a".repeat(3)),
+            "3 at least"
+        );
+        assert!(
+            valid(&"a".repeat(16)) && !valid(&"a".repeat(17)),
+            "16 at most"
+        );
+        assert!(valid("a_1") && !valid("a-1") && !valid("a b"));
+        // A name of 3 letters is copied only by being equal to it, one of 4 by being contained.
+        assert!(looks_like("bob", "bob") && !looks_like("xbobx", "bob"));
+        assert!(looks_like("xbobbx", "bobb") && !looks_like("xbobx", "bobb"));
+    }
+
+    #[test]
     fn the_form_and_the_letters() {
         let (mut n, dir) = setup("form");
         for bad in ["ab", "way_too_long_nickname", "bad-name", "no.dots"] {
