@@ -226,4 +226,68 @@ mod tests {
         assert!(out.contains(&Shape::Text("3 CPS".into(), [2.0, 60.0], INK, true)));
         assert_eq!(SIZE, (70.0, 82.0));
     }
+
+    #[test]
+    fn the_stored_files_of_earlier_versions_are_read_back() {
+        // Each corner is read from the name the earlier versions' file holds.
+        for (i, (name, _)) in CORNERS.iter().enumerate() {
+            let get = |k: &str| (k == "corner").then(|| format!("{name}\n"));
+            assert_eq!(Settings::read(get).corner, i, "{name}");
+        }
+        // An earlier version's bottom right with the clicks per second off.
+        let get = |k: &str| match k {
+            "corner" => Some("bottom_right".to_owned()),
+            "cps" => Some("false".to_owned()),
+            _ => None,
+        };
+        let s = Settings::read(get);
+        assert_eq!(
+            s,
+            Settings {
+                corner: 3,
+                cps: false
+            }
+        );
+        assert_eq!(
+            s.stored(),
+            [
+                ("corner", "bottom_right".to_owned()),
+                ("cps", "false".to_owned())
+            ]
+        );
+        // A corner it does not know, and any cps but "false", are the extra's defaults.
+        let odd = |k: &str| Some(if k == "corner" { "middle" } else { "yes" }.to_owned());
+        assert_eq!(
+            Settings::read(odd),
+            Settings {
+                corner: 0,
+                cps: true
+            }
+        );
+        // The Corner button goes round the four corners and back to the first.
+        let mut s = Settings {
+            corner: 0,
+            cps: true,
+        };
+        let seen: Vec<String> = (0..5)
+            .map(|_| {
+                s.click(0);
+                s.stored()[0].1.clone()
+            })
+            .collect();
+        assert_eq!(
+            seen,
+            [
+                "top_right",
+                "bottom_left",
+                "bottom_right",
+                "top_left",
+                "top_right"
+            ]
+        );
+        assert!(
+            s.cps,
+            "the Corner button leaves the clicks per second alone"
+        );
+    }
 }
