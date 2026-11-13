@@ -462,6 +462,33 @@ fn config_defaults_fill_in() {
     );
 }
 
+#[test]
+fn the_keep_alive_clients_are_told_stays_between_100_and_60000() {
+    // (the config's `keep_alive_ms`, the one the secret message carries)
+    for (set, told) in [
+        (0, 100),
+        (50, 100),
+        (100, 100),
+        (1000, 1000),
+        (60_000, 60_000),
+        (u32::MAX, 60_000),
+    ] {
+        let s = server_with(Config {
+            keep_alive_ms: set,
+            ..Config::default()
+        });
+        let message = ask_secret(&s, A);
+        let mut r = In::new(&message);
+        r.take(16).unwrap(); // the secret
+        r.int().unwrap(); // the port
+        r.uuid().unwrap();
+        r.byte().unwrap(); // the Opus application
+        r.int().unwrap(); // the MTU
+        r.take(8).unwrap(); // the distance
+        assert_eq!(r.int().unwrap(), told, "keep_alive_ms {set}");
+    }
+}
+
 /// A socket elsewhere that copies datagrams it saw and sends them as its own.
 fn stranger() -> UdpSocket {
     let socket = UdpSocket::bind("127.0.0.1:0").unwrap();

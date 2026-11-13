@@ -36,7 +36,7 @@ any server: the server sends them nothing.
 | `distance` | `48.0` | blocks a voice carries |
 | `whisper_distance` | `24.0` | |
 | `groups` | `true` | players may make and join groups |
-| `keep_alive_ms` | `1000` | a client silent 10 times this long shows as disconnected |
+| `keep_alive_ms` | `1000` | a client silent 10 times this long shows as disconnected; a value outside 100 to 60000 is read as the nearest of the two (`50` and `0` as 100), and clients are told the value used |
 | `mtu` | `1024` | |
 
 ## Files

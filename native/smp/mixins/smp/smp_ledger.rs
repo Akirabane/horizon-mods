@@ -85,7 +85,7 @@ pub fn command(
                 && (e.get("from").is_some() || e.get("to").is_some())
         })
         .filter(mine)
-        .skip((page - 1) * PAGE)
+        .skip((page - 1).saturating_mul(PAGE))
         .take(PAGE)
         .map(|e| row(&e, name_of, money))
         .collect();
@@ -421,6 +421,43 @@ mod tests {
             matches!(&third[5], Out::Reply(s) if s.ends_with(", 1 coins")),
             "{third:?}"
         );
+        let _ = std::fs::remove_dir_all(d);
+    }
+
+    #[test]
+    fn a_page_number_near_the_largest_is_an_empty_page() {
+        let d = dir();
+        let audit = d.join("audit.log");
+        let mut lines = String::new();
+        for i in 0..25 {
+            lines.push_str(&format!(
+                "{{\"amount\":{},\"from\":\"00000000-0000-0000-0000-000000000001\",\"kind\":\"market_tax\",\"time\":{},\"to_pool\":\"treasury\"}}
+",
+                i + 1,
+                1_793_880_000_000i64 + i * 1000
+            ));
+        }
+        std::fs::write(&audit, lines).unwrap();
+        // `usize::MAX / PAGE + 2` is the page whose first row, counted as
+        // (page - 1) * PAGE, wraps round to row 4 when it overflows.
+        for page in [usize::MAX, usize::MAX / PAGE + 2] {
+            let out = command(
+                &op(),
+                &audit,
+                &find,
+                &name_of,
+                &money,
+                1_793_880_100_000,
+                &format!("ledger {page}"),
+            )
+            .unwrap();
+            assert_eq!(
+                out,
+                [Out::Reply(format!(
+                    "Coin movements: none in the newest part of the ledger (page {page})."
+                ))]
+            );
+        }
         let _ = std::fs::remove_dir_all(d);
     }
 }

@@ -608,6 +608,10 @@ impl Economy {
                             balance: start,
                         },
                     );
+                    if start > 0 {
+                        // The log marks it minted: `/eco stats` counts it too.
+                        self.count_flow("open", start);
+                    }
                     self.touch();
                 }
             }
@@ -875,7 +879,12 @@ impl Economy {
         let top = self.top();
         let pages = top.len().div_ceil(PAGE).max(1);
         let mut out = vec![Out::Reply(format!("Richest players ({page}/{pages}):"))];
-        for (i, (name, balance)) in top.iter().enumerate().skip((page - 1) * PAGE).take(PAGE) {
+        for (i, (name, balance)) in top
+            .iter()
+            .enumerate()
+            .skip((page - 1).saturating_mul(PAGE))
+            .take(PAGE)
+        {
             out.push(Out::Reply(format!(
                 "{}. {name}: {}",
                 i + 1,
@@ -1130,6 +1139,22 @@ mod tests {
     }
 
     #[test]
+    fn starting_balances_count_as_money_the_server_made() {
+        // Two accounts opened with 100 coins each (the log marks them minted).
+        let (mut e, dir) = economy("start-flow");
+        assert_eq!(e.flows().minted["open"], 200);
+        // A player who comes back does not open an account again.
+        e.seen(ALEX, "Alex");
+        assert_eq!(e.flows().minted["open"], 200);
+        // With no starting balance nothing is made.
+        let dir = dir.with_extension("none");
+        let _ = fs::remove_dir_all(&dir);
+        let mut none = Economy::open(&dir, Config::default()).unwrap();
+        none.seen(ALEX, "Alex");
+        assert!(none.flows().minted.is_empty());
+    }
+
+    #[test]
     fn pools_pay_only_what_they_hold_and_survive_a_restart() {
         let (mut e, dir) = economy("pools");
         e.to_pool("ah_bid", ALEX, "ah", 30, "").unwrap();
@@ -1253,6 +1278,23 @@ mod tests {
             last.last().unwrap(),
             &Out::Reply("14. Alex: 50 coins".into())
         );
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn a_page_number_near_the_largest_is_an_empty_page() {
+        let (mut e, dir) = economy("baltop-huge");
+        for i in 0..12u128 {
+            e.seen(100 + i, &format!("P{i:02}"));
+        }
+        // `usize::MAX / PAGE + 2` is the page whose first row, counted as
+        // (page - 1) * PAGE, wraps round to row 4 when it overflows.
+        for page in [usize::MAX, usize::MAX / PAGE + 2] {
+            let out = e
+                .command(&player(ALEX, "Alex", 0), &[], &format!("baltop {page}"))
+                .unwrap();
+            assert_eq!(out, [Out::Reply(format!("Richest players ({page}/2):"))]);
+        }
         fs::remove_dir_all(dir).unwrap();
     }
 

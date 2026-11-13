@@ -38,8 +38,8 @@ impl Settings {
     /// defaults (4x, smooth, slower turning) for the ones missing.
     pub fn read(get: impl Fn(&str) -> Option<String>) -> Self {
         let level = get("level")
-            .and_then(|v| v.trim().parse::<u8>().ok())
-            .map_or(4, |v| v.clamp(2, MAX as u8));
+            .and_then(|v| v.trim().parse::<i64>().ok())
+            .map_or(4, |v| v.clamp(2, MAX as i64) as u8);
         let flag = |key: &str| get(key).is_none_or(|v| v.trim() != "false");
         Self {
             level,
@@ -174,6 +174,23 @@ mod tests {
         let round: Vec<(&str, String)> = s.stored().into();
         let back: Vec<(&str, &str)> = round.iter().map(|(k, v)| (*k, v.as_str())).collect();
         assert_eq!(Settings::read(stored(&back)), s);
+    }
+
+    #[test]
+    fn a_stored_level_out_of_range_clamps_whatever_its_size() {
+        let level = |v: &str| Settings::read(stored(&[("level", v)])).level;
+        // Too high: the largest zoom, as for 99.
+        for v in ["99", "255", "256", "300", "100000"] {
+            assert_eq!(level(v), 10, "{v}");
+        }
+        // Too low: the smallest.
+        for v in ["1", "0", "-5"] {
+            assert_eq!(level(v), 2, "{v}");
+        }
+        // Not a number: the default.
+        for v in ["", "x", "4x", "2.5"] {
+            assert_eq!(level(v), 4, "{v:?}");
+        }
     }
 
     #[test]

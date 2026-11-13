@@ -1333,6 +1333,32 @@ mod tests {
     }
 
     #[test]
+    fn open_survives_a_price_above_the_limit() {
+        let dir = std::env::temp_dir().join(format!("smp-market-huge-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let mut config = Config::default();
+        config.items.insert(
+            "minecraft:diamond".into(),
+            Price {
+                buy: i64::MAX,
+                sell: 1,
+            },
+        );
+        let (m, _) = Market::open(&dir, config);
+        // Both sides are cut to the limit, then to one price (their geometric
+        // mean: sqrt(1,000,000,000,000 * 1)).
+        assert_eq!(
+            m.config.items["minecraft:diamond"],
+            Price {
+                buy: 1_000_000,
+                sell: 1_000_000
+            }
+        );
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
     fn a_purchase_too_dear_to_count_is_refused() {
         let mut config = fixed();
         config.items.insert(
