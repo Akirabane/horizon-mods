@@ -254,4 +254,39 @@ mod tests {
         assert_eq!((again.balance(A), again.held(A)), (500, 0));
         std::fs::remove_dir_all(dir).unwrap();
     }
+
+    #[test]
+    fn a_player_may_hold_exactly_100_tickets_in_a_draw() {
+        // README: "`max_tickets` 100 a player a draw". A ticket costs 1 here, so money is no limit.
+        let (mut e, mut c, dir) = setup("hundred");
+        c.ticket_price = 1;
+        let mut l = Lottery::default();
+        let mut buy = |l: &mut Lottery, who: u128, n: u32| {
+            l.command(&c, &mut e, &player(who), 0, &format!("lottery buy {n}"))
+                .unwrap()
+        };
+        assert!(matches!(&buy(&mut l, A, 60)[0], Out::Reply(_)));
+        // The tickets already held count: 60 and 41 are 101.
+        let out = buy(&mut l, A, 41);
+        assert!(
+            matches!(&out[0], Out::Error(s) if s.contains("100 tickets")),
+            "{out:?}"
+        );
+        assert!(
+            matches!(&buy(&mut l, A, 40)[0], Out::Reply(_)),
+            "the 100th is allowed"
+        );
+        let out = buy(&mut l, A, 1);
+        assert!(
+            matches!(&out[0], Out::Error(s) if s.contains("100 tickets")),
+            "{out:?}"
+        );
+        // The limit is each player's own.
+        assert!(matches!(&buy(&mut l, B, 100)[0], Out::Reply(_)));
+        assert_eq!(
+            l.tickets.iter().map(|t| t.2).collect::<Vec<_>>(),
+            [100, 100]
+        );
+        std::fs::remove_dir_all(dir).unwrap();
+    }
 }
