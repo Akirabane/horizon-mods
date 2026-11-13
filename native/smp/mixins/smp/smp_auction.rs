@@ -580,7 +580,13 @@ impl AuctionHouse {
                 played,
                 start,
                 None,
-                Some(self.config.auction_hours),
+                // The default length is held to the longest, like a given one.
+                Some(
+                    self.config
+                        .auction_hours
+                        .min(self.config.auction_hours_max)
+                        .max(1),
+                ),
                 now,
             )),
             ["auction", start, hours] => match hours.parse::<i64>() {
@@ -1644,6 +1650,41 @@ mod tests {
         assert_eq!(ah.listing_limit(2 * 3600), 6);
         assert_eq!(ah.listing_limit(90 * 3600), 50);
         assert_eq!(ah.listing_limit(1000 * 3600), 50);
+    }
+
+    #[test]
+    fn an_auction_without_a_length_never_outlasts_the_longest_one() {
+        let (mut e, mut ah, _dir) = setup("default-hours");
+        // `auction_hours` (12 by default) is longer than the longest allowed.
+        ah.config.auction_hours_max = 6;
+        let mut alex = holding("emerald", 3);
+        let out = run(
+            &mut ah,
+            &mut e,
+            &p(ALEX, "Alex"),
+            &mut alex,
+            T0,
+            "ah auction 100",
+        );
+        assert!(
+            matches!(&out[0], Out::Reply(s) if s.contains("ends in 6h")),
+            "{out:?}"
+        );
+        assert_eq!(ah.listing(1).unwrap().ends, T0 + 6 * 3_600_000);
+        // A given length is held to the same limit.
+        let mut alex = holding("emerald", 3);
+        let out = run(
+            &mut ah,
+            &mut e,
+            &p(ALEX, "Alex"),
+            &mut alex,
+            T0,
+            "ah auction 100 7",
+        );
+        assert!(
+            matches!(&out[0], Out::Error(s) if s.contains("1 to 6 hours")),
+            "{out:?}"
+        );
     }
 
     #[test]
