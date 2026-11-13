@@ -54,7 +54,8 @@ impl Default for Config {
             warmup_seconds: 3,
             request_seconds: 60,
             cooldown_seconds: 10,
-            homes: vec![[0, 1], [5, 2], [20, 3], [100, 5]],
+            // 2 homes to start, one more every 10 hours played, up to 7.
+            homes: (0..=5).map(|i| [i * 10, 2 + i]).collect(),
             rules: vec![
                 "Be respectful to everyone.".into(),
                 "No griefing, no stealing, no cheats.".into(),
@@ -572,10 +573,10 @@ impl Places {
     /// Each `/rtp` that has columns to screen asks `terrain` about them in one call (None when the game cannot
     /// say: then they all count) and keeps, in the order drawn, the chunks of up to `rtp_attempts` dry ones. Only
     /// those chunks are ever held and loaded.
-    pub fn rtp_screen(
-        &mut self,
-        terrain: &mut dyn FnMut(&[(i32, i32)]) -> Option<Vec<Option<Terrain>>>,
-    ) {
+    pub fn rtp_screen<F>(&mut self, terrain: &mut F)
+    where
+        F: FnMut(&[(i32, i32)]) -> Option<Vec<Option<Terrain>>>,
+    {
         let attempts = self.config.rtp_attempts.max(1) as usize;
         for p in &mut self.pending {
             let To::Random(r) = &mut p.to else { continue };
@@ -1204,30 +1205,31 @@ mod tests {
         let mut p = Places::open(&d, Config::default()).unwrap();
         let here = [body(A, 0.0)];
         p.command(&player(A, 0), &here, 0, "sethome").unwrap();
-        let out = p.command(&player(A, 0), &here, 0, "sethome two").unwrap();
+        p.command(&player(A, 0), &here, 0, "sethome two").unwrap();
+        let out = p.command(&player(A, 0), &here, 0, "sethome three").unwrap();
         assert!(
-            matches!(&out[0], Out::Error(s) if s.contains("1 of 1")),
+            matches!(&out[0], Out::Error(s) if s.contains("2 of 2")),
             "{out:?}"
         );
         // Moving a home is always allowed.
         let out = p.command(&player(A, 0), &here, 0, "sethome home").unwrap();
         assert!(matches!(&out[0], Out::Reply(_)));
         p.save(0).unwrap();
-        for _ in 0..5 * 3600 {
+        for _ in 0..10 * 3600 {
             p.played(&[A], 0);
         }
-        assert_eq!(p.home_limit(A), 2);
+        assert_eq!(p.home_limit(A), 3);
         // Time played is written once a minute.
         p.save(59_999).unwrap();
         assert_eq!(
             Places::open(&d, Config::default()).unwrap().home_limit(A),
-            1
+            2
         );
         p.save(60_000).unwrap();
-        let out = p.command(&player(A, 0), &here, 0, "sethome two").unwrap();
+        let out = p.command(&player(A, 0), &here, 0, "sethome three").unwrap();
         assert!(matches!(&out[0], Out::Reply(_)), "{out:?}");
         let again = Places::open(&d, Config::default()).unwrap();
-        assert_eq!(again.home_limit(A), 2);
+        assert_eq!(again.home_limit(A), 3);
         std::fs::remove_dir_all(d).unwrap();
     }
 
@@ -1657,9 +1659,19 @@ mod tests {
                 .map(|&(x, _)| {
                     let land = (x >> 4) % 2 == 0;
                     Some(Terrain {
-                        block: if land { "minecraft:grass_block" } else { "minecraft:sand" }.into(),
+                        block: if land {
+                            "minecraft:grass_block"
+                        } else {
+                            "minecraft:sand"
+                        }
+                        .into(),
                         water: (!land).then_some(63),
-                        biome: if land { "minecraft:plains" } else { "minecraft:deep_ocean" }.into(),
+                        biome: if land {
+                            "minecraft:plains"
+                        } else {
+                            "minecraft:deep_ocean"
+                        }
+                        .into(),
                     })
                 })
                 .collect(),
@@ -1673,7 +1685,10 @@ mod tests {
         p.rng = 42;
         let here = [body(A, 0.0)];
         p.command(&player(A, 0), &here, 0, "rtp").unwrap();
-        assert!(p.rtp_searching() && p.rtp_wanted(0).is_empty(), "searching, nothing held yet");
+        assert!(
+            p.rtp_searching() && p.rtp_wanted(0).is_empty(),
+            "searching, nothing held yet"
+        );
         let mut asked = 0;
         p.rtp_screen(&mut |columns| {
             asked += 1;
@@ -1692,7 +1707,10 @@ mod tests {
                 chunk(c, "minecraft:lava", "minecraft:air", "minecraft:air").into()
             });
         }
-        assert!(!tried.is_empty() && tried.iter().all(|(cx, _)| cx % 2 == 0), "{tried:?}");
+        assert!(
+            !tried.is_empty() && tried.iter().all(|(cx, _)| cx % 2 == 0),
+            "{tried:?}"
+        );
         // Dry land in the first chunk: one read and the player lands there.
         let mut reads = 0;
         let mut q = Places::open(&d, Config::default()).unwrap();
@@ -1735,7 +1753,10 @@ mod tests {
         assert!(go.is_empty());
         assert_eq!(
             out,
-            vec![Out::Tell(A, "No safe spot found for /rtp: try again.".into())]
+            vec![Out::Tell(
+                A,
+                "No safe spot found for /rtp: try again.".into()
+            )]
         );
         let _ = std::fs::remove_dir_all(d);
     }

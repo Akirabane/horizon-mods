@@ -44,7 +44,7 @@ use std::{path::PathBuf, sync::Mutex};
 /// The mod's id, name and version.
 pub const ID: &str = "smp";
 pub const NAME: &str = "SMP";
-pub const VERSION: &str = "0.36.0";
+pub const VERSION: &str = "0.36.1";
 
 /// `config.json` in `world/horizon-smp/`, written with its defaults the
 /// first time, and again with the keys a newer version adds (values kept).
@@ -2280,9 +2280,10 @@ fn ah_command(game: &mut Game<'_>, smp: &mut Smp, me: &Player, trades: bool, now
         return vec![Out::Error("The economy is off: its file can't be read (see the server log).".into())];
     };
     e.seen(me.uuid, &me.name);
+    let played = smp.places.as_ref().map_or(0, |p| p.played_seconds(me.uuid));
     let reply = {
         let mut bag = GameBag(game);
-        a.command(e, me, trades, &mut bag, now, line)
+        a.command(e, me, trades, &mut bag, played, now, line)
     };
     match reply {
         Some(smp_auction::Reply::Out(out)) => out,

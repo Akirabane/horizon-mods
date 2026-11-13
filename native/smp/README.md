@@ -231,7 +231,7 @@ told to everyone. Settings in `config.json`'s `casino`, also `crash_edge_percent
 stays where they are, and `cooldown_seconds` (10) passes between two of one player's teleports. Teleports are free (an older config's
 `places.fees` is ignored). `/tpa` takes the
 asker to where the other player is when the warmup ends. Homes grow with the time played on the server since the mod
-was on (`homes`: `[hours, homes]`, by default 1 home, 2 from 5 hours, 3 from 20, 5 from 100). `rules` holds `/rules`'
+was on (`homes`: `[hours, homes]`, by default 2 to start, one more every 10 hours played, up to 7). `rules` holds `/rules`'
 lines. `/spawn` lands on a random safe column within `spawn_radius` (250) blocks of the spawn point, like vanilla's `respawn_radius` for a first join or a respawn: after the `tp`, vanilla's `spreadplayers` moves the player off fluid, fire and magma onto solid ground (0: exactly the spawn point; if no column is found the player stays at the spawn point). Teleports are vanilla's `tp`, run as the server (`execute in <level> run tp`), so they cross levels and land
 as any teleport does.
 
@@ -256,7 +256,7 @@ stopped first; a chunk an operator forced already is used and left forced. `/bac
 **Claims.** In a claimed chunk, only its owner, the players they trust and operators of level 3 break blocks or right
 click blocks: doors, chests, levers, buttons, placing a block, a bucket or flint on a block. Anyone else's click does
 nothing, and the action bar says whose land it is. The chunks a player may hold grow with the time played here
-(`claims.chunks`: `[hours, chunks]`, by default 4, 16 from 5 hours, 36 from 20, 64 from 100); `claims.enabled`
+(`claims.chunks`: `[hours, chunks]`, by default 10 to start, one more for every hour played, up to 200); `claims.enabled`
 turns them off. `claims.free_radius` (0, none) keeps the land within that many blocks of 0 0, in every dimension, free
 for all: no one claims a chunk that touches it, and claims already there are dropped at start (each logged). The world stays out too: no water or lava flows, no fire spreads or burns, and no piston pushes into
 a claim from land that isn't its owner's (or a player's they trust), and explosions break no claimed block, whoever
@@ -319,7 +319,7 @@ itself (its tooltip), with the listing's price, seller and time under it. A stac
 back the same (its data written and read back equal); not market charts (free at `/market`), nor a stack holding
 more than 32 KiB of data (a box of books). Listings and mail from before 0.31 hold plain items and are given back as
 before. Survival and adventure players only. `config.json`'s `auction`:
-`enabled`, `max_listings` (8 a player), `listing_hours` (48), `auction_hours` (12),
+`enabled`, `start_listings` (5 a player to start), `listing_every_hours` (2: one more listing per this many hours played), `max_listings` (50), `listing_hours` (48), `auction_hours` (12),
 `auction_hours_max` (24), `bid_step_percent` (5: the smallest raise), `snipe_seconds` (60). Ended listings are
 looked at once a second (a pass over the open listings).
 

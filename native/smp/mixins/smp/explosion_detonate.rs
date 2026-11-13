@@ -7,5 +7,5 @@ fn smp_explosion_detonate(
     blocks: &mut Vec<[i32; 3]>,
 ) {
     crate::game::smp_glue::explosion(game, dimension, blocks);
-    crate::game::smp_claims_glue::blast(game, dimension, center);
+    crate::game::smp_claims_glue::blast(dimension, center);
 }

@@ -60,7 +60,10 @@ const CATEGORY_SLOTS: [usize; 21] = [
 #[serde(default)]
 pub struct Config {
     pub enabled: bool,
-    /// Listings one player may have at once.
+    /// Listings one player may have at once, to start with; one more for
+    /// every `listing_every_hours` hours played here, up to `max_listings`.
+    pub start_listings: usize,
+    pub listing_every_hours: i64,
     pub max_listings: usize,
     /// How long a fixed-price listing stays.
     pub listing_hours: i64,
@@ -77,7 +80,9 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             enabled: true,
-            max_listings: 8,
+            start_listings: 5,
+            listing_every_hours: 2,
+            max_listings: 50,
             listing_hours: 48,
             auction_hours: 12,
             auction_hours_max: 24,
@@ -514,6 +519,17 @@ impl AuctionHouse {
         }
     }
 
+    /// How many listings a player may have at once after `played` seconds
+    /// here.
+    pub fn listing_limit(&self, played: i64) -> usize {
+        let every = self.config.listing_every_hours.max(1);
+        let more = (played.max(0) / 3600 / every) as usize;
+        self.config
+            .start_listings
+            .saturating_add(more)
+            .min(self.config.max_listings)
+    }
+
     /// Runs `/ah ...`; None for another command. `bag`: the acting player's
     /// items; `trades`: survival or adventure.
     #[allow(clippy::too_many_arguments)]
@@ -523,6 +539,7 @@ impl AuctionHouse {
         me: &Player,
         trades: bool,
         bag: &mut dyn Hand,
+        played: i64,
         now: i64,
         line: &str,
     ) -> Option<Reply> {
@@ -551,15 +568,16 @@ impl AuctionHouse {
                 Filter::Search(q.join(" ").to_ascii_lowercase()),
                 0,
             ))),
-            ["sell", price] => out(self.list(economy, me, bag, price, None, None, now)),
+            ["sell", price] => out(self.list(economy, me, bag, played, price, None, None, now)),
             ["sell", price, count] => match count.parse::<u32>() {
-                Ok(c) => out(self.list(economy, me, bag, price, Some(c), None, now)),
+                Ok(c) => out(self.list(economy, me, bag, played, price, Some(c), None, now)),
                 Err(_) => err("Usage: /ah sell <price> [count]"),
             },
             ["auction", start] => out(self.list(
                 economy,
                 me,
                 bag,
+                played,
                 start,
                 None,
                 Some(self.config.auction_hours),
@@ -567,7 +585,7 @@ impl AuctionHouse {
             )),
             ["auction", start, hours] => match hours.parse::<i64>() {
                 Ok(h) if (1..=self.config.auction_hours_max).contains(&h) => {
-                    out(self.list(economy, me, bag, start, None, Some(h), now))
+                    out(self.list(economy, me, bag, played, start, None, Some(h), now))
                 }
                 _ => err(&format!(
                     "An auction lasts 1 to {} hours.",
@@ -607,6 +625,7 @@ impl AuctionHouse {
         economy: &mut Economy,
         me: &Player,
         bag: &mut dyn Hand,
+        played: i64,
         price: &str,
         count: Option<u32>,
         hours: Option<i64>,
@@ -623,11 +642,11 @@ impl AuctionHouse {
             .iter()
             .filter(|l| l.seller == mine)
             .count()
-            >= self.config.max_listings
+            >= self.listing_limit(played)
         {
             return err(format!(
-                "You may have {} listings at once.",
-                self.config.max_listings
+                "You may have {} listings at once: play longer for more.",
+                self.listing_limit(played)
             ));
         }
         let held = match bag.held_whole() {
@@ -1491,7 +1510,7 @@ mod tests {
         now: i64,
         line: &str,
     ) -> Vec<Out> {
-        match ah.command(e, me, true, bag, now, line) {
+        match ah.command(e, me, true, bag, 0, now, line) {
             Some(Reply::Out(o)) => o,
             other => panic!("{line}: {other:?}"),
         }
@@ -1574,7 +1593,7 @@ mod tests {
         );
         // Creative players can't list or buy.
         assert!(matches!(
-            ah.command(&mut e, &alex, false, &mut bag, T0, "ah sell 10"),
+            ah.command(&mut e, &alex, false, &mut bag, 0, T0, "ah sell 10"),
             Some(Reply::Out(o)) if matches!(&o[0], Out::Error(_))
         ));
         run(&mut ah, &mut e, &alex, &mut bag, T0, "ah sell 5000 5");
@@ -1606,13 +1625,25 @@ mod tests {
         assert_eq!(e.balance(STEVE), 11_000);
         // The listing limit.
         let mut many = holding("dirt", 64);
-        for _ in 1..8 {
+        for _ in 1..5 {
             run(&mut ah, &mut e, &alex, &mut many, T0, "ah sell 1 1");
         }
         assert_eq!(
             run(&mut ah, &mut e, &alex, &mut many, T0, "ah sell 1 1"),
-            [Out::Error("You may have 8 listings at once.".into())]
+            [Out::Error(
+                "You may have 5 listings at once: play longer for more.".into()
+            )]
         );
+    }
+
+    #[test]
+    fn listing_limit_grows_one_per_two_hours_up_to_fifty() {
+        let (_e, ah, _dir) = setup("limit");
+        assert_eq!(ah.listing_limit(0), 5);
+        assert_eq!(ah.listing_limit(2 * 3600 - 1), 5);
+        assert_eq!(ah.listing_limit(2 * 3600), 6);
+        assert_eq!(ah.listing_limit(90 * 3600), 50);
+        assert_eq!(ah.listing_limit(1000 * 3600), 50);
     }
 
     #[test]
