@@ -211,7 +211,7 @@ pub fn one_price(buy: i64, sell: i64) -> i64 {
 /// The base mid price of an item priced `buy` and `sell`.
 pub fn base_mid(buy: i64, sell: i64) -> f64 {
     match (buy > 0, sell > 0) {
-        (true, true) => (buy + sell) as f64 / 2.0,
+        (true, true) => (buy as f64 + sell as f64) / 2.0,
         (true, false) => buy as f64,
         _ => sell as f64,
     }
