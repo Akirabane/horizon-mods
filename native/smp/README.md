@@ -392,7 +392,7 @@ acting player's items (API 9), the server menus and `native_exchange_items` (API
 action bar (API 21), `native_block_spread`, `native_piston_move`, `native_explosion_detonate`, `native_fill_bucket` and
 `native_attack_entity` (API 22), `native_sidebar`, `native_tab_list` and `native_tick_stats` (API 49),
 `native_set_nickname` and `native_text_allowed` (API 62), `native_hide_player` (API 314, horizon#7003), the server tick and the world lifecycle.
-`compatibility.json` names `"hooks": 58`.
+`compatibility.json` names `"hooks": 413`.
 
 | File | What it is |
 |---|---|
