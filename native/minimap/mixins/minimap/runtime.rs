@@ -233,4 +233,62 @@ mod tests {
         settings.click(5);
         assert!(!settings.show_coordinates);
     }
+
+    #[test]
+    fn every_stored_value_of_earlier_versions_is_read_and_the_buttons_go_round() {
+        let read = |pairs: &[(&str, &str)]| {
+            Settings::read(|k: &str| {
+                pairs
+                    .iter()
+                    .find(|p| p.0 == k)
+                    .map(|p| format!("{}\n", p.1))
+            })
+        };
+        // The values the files hold: each corner, size and zoom, by position.
+        for (i, name) in ["top_left", "top_right", "bottom_left", "bottom_right"]
+            .into_iter()
+            .enumerate()
+        {
+            assert_eq!(read(&[("corner", name)]).corner, i, "{name}");
+        }
+        for (i, size) in ["64", "96", "128"].into_iter().enumerate() {
+            assert_eq!(read(&[("size", size)]).size, i, "{size}");
+        }
+        for (i, zoom) in ["0.5", "1", "2", "4"].into_iter().enumerate() {
+            assert_eq!(read(&[("zoom", zoom)]).zoom, i, "{zoom}");
+        }
+        // Only "round" is round and only "true" turns the map; anything else is
+        // the default, as is a corner, size or zoom the mod does not have.
+        assert!(!read(&[("shape", "square")]).round);
+        assert!(!read(&[("rotate", "yes")]).rotate);
+        let unknown = read(&[("corner", "middle"), ("size", "100"), ("zoom", "3")]);
+        assert_eq!((unknown.corner, unknown.size, unknown.zoom), (1, 1, 1));
+        // Corner, size and zoom buttons go through every value and back to the first.
+        let mut s = read(&[("corner", "top_left"), ("size", "64"), ("zoom", "0.5")]);
+        let mut seen = Vec::new();
+        for _ in 0..5 {
+            s.click(0);
+            s.click(1);
+            s.click(3);
+            let stored = s.stored();
+            seen.push((
+                stored[0].1.clone(),
+                stored[1].1.clone(),
+                stored[3].1.clone(),
+            ));
+        }
+        let row = |corner: &str, size: &str, zoom: &str| {
+            (corner.to_owned(), size.to_owned(), zoom.to_owned())
+        };
+        assert_eq!(
+            seen,
+            [
+                row("top_right", "96", "1"),
+                row("bottom_left", "128", "2"),
+                row("bottom_right", "64", "4"),
+                row("top_left", "96", "0.5"),
+                row("top_right", "128", "1"),
+            ]
+        );
+    }
 }
