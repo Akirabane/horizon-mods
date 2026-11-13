@@ -450,6 +450,36 @@ fn outgoing_is_paced_per_player() {
 }
 
 #[test]
+fn at_most_512_messages_wait_for_a_player() {
+    // README: "at most 512 waiting". 600 players with voice chat each turn it off: the next
+    // tick tells every client 600 state changes, and a client that does not collect them
+    // keeps the first 512 and loses the rest.
+    let s = server();
+    let many: Vec<Player> = (0..600u128)
+        .map(|i| player(0x2000 + i, &format!("r{i}"), "minecraft:overworld", 0.0))
+        .collect();
+    s.tick(many.clone());
+    for p in &many {
+        s.message(p.uuid, proto::REQUEST_SECRET, &20i32.to_be_bytes());
+    }
+    s.tick(many.clone());
+    s.outgoing(usize::MAX);
+    for p in &many {
+        s.message(p.uuid, proto::UPDATE_STATE, &[1]);
+    }
+    s.tick(many.clone());
+    let out = s.outgoing(usize::MAX);
+    let mine = for_player(&out, many[0].uuid);
+    assert_eq!(mine.len(), 512, "{} states told, 512 kept", many.len());
+    assert!(mine.iter().all(|m| m.0 == proto::STATE));
+    // Collected, the queue has room again.
+    s.message(many[0].uuid, proto::UPDATE_STATE, &[0]);
+    s.tick(many.clone());
+    let out = s.outgoing(usize::MAX);
+    assert_eq!(for_player(&out, many[0].uuid).len(), 1);
+}
+
+#[test]
 fn config_defaults_fill_in() {
     let c: Config = serde_json::from_str(r#"{"port": 25565}"#).unwrap();
     assert_eq!((c.port, c.distance, c.enabled), (25565, 48.0, true));
