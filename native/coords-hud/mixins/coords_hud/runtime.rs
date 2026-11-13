@@ -79,6 +79,31 @@ mod tests {
     }
 
     #[test]
+    fn facing_turns_at_the_half_way_yaws() {
+        // Direction.fromYRot: each side owns 90 degrees centred on its own yaw, so it
+        // changes half way (45, 135, 225, 315), the half way yaw itself going to the next.
+        let south = "South (+Z)";
+        let (west, north, east) = ("West (-X)", "North (-Z)", "East (+X)");
+        for (yaw, side) in [
+            (44.9, south),
+            (45.0, west),
+            (134.9, west),
+            (135.0, north),
+            (224.9, north),
+            (225.0, east),
+            (314.9, east),
+            (315.0, south),
+            (-44.9, south),
+            (-45.0, south),
+            (-45.1, east),
+            (-135.0, east),
+            (-135.1, north),
+        ] {
+            assert_eq!(facing(yaw), side, "yaw {yaw}");
+        }
+    }
+
+    #[test]
     fn lines_read_as_the_webassembly_mods() {
         assert_eq!(
             lines(12.5, 64.0, -3.25, 180.0),
