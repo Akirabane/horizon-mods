@@ -608,6 +608,10 @@ impl Economy {
                             balance: start,
                         },
                     );
+                    if start > 0 {
+                        // The log marks it minted: `/eco stats` counts it too.
+                        self.count_flow("open", start);
+                    }
                     self.touch();
                 }
             }
@@ -1127,6 +1131,22 @@ mod tests {
         );
         assert_eq!(take["by"], uuid_string(ALEX));
         fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn starting_balances_count_as_money_the_server_made() {
+        // Two accounts opened with 100 coins each (the log marks them minted).
+        let (mut e, dir) = economy("start-flow");
+        assert_eq!(e.flows().minted["open"], 200);
+        // A player who comes back does not open an account again.
+        e.seen(ALEX, "Alex");
+        assert_eq!(e.flows().minted["open"], 200);
+        // With no starting balance nothing is made.
+        let dir = dir.with_extension("none");
+        let _ = fs::remove_dir_all(&dir);
+        let mut none = Economy::open(&dir, Config::default()).unwrap();
+        none.seen(ALEX, "Alex");
+        assert!(none.flows().minted.is_empty());
     }
 
     #[test]
