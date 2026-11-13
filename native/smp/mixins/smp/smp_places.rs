@@ -120,6 +120,8 @@ pub struct Rtp {
     /// Where the distances count from.
     centre: (f64, f64),
     border: Option<Bounds>,
+    /// Columns drawn on the ring, not asked about yet: `rtp_screen` turns the dry ones into `chunks`.
+    candidates: Vec<(i32, i32)>,
     /// The chunks left to try, the one loading first.
     chunks: Vec<(i32, i32)>,
     /// The spot found, waiting for the warmup's end.
@@ -136,6 +138,25 @@ pub struct Ground {
     pub palette: Vec<String>,
     pub columns: Vec<(i32, i32, i32, [u16; 3])>,
 }
+
+/// What the game's generator makes at a column before its features are placed (`native_terrain_surface`): the
+/// top block, the water surface over it if any, and the biome.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Terrain {
+    pub block: String,
+    pub water: Option<i32>,
+    pub biome: String,
+}
+
+/// Whether a column of terrain can hold a spot: dry (no water over the ground), solid ground that is not a
+/// hazard, and not an ocean or a river. Trees, lava and cacti are decorated later: the loaded chunk is checked too.
+fn terrain_ok(t: &Terrain) -> bool {
+    let biome = t.biome.strip_prefix("minecraft:").unwrap_or(&t.biome);
+    t.water.is_none() && ground_ok(&t.block) && !biome.contains("ocean") && !biome.contains("river")
+}
+
+/// How many columns `/rtp` draws on the ring and asks the terrain about at once.
+const RTP_CANDIDATES: usize = 96;
 
 /// Where a teleport goes.
 #[derive(Clone, Debug, PartialEq)]
@@ -506,8 +527,8 @@ impl Places {
             Some(s) if s.dimension == OVERWORLD => (s.x, s.z),
             _ => (0.0, 0.0),
         };
-        let chunks = self.rtp_chunks(centre, self.border);
-        if chunks.is_empty() {
+        let candidates = self.rtp_columns(centre, self.border);
+        if candidates.is_empty() {
             return vec![Out::Error(
                 "No land for /rtp: the world border is too close to the spawn.".into(),
             )];
@@ -518,7 +539,8 @@ impl Places {
             To::Random(Rtp {
                 centre,
                 border,
-                chunks,
+                candidates,
+                chunks: Vec::new(),
                 spot: None,
                 told: false,
             }),
@@ -526,26 +548,56 @@ impl Places {
         )
     }
 
-    /// Up to `rtp_attempts` distinct chunks around points drawn on the ring,
-    /// inside the border (none when the border leaves no room).
-    fn rtp_chunks(&mut self, centre: (f64, f64), border: Option<Bounds>) -> Vec<(i32, i32)> {
+    /// Up to `RTP_CANDIDATES` distinct columns drawn on the ring, inside the border (none when the border leaves no
+    /// room).
+    fn rtp_columns(&mut self, centre: (f64, f64), border: Option<Bounds>) -> Vec<(i32, i32)> {
         let min = self.config.rtp_min_distance.max(0) as f64;
         let max = (self.config.rtp_max_distance as f64).max(min);
-        let mut chunks = Vec::new();
+        let mut columns = Vec::new();
         // Drawn until enough fall inside the border: a border that cuts the
         // ring takes more draws (a few microseconds each).
-        for _ in 0..2_000 {
-            if chunks.len() >= self.config.rtp_attempts.max(1) as usize {
+        for _ in 0..20 * RTP_CANDIDATES {
+            if columns.len() >= RTP_CANDIDATES {
                 break;
             }
             let (u, v) = (unit(&mut self.rng), unit(&mut self.rng));
             let (x, z) = ring_point(centre, min, max, u, v);
-            let c = ((x.floor() as i32) >> 4, (z.floor() as i32) >> 4);
-            if inside(border, x, z) && !chunks.contains(&c) {
-                chunks.push(c);
+            let c = (x.floor() as i32, z.floor() as i32);
+            if inside(border, x, z) && !columns.contains(&c) {
+                columns.push(c);
             }
         }
-        chunks
+        columns
+    }
+
+    /// Each `/rtp` that has columns to screen asks `terrain` about them in one call (None when the game cannot
+    /// say: then they all count) and keeps, in the order drawn, the chunks of up to `rtp_attempts` dry ones. Only
+    /// those chunks are ever held and loaded.
+    pub fn rtp_screen<F>(&mut self, terrain: &mut F)
+    where
+        F: FnMut(&[(i32, i32)]) -> Option<Vec<Option<Terrain>>>,
+    {
+        let attempts = self.config.rtp_attempts.max(1) as usize;
+        for p in &mut self.pending {
+            let To::Random(r) = &mut p.to else { continue };
+            if r.candidates.is_empty() {
+                continue;
+            }
+            let columns = std::mem::take(&mut r.candidates);
+            let seen = terrain(&columns);
+            for (i, &(x, z)) in columns.iter().enumerate() {
+                if r.chunks.len() >= attempts {
+                    break;
+                }
+                let ok = seen
+                    .as_ref()
+                    .is_none_or(|t| t.get(i).and_then(Option::as_ref).is_some_and(terrain_ok));
+                let c = (x >> 4, z >> 4);
+                if ok && !r.chunks.contains(&c) {
+                    r.chunks.push(c);
+                }
+            }
+        }
     }
 
     /// The safe columns of a loaded chunk that are within the ring and the
@@ -588,7 +640,7 @@ impl Places {
     pub fn rtp_searching(&self) -> bool {
         self.pending
             .iter()
-            .any(|p| matches!(&p.to, To::Random(r) if r.spot.is_none() && !r.chunks.is_empty()))
+            .any(|p| matches!(&p.to, To::Random(r) if r.spot.is_none() && (!r.chunks.is_empty() || !r.candidates.is_empty())))
     }
 
     /// Each `/rtp` still looking reads the chunk it loads: None while it
@@ -947,7 +999,7 @@ impl Places {
             {
                 // `/rtp` after the warmup, its land not found yet.
                 let search = self.config.rtp_search_seconds.max(0) * 1000;
-                if r.chunks.is_empty() {
+                if r.chunks.is_empty() && r.candidates.is_empty() {
                     out.push(Out::Tell(
                         p.uuid,
                         "No safe spot found for /rtp: try again.".into(),
@@ -1351,6 +1403,8 @@ mod tests {
             out,
             vec![Out::Reply("Teleporting in 3 s: don't move.".into())]
         );
+        // The game cannot say what the terrain is: every column counts.
+        p.rtp_screen(&mut |_| None);
         for _ in 0..8 {
             p.rtp_look(land);
         }
@@ -1597,6 +1651,116 @@ mod tests {
         let _ = std::fs::remove_dir_all(d);
     }
 
+    /// Land in chunks of even `x`, ocean in the others, as the terrain query answers.
+    fn terrain_by_chunk(columns: &[(i32, i32)]) -> Option<Vec<Option<Terrain>>> {
+        Some(
+            columns
+                .iter()
+                .map(|&(x, _)| {
+                    let land = (x >> 4) % 2 == 0;
+                    Some(Terrain {
+                        block: if land {
+                            "minecraft:grass_block"
+                        } else {
+                            "minecraft:sand"
+                        }
+                        .into(),
+                        water: (!land).then_some(63),
+                        biome: if land {
+                            "minecraft:plains"
+                        } else {
+                            "minecraft:deep_ocean"
+                        }
+                        .into(),
+                    })
+                })
+                .collect(),
+        )
+    }
+
+    #[test]
+    fn rtp_holds_only_chunks_the_terrain_says_are_dry_land() {
+        let d = dir();
+        let mut p = Places::open(&d, Config::default()).unwrap();
+        p.rng = 42;
+        let here = [body(A, 0.0)];
+        p.command(&player(A, 0), &here, 0, "rtp").unwrap();
+        assert!(
+            p.rtp_searching() && p.rtp_wanted(0).is_empty(),
+            "searching, nothing held yet"
+        );
+        let mut asked = 0;
+        p.rtp_screen(&mut |columns| {
+            asked += 1;
+            assert!(columns.len() > 90, "many candidates in one call");
+            terrain_by_chunk(columns)
+        });
+        assert_eq!(asked, 1);
+        // The first chunk it holds is land, and so is every one it would try after it.
+        let wanted = p.rtp_wanted(0);
+        assert_eq!(wanted.len(), 1);
+        assert!(wanted.iter().all(|(cx, _)| cx % 2 == 0), "{wanted:?}");
+        let mut tried = Vec::new();
+        for _ in 0..6 {
+            p.rtp_look(&mut |_, c| {
+                tried.push(c);
+                chunk(c, "minecraft:lava", "minecraft:air", "minecraft:air").into()
+            });
+        }
+        assert!(
+            !tried.is_empty() && tried.iter().all(|(cx, _)| cx % 2 == 0),
+            "{tried:?}"
+        );
+        // Dry land in the first chunk: one read and the player lands there.
+        let mut reads = 0;
+        let mut q = Places::open(&d, Config::default()).unwrap();
+        q.rng = 7;
+        q.command(&player(A, 0), &here, 100_000_000, "rtp").unwrap();
+        q.rtp_screen(&mut |c| terrain_by_chunk(c));
+        q.rtp_look(&mut |_, c| {
+            reads += 1;
+            grass(c)
+        });
+        assert_eq!(reads, 1);
+        let (_, go) = q.tick(&here, 100_003_000);
+        assert_eq!(go.len(), 1);
+        let _ = std::fs::remove_dir_all(d);
+    }
+
+    #[test]
+    fn rtp_with_no_dry_land_among_the_candidates_says_so_at_once() {
+        let d = dir();
+        let mut p = Places::open(&d, Config::default()).unwrap();
+        p.rng = 3;
+        let here = [body(A, 0.0)];
+        p.command(&player(A, 0), &here, 0, "rtp").unwrap();
+        p.rtp_screen(&mut |columns| {
+            Some(
+                columns
+                    .iter()
+                    .map(|_| {
+                        Some(Terrain {
+                            block: "minecraft:sand".into(),
+                            water: Some(63),
+                            biome: "minecraft:ocean".into(),
+                        })
+                    })
+                    .collect(),
+            )
+        });
+        assert!(p.rtp_wanted(0).is_empty(), "no chunk is held for an ocean");
+        let (out, go) = p.tick(&here, 3_000);
+        assert!(go.is_empty());
+        assert_eq!(
+            out,
+            vec![Out::Tell(
+                A,
+                "No safe spot found for /rtp: try again.".into()
+            )]
+        );
+        let _ = std::fs::remove_dir_all(d);
+    }
+
     /// `force` with a fake game: the tickets held, and the commands run.
     fn force_into(
         p: &mut Places,
@@ -1621,6 +1785,10 @@ mod tests {
         let here = [body(A, 0.0)];
         p.command(&player(A, 0), &here, 0, "rtp").unwrap();
         let (mut held, mut ran) = (BTreeSet::new(), Vec::new());
+        // Nothing is held before the terrain is screened.
+        force_into(&mut p, 0, &mut held, &mut ran);
+        assert!(held.is_empty(), "{held:?}");
+        p.rtp_screen(&mut |_| None);
         force_into(&mut p, 0, &mut held, &mut ran);
         // One chunk at a time, with a ticket: never `/forceload add`, which
         // waits on the server thread until the chunk is generated.

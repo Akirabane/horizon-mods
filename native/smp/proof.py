@@ -123,7 +123,8 @@ class Server:
     def start(self):
         self.lines = []
         self.process = subprocess.Popen(
-            [str(self.game), "--resources", str(self.resources), "--dedicated", "--nogui"], cwd=self.folder,
+            [*os.environ.get("SMP_PROOF_PIN", "").split(), str(self.game), "--resources", str(self.resources),
+             "--dedicated", "--nogui"], cwd=self.folder,
             env=self.env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         threading.Thread(target=self._read, daemon=True).start()
         self.wait_for("Done (", 600)
@@ -456,10 +457,14 @@ def rtp_alone(ctl, resources, out):
         time.sleep(30)
         r["before"] = report(server, 30)
         start = len(server.lines)
+        asked_at = time.monotonic()
         r["asked"] = steve.say("/rtp")
         assert any("Teleporting in 3 s: don't move." in l for l in r["asked"]), r
         server.console("horizon-report 30")
         r["landed"] = landed(steve, "Teleported to a random spot", 90)
+        # From the command to the teleport's line, the 3 s warmup included (SMP_PROOF_PIN="taskset -c 0" pins the server).
+        r["seconds"] = round(time.monotonic() - asked_at, 1)
+        print(f"rtp: {r['seconds']} s from the command to the teleport", flush=True)
         assert "Teleported to a random spot" in r["landed"], r
         folder = server.folder / "reports"
         end = time.time() + 120

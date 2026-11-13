@@ -708,6 +708,18 @@ pub(in crate::game) fn level_ticked(game: &mut Game<'_>, dimension: &str) {
         return;
     };
     let game = &*game;
+    // The columns an `/rtp` drew are asked about first, from the generator: no chunk is loaded for them, and
+    // only the dry land's chunks are held.
+    places.rtp_screen(&mut |columns| {
+        let seen = game.native_terrain_surface(smp_places::OVERWORLD, columns).ok()?;
+        Some(
+            seen.into_iter()
+                .map(|c| {
+                    c.map(|c| smp_places::Terrain { block: c.block, water: c.water, biome: c.biome })
+                })
+                .collect(),
+        )
+    });
     let mut cost = RTP_COST.lock().unwrap_or_else(|e| e.into_inner());
     places.rtp_look(&mut |uuid, (cx, cz)| {
         let started = std::time::Instant::now();
