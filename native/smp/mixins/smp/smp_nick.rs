@@ -313,7 +313,9 @@ impl Nicks {
         };
         let word = words[at];
         if word == "*"
-            || (at == 1 && ["accept", "deny", "cancel", "money"].contains(&word))
+            || (at == 1
+                && words[0] == "trade"
+                && ["accept", "deny", "cancel", "money"].contains(&word))
             || is_name(word)
         {
             return None;
@@ -822,6 +824,34 @@ mod tests {
         assert_eq!(r("eco give * 5"), None);
         assert_eq!(r("pay Nobody 5"), None);
         assert_eq!(r("balance"), None);
+        fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
+    fn a_nickname_that_is_a_trade_word_still_resolves_outside_trade() {
+        let (mut n, dir) = setup("resolve-words");
+        for (uuid, nick, real) in [(STEVE, "Money", "Steve"), (ALEX, "Accept", "Alex")] {
+            let change = Change {
+                uuid,
+                nick: Some(nick.into()),
+                by: uuid,
+                own: true,
+            };
+            n.apply(&change, real, 0);
+        }
+        let is_name = |w: &str| ["alex", "steve"].contains(&w.to_ascii_lowercase().as_str());
+        let name_of = |u: u128| known().name_of(u);
+        let r = |line: &str| n.resolve(line, &is_name, &name_of);
+        assert_eq!(r("pay money 5").as_deref(), Some("pay Steve 5"));
+        assert_eq!(r("tpa ~accept").as_deref(), Some("tpa Alex"));
+        assert_eq!(r("playtime Money").as_deref(), Some("playtime Steve"));
+        // `/trade money 5` is the subcommand, as `/trade accept` is.
+        assert_eq!(r("trade money 5"), None);
+        assert_eq!(r("trade accept"), None);
+        assert_eq!(
+            r("trade accept Money").as_deref(),
+            Some("trade accept Steve")
+        );
         fs::remove_dir_all(dir).ok();
     }
 
