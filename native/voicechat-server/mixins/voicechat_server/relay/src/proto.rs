@@ -578,6 +578,59 @@ mod tests {
     }
 
     #[test]
+    fn the_wire_limits_are_exact() {
+        // README: "Opus frames up to 1275 bytes ... names and passwords up to 24 characters".
+        let mic = |n: usize| {
+            [
+                &[1u8][..],
+                &Out::default().varint(n as i32).done(),
+                &vec![0u8; n],
+                &5i64.to_be_bytes(),
+                &[0],
+            ]
+            .concat()
+        };
+        assert!(matches!(
+            FromClient::read(&mic(1275)),
+            Ok(FromClient::Mic { .. })
+        ));
+        assert_eq!(FromClient::read(&mic(1276)), Err(Malformed));
+
+        let create = |name: &str, password: Option<&str>| {
+            let mut out = Out::default();
+            out.text(name).flag(password.is_some());
+            if let Some(p) = password {
+                out.text(p);
+            }
+            out.short(0).done()
+        };
+        let made = |name: &str, password: Option<&str>| {
+            matches!(
+                Request::read(CREATE_GROUP, &create(name, password)),
+                Some(Ok(Request::CreateGroup { .. }))
+            )
+        };
+        let (n24, n25) = ("n".repeat(24), "n".repeat(25));
+        assert!(made(&n24, None) && !made(&n25, None), "a name");
+        assert!(
+            made("a", Some(&n24)) && !made("a", Some(&n25)),
+            "a password"
+        );
+        // Characters, not bytes: 24 two-byte letters fit, 25 do not.
+        let (e24, e25) = ("\u{e9}".repeat(24), "\u{e9}".repeat(25));
+        assert!(made(&e24, None) && !made(&e25, None), "two-byte characters");
+        // Joining a group with a password: the same limit.
+        let join = |password: &str| {
+            let mut data = 7u128.to_be_bytes().to_vec();
+            data.push(1);
+            data.extend(Out::default().text(password).done());
+            Request::read(SET_GROUP, &data)
+        };
+        assert!(matches!(join(&n24), Some(Ok(Request::JoinGroup { .. }))));
+        assert_eq!(join(&n25), Some(Err(Malformed)));
+    }
+
+    #[test]
     fn secret_layout() {
         let key = [9u8; 16];
         let bytes = secret(&SecretInfo {
