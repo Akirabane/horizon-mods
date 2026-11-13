@@ -141,9 +141,10 @@ pub fn compact(n: i64) -> String {
         }
         return format!("{sign}{out}");
     }
+    // Each unit ends where its one decimal would read 1000.0 (999,950 and up).
     let (value, unit) = match a {
-        100_000..1_000_000 => (a as f64 / 1e3, "k"),
-        1_000_000..1_000_000_000 => (a as f64 / 1e6, "M"),
+        100_000..999_950 => (a as f64 / 1e3, "k"),
+        999_950..999_950_000 => (a as f64 / 1e6, "M"),
         _ => (a as f64 / 1e9, "B"),
     };
     format!("{sign}{value:.1}{unit}")
@@ -377,6 +378,13 @@ mod tests {
         assert_eq!(compact(125_400), "125.4k");
         assert_eq!(compact(3_210_000), "3.2M");
         assert_eq!(compact(7_000_000_000), "7.0B");
+        // A value that rounds up to 1000 moves to the next unit.
+        assert_eq!(compact(999_949), "999.9k");
+        assert_eq!(compact(999_950), "1.0M");
+        assert_eq!(compact(999_949_999), "999.9M");
+        assert_eq!(compact(999_950_000), "1.0B");
+        assert_eq!(compact(-999_950), "-1.0M");
+        assert_eq!(compact(100_000), "100.0k");
     }
 
     fn me_of(uuid: u128) -> Me {
