@@ -242,6 +242,49 @@ fn voices_reach_who_is_near_in_the_same_dimension() {
 }
 
 #[test]
+fn a_player_may_send_75_voice_packets_a_second_in_bursts_of_30() {
+    // README: "75 voice packets a second a player (burst 30)". Alice sends 100 packets at
+    // once, waits 0.2 s and sends 100 more; bob counts what reaches him by sequence number.
+    let s = server();
+    let a = Voice::connect(A, &ask_secret(&s, A));
+    let b = Voice::connect(B, &ask_secret(&s, B));
+    s.tick(world());
+    s.outgoing(64);
+    let burst = |from: i64| {
+        let start = Instant::now();
+        for i in from..from + 100 {
+            a.talk(i, false);
+        }
+        start.elapsed().as_secs_f64()
+    };
+    let first_took = burst(0);
+    let waited = Instant::now();
+    std::thread::sleep(Duration::from_millis(200));
+    let gap = waited.elapsed().as_secs_f64();
+    let second_took = burst(100);
+    let (mut first, mut second) = (0.0, 0.0);
+    while let Some(p) = b.hears() {
+        let sequence = i64::from_be_bytes(p[p.len() - 13..p.len() - 5].try_into().unwrap());
+        if sequence < 100 {
+            first += 1.0;
+        } else {
+            second += 1.0;
+        }
+    }
+    // The bucket holds 30 and fills at 75 a second (a little extra for the time the sending
+    // itself took, and a little less for the packets still on their way).
+    assert!(
+        (30.0..=30.0 + 75.0 * (first_took + 0.05) + 1.0).contains(&first),
+        "first burst: {first} heard, sent in {first_took} s"
+    );
+    let filled = 75.0 * gap;
+    assert!(
+        (filled - 5.0..=filled + 75.0 * (second_took + 0.05) + 1.0).contains(&second),
+        "after {gap} s: {second} heard, sent in {second_took} s"
+    );
+}
+
+#[test]
 fn groups_follow_their_kind() {
     let s = server();
     let a = Voice::connect(A, &ask_secret(&s, A));
