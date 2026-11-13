@@ -1769,6 +1769,39 @@ mod tests {
     }
 
     #[test]
+    fn rtp_draws_96_columns_and_tries_the_chunks_of_six_of_them() {
+        // README: "draws 96 columns at random ... the chunks of up to `rtp_attempts` (6) of
+        // those are the ones it tries".
+        let d = dir();
+        let mut p = Places::open(&d, Config::default()).unwrap();
+        p.rng = 42;
+        let here = [body(A, 0.0)];
+        p.command(&player(A, 0), &here, 0, "rtp").unwrap();
+        let mut drawn = Vec::new();
+        // The game cannot say what the terrain is: every column counts.
+        p.rtp_screen(&mut |columns| {
+            drawn = columns.to_vec();
+            None
+        });
+        assert_eq!(drawn.len(), 96);
+        assert_eq!(drawn.iter().collect::<BTreeSet<_>>().len(), 96, "distinct");
+        // No chunk has a safe column: each is tried once, then the search gives up.
+        let mut tried = Vec::new();
+        for _ in 0..20 {
+            p.rtp_look(&mut |_, c| {
+                tried.push(c);
+                chunk(c, "minecraft:lava", "minecraft:air", "minecraft:air").into()
+            });
+        }
+        assert_eq!(tried.len(), 6, "{tried:?}");
+        assert_eq!(tried.iter().collect::<BTreeSet<_>>().len(), 6, "each once");
+        let (out, go) = p.tick(&here, 3_000);
+        assert!(go.is_empty());
+        assert!(matches!(&out[..], [Out::Tell(_, s)] if s.contains("No safe spot")));
+        let _ = std::fs::remove_dir_all(d);
+    }
+
+    #[test]
     fn rtp_with_no_dry_land_among_the_candidates_says_so_at_once() {
         let d = dir();
         let mut p = Places::open(&d, Config::default()).unwrap();
